@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Management — Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}
+    .block li{margin-bottom:5px;}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
+    .block-pass h4{color:var(--green);}
+    .block-danger{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.25);border-radius:6px;padding:14px 16px;}
+    .block-danger h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html" class="active">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-api-design.html">← API Design</a>
+    <a href="checklist-security.html">Security →</a>
+  </div>
+  <h2>Data Management <small>— 10 requirements &nbsp; Pass 5 / Partial 2 / Fail 3</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การจัดการ database, caching, migration, และความสมบูรณ์ของข้อมูล</p>
+
+  <div class="item" id="postgresql"><div class="item-head"><div><div class="item-title">1. PostgreSQL (SSH/Direct)</div><div class="item-sub">รองรับการเชื่อมต่อทั้งแบบ SSH tunnel และ direct connection</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>รองรับการเชื่อมต่อ PostgreSQL ได้ 2 วิธี: <strong>Direct</strong> เชื่อมตรงผ่าน network, <strong>SSH Tunnel</strong> เชื่อมผ่าน SSH jump server ก่อนแล้วค่อย forward ไปยัง DB ซึ่งอยู่ใน private network ที่ไม่ expose internet โดยตรง</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Production DB มักอยู่ใน private network ที่เข้าถึงได้ผ่าน SSH เท่านั้น เพื่อความปลอดภัย การที่ app รองรับทั้งสองแบบทำให้ dev ใช้ direct ได้ง่าย ส่วน prod ใช้ SSH ได้ตาม network policy</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>DB_MODE=ssh|direct</code> ใน <code>.env</code> · SSH ผ่าน <code>sshtunnel</code> + <code>paramiko</code> รองรับ key-based และ password auth · <code>database.py:19-67</code></p></div>
+  </div></div>
+
+  <div class="item" id="db-indexing"><div class="item-head"><div><div class="item-title">2. Database Indexing</div><div class="item-sub">ทำ index บน column ที่ใช้ filter/join บ่อย</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Database index คือโครงสร้างข้อมูลเพิ่มเติมที่ทำให้ DB ค้นหาแถวที่ต้องการได้เร็วขึ้นมาก แทนที่จะ scan ทุกแถว (sequential scan) ใช้ B-tree index ค้นได้ใน O(log n) ซึ่งแตกต่างมากเมื่อมีหลายล้านแถว</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance query ของ system นี้ทำ JOIN หลาย table และ WHERE ด้วย <code>fiscal_year</code>, <code>cost_owner</code>, <code>gl_id</code> ทุก query ถ้าไม่มี index แต่ละ query อาจใช้เวลาหลายวินาทีแทนที่จะเป็น milliseconds</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>migrations/004_create_indexes.sql</code> มี 16 indexes ครอบคลุม: <code>fiscal_year</code>, <code>fiscal_year+fiscal_month</code>, <code>year+month</code>, <code>gl_id</code>, <code>cost_ctr_id</code>, <code>cost_owner</code>, IO fields (partial indexes สำหรับ nullable columns), master table PKs</p></div>
+  </div></div>
+
+  <div class="item" id="data-integrity"><div class="item-head"><div><div class="item-title">3. Data Integrity</div><div class="item-sub">ใช้ DB constraint (NOT NULL, FK, CHECK) และจัดการ transaction ด้วย ACID</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Data integrity คือการรับประกันว่าข้อมูลใน DB ถูกต้องและสอดคล้องกันเสมอ ทำได้ด้วย constraint (NOT NULL, UNIQUE, FK, CHECK) และ ACID transaction (Atomicity, Consistency, Isolation, Durability)</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี constraint อาจมี coordinator record ที่ username เป็น NULL, หรือ ERP record ที่ amount เป็น NULL ซึ่งทำให้ aggregate calculation ผิด ข้อมูลการเงินผิดพลาดสร้างความเสียหายทางธุรกิจ</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>Coordinator table: <code>NOT NULL</code> ทุก required field, <code>UNIQUE(username)</code>, <code>DEFAULT TRUE</code> · ERP table: implicit NOT NULL ผ่าน data import · psycopg3 transaction: auto rollback เมื่อ exception ใน <code>async with get_db()</code></p></div>
+  </div></div>
+
+  <div class="item" id="redis-cache"><div class="item-head"><div><div class="item-title">4. Redis Caching</div><div class="item-sub">Cache ข้อมูลที่เรียกบ่อย พร้อมกำหนด TTL ที่เหมาะสม</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Redis คือ in-memory data store ที่ใช้เป็น cache layer ระหว่าง application และ database ข้อมูลที่ query บ่อยและเปลี่ยนแปลงไม่บ่อยจะถูกเก็บใน Redis ซึ่งเร็วกว่า DB หลายร้อยเท่า TTL (Time To Live) กำหนดว่า cache หมดอายุเมื่อไร</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance SQL ของ system นี้ซับซ้อนมาก (CTE + หลาย JSONB_AGG) ถ้าทุก request query DB จะช้าและ DB รับ load สูง Redis cache ทำให้ request ที่ 2 เป็นต้นไปตอบได้ใน milliseconds และ DB ทำงานน้อยลงมาก</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>Finance/Budget/IO: TTL 300s (5 min) · Coordinator lookup: TTL 600s (10 min) · cache key: <code>seamless:v1:{prefix}:{role}:{params_hash}</code> · graceful fallback เมื่อ Redis ไม่พร้อม — app ทำงานต่อได้โดยไม่มี cache</p></div>
+  </div></div>
+
+  <div class="item" id="connection-pooling"><div class="item-head"><div><div class="item-title">5. Connection Pooling</div><div class="item-sub">ใช้ connection pool ป้องกัน DB connection exhaustion</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Connection pool คือ pool ของ DB connection ที่สร้างไว้ล่วงหน้า แทนที่จะสร้าง connection ใหม่ทุก request (ซึ่งช้า) app หยิบ connection จาก pool มาใช้แล้วคืนกลับ ป้องกัน DB รับ connection เกิน limit</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>PostgreSQL รองรับ connection จำนวนจำกัด (default 100) ถ้า app สร้าง connection ใหม่ทุก request ภายใต้ traffic สูงจะ exhaust limit ทำให้ DB reject connection ใหม่ทั้งหมด</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>psycopg3 AsyncConnectionPool</code> min=2, max=20 · ปรับได้ผ่าน <code>DB_POOL_MIN_SIZE</code>, <code>DB_POOL_MAX_SIZE</code> · <code>database.py:55-62</code> · async — ไม่ block event loop ขณะรอ connection</p></div>
+  </div></div>
+
+  <div class="item" id="read-replica"><div class="item-head"><div><div class="item-title">6. Read Replica</div><div class="item-sub">แยก read traffic ไปยัง PostgreSQL read replica เพื่อลดภาระ primary DB</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Read replica คือ PostgreSQL instance ที่ sync ข้อมูลจาก primary แบบ real-time (streaming replication) สำหรับ read-only query เท่านั้น ทำให้ primary DB รับเฉพาะ write operation ลด load ได้มาก</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard มีเฉพาะ read query (SELECT) เกือบทั้งหมด ถ้า concurrent users มากขึ้นจน primary DB เริ่ม overload read replica จะช่วยกระจาย load ได้โดยไม่ต้องเปลี่ยน code มาก</p></div>
+    <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ทุก query รวม read และ write ส่งไปยัง primary DB เดียวกัน Redis cache ช่วยลด read load บางส่วน แต่ไม่เพียงพอเมื่อ concurrent users สูงและมี cache miss บ่อย</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ (เมื่อ traffic เพิ่มขึ้น)</h4><ul>
+      <li>ตั้ง PostgreSQL streaming replication: primary → replica</li>
+      <li>เพิ่ม <code>READ_REPLICA_URL</code> ใน config</li>
+      <li>แก้ <code>database.py</code> ให้มี 2 pool: write pool (primary) และ read pool (replica)</li>
+      <li>Route Finance/IO/Budget queries ไปยัง read pool</li>
+    </ul></div>
+  </div></div>
+
+  <div class="item" id="db-migration"><div class="item-head"><div><div class="item-title">7. Database Migration</div><div class="item-sub">ใช้ Alembic จัดการ schema migration แบบ version-controlled</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Database migration คือกระบวนการเปลี่ยน DB schema อย่างมีระเบียบผ่าน versioned files เช่น <code>001_add_column.sql</code> Alembic คือ migration tool มาตรฐานของ Python/SQLAlchemy ที่รองรับ up (apply) และ down (rollback) migration</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าแก้ DB โดยตรงโดยไม่มี migration file ทีม dev จะไม่รู้ว่า production DB มี schema อะไรบ้าง เมื่อ deploy ใหม่ DB จะไม่ match code ทำให้ error down migration ทำให้ rollback เมื่อ deploy ใหม่มีปัญหาได้</p></div>
+    <div class="block"><h4>สถานะในโปรเจกต์</h4><p>มี custom <code>migrations/migrate.py</code> + raw SQL files (001-004) ✓ — idempotent ผ่าน <code>IF NOT EXISTS</code>, track ด้วย <code>schema_migrations</code> table ✓</p><p>แต่: ไม่ใช้ Alembic — ไม่มี down migration (rollback ไม่ได้) · ต้องเขียน SQL เอง ไม่มี auto-generate จาก model</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>ถ้าต้องการ rollback: เพิ่ม <code>down</code> section ใน migration files แต่ละไฟล์</li>
+      <li>พิจารณา migrate ไปใช้ Alembic เพื่อ auto-generate migration จาก SQLAlchemy models</li>
+      <li>อย่างน้อย document ว่าแต่ละ migration undo ได้อย่างไร</li>
+    </ul></div>
+  </div></div>
+
+  <div class="item" id="soft-delete"><div class="item-head"><div><div class="item-title">8. Soft Delete</div><div class="item-sub">ใช้ is_deleted flag แทน hard delete เพื่อรักษา audit trail</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Soft delete คือการ "ลบ" ข้อมูลโดยการ set flag <code>is_deleted=true</code> แทนการลบ row จริง ข้อมูลยังอยู่ใน DB สามารถ restore ได้ ตรงข้ามกับ hard delete ที่ <code>DELETE FROM table</code> โดยตรง</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>สำหรับ financial data การลบข้อมูลถาวรเป็น risk ถ้า hard delete ผิดพลาดจะกู้คืนไม่ได้ soft delete ยังรักษา audit trail ว่าเคยมีรายการนี้อยู่ และสามารถ restore ได้เมื่อ admin ต้องการ</p></div>
+    <div class="block"><h4>สถานะในโปรเจกต์</h4><p><code>finance_coordinator</code>: ใช้ <code>active BOOLEAN DEFAULT TRUE</code> (soft delete) ✓ — <code>PATCH /coordinators/{id}</code> toggle active/inactive แทนการลบจริง</p><p>ERP data (<code>erp_2025</code>): ไม่มี soft delete — เป็น read-only import data จาก ERP system ดังนั้นไม่ apply</p></div>
+  </div></div>
+
+  <div class="item" id="db-backup"><div class="item-head"><div><div class="item-title">9. Database Backup</div><div class="item-sub">ทำ full backup รายวัน + incremental รายชั่วโมง + PITR รองรับย้อนหลัง 30 วัน</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p><strong>Full backup</strong> คือ snapshot ทั้ง database ณ เวลาหนึ่ง <strong>Incremental backup</strong> คือ backup เฉพาะ changes หลัง backup ครั้งล่าสุด <strong>PITR (Point-in-Time Recovery)</strong> คือความสามารถ restore DB ไปยังช่วงเวลาใดก็ได้ในอดีต</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า DB crash, hardware failure, หรือ ransomware — ถ้าไม่มี backup ข้อมูลการเงินทั้งหมดหาย PITR ช่วยให้ restore ได้ถึง 1 นาทีก่อนเกิดปัญหา แทนที่จะต้องย้อนไปถึง full backup ล่าสุด</p></div>
+    <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี backup script · ไม่มี backup schedule · ไม่มี restore procedure document เป็น infrastructure gap ที่ต้องจัดการนอก codebase</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>ตั้ง <code>pg_dump</code> cron job: full backup รายวัน (เก็บ 30 วัน), incremental ด้วย WAL archiving รายชั่วโมง</li>
+      <li>เก็บ backup ใน object storage แยก server (S3, Azure Blob) ไม่เก็บบน DB server เดียวกัน</li>
+      <li>Enable PostgreSQL WAL archiving สำหรับ PITR</li>
+      <li>ทดสอบ restore ทุก quarter เพื่อยืนยันว่า backup ใช้งานได้จริง</li>
+    </ul></div>
+  </div></div>
+
+  <div class="item" id="data-retention"><div class="item-head"><div><div class="item-title">10. Data Retention Policy</div><div class="item-sub">กำหนด policy ว่าข้อมูลแต่ละประเภทเก็บนานเท่าไร ก่อน archive หรือ purge</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Data retention policy คือ rule ที่กำหนดว่าข้อมูลแต่ละประเภทต้องเก็บอย่างน้อยกี่ปี และเมื่อครบกำหนดต้องทำอะไร (archive ลง cold storage, anonymize, หรือ delete) เพื่อสมดุลระหว่าง compliance requirement และ storage cost</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ข้อมูลการเงินในไทยต้องเก็บตาม กฎหมายบัญชี อย่างน้อย 5 ปี ถ้าเก็บมากเกินไปก็เปลืองพื้นที่และเพิ่มความเสี่ยง ถ้าเก็บน้อยเกินไปก็ผิด compliance</p></div>
+    <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p><code>erp_2025</code> table ชื่อระบุปีไว้ชัดเจน แต่ไม่มี policy ว่าเมื่อไรจะ archive หรือ create <code>erp_2026</code> ไม่มีกระบวนการ purge coordinator records เก่า</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>กำหนด retention period: ERP data เก็บ 7 ปี (financial compliance), coordinator records เก็บ 2 ปีหลัง inactive</li>
+      <li>สร้าง archive process: ข้อมูลเก่า → cold storage (เช่น Azure Archive Tier)</li>
+      <li>Document policy และ review ทุกปี</li>
+    </ul></div>
+  </div></div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-security.html" style="color:var(--accent)">Security →</a>
+  </div>
+</main>
+</body>
+</html>

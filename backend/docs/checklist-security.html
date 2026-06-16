@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security — Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}
+    .block li{margin-bottom:5px;}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
+    .block-pass h4{color:var(--green);}
+    .block-danger{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.25);border-radius:6px;padding:14px 16px;}
+    .block-danger h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html" class="active">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-data-management.html">← Data Management</a>
+    <a href="checklist-architecture.html">Architecture →</a>
+  </div>
+  <h2>Security <small>— 11 requirements &nbsp; Pass 6 / Partial 2 / Fail 3</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความปลอดภัยของ API, authentication, authorization, และการป้องกัน attack vectors ต่างๆ</p>
+
+  <!-- 1. JWT -->
+  <div class="item" id="jwt">
+    <div class="item-head">
+      <div><div class="item-title">1. JWT Authentication</div><div class="item-sub">ใช้ JWT token มาตรฐาน พร้อมกำหนด expiry</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>JWT (JSON Web Token) คือ token ที่มี payload เข้ารหัสไว้ภายใน ประกอบด้วย header (algorithm), payload (claims เช่น user id, role), และ signature ที่ verify ได้โดยไม่ต้อง query database ทุกครั้ง</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Stateless auth ทำให้ server ไม่ต้องเก็บ session ทำให้ scale ง่าย token มี expiry ทำให้ถ้าถูก compromise ก็ใช้ได้แค่ชั่วคราว claims ใน payload ทำให้รู้ role/permission โดยไม่ต้อง query DB ทุก request</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>HS256 algorithm · expiry ตั้งได้ผ่าน <code>JWT_EXPIRES_SECONDS</code> (default 3600s) payload: <code>{sub, role, position, coordinator, iat, exp}</code> · <code>core/security.py</code></p>
+        <pre>{"sub": "user@example.com", "role": "fa", "position": "chief",
+ "coordinator": false, "iat": 1717300000, "exp": 1717303600}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Entra ID -->
+  <div class="item" id="entra-id">
+    <div class="item-head">
+      <div><div class="item-title">2. Microsoft Entra ID (SSO)</div><div class="item-sub">Auth ผ่าน Microsoft Entra ID รับ job_title เพื่อกำหนดสิทธิ์</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Microsoft Entra ID (เดิมชื่อ Azure AD) คือ enterprise identity provider ที่องค์กรส่วนใหญ่ใช้ SSO (Single Sign-On) ทำให้ user login ครั้งเดียวใช้ได้ทุก app ไม่ต้องจำ password แยกสำหรับแต่ละระบบ</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>User ไม่ต้องสร้าง account ใหม่ — ใช้ account องค์กรที่มีอยู่แล้ว IT ยังคุม access ได้ส่วนกลาง (ถ้าไล่พนักงานออก revoke access ครั้งเดียวหมดทุก app) ลดความเสี่ยงจาก weak password</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><code>auth_service.py:94-177</code> — validate MS Entra token ด้วย JWKS (RS256) extract <code>jobTitle</code> → parse เป็น role/position issue JWT ของระบบ</p>
+        <p><code>draft_login</code> สำหรับ dev โดยไม่ต้องเชื่อม Azure จริง (เมื่อ <code>DRAFT_MODE=true</code>)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Coordinator Auth -->
+  <div class="item" id="coordinator-auth">
+    <div class="item-head">
+      <div><div class="item-title">3. Coordinator Authorization</div><div class="item-sub">ตรวจสอบ username ในตาราง finance_coordinator เพิ่มเติม</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>นอกจาก position-based access (chairman/chief/head) ยังมี whitelist table <code>finance_coordinator</code> ที่ admin เพิ่มชื่อ user เข้าได้ด้วยตนเอง user ที่อยู่ใน table นี้ (และ active=true) เข้าระบบได้แม้ไม่มี position</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ทำให้ยืดหยุ่น — บางคนอาจไม่มี position ใน Entra แต่ต้องการสิทธิ์เข้าระบบ (เช่น เจ้าหน้าที่ประสานงาน) admin จัดการได้โดยไม่ต้องเปลี่ยน Entra attributes</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><code>auth_service.py:35-66</code> ตรวจ Redis cache ก่อน (key: <code>seamless:coordinator:{username}</code> TTL 600s) ถ้า miss ค่อย query <code>finance_coordinator</code> table toggle active/inactive ผ่าน <code>PATCH /admin/coordinators/{id}</code> · invalidate cache อัตโนมัติ</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. HTTPS/TLS -->
+  <div class="item" id="https">
+    <div class="item-head">
+      <div><div class="item-title">4. HTTPS / TLS</div><div class="item-sub">บังคับ HTTPS ทุก endpoint, redirect HTTP → HTTPS, ใช้ TLS 1.2+ เท่านั้น</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="partial">Partial</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>HTTPS เข้ารหัส traffic ระหว่าง browser และ server ด้วย TLS ป้องกัน man-in-the-middle attack ที่ดักอ่าน JWT token หรือ financial data ที่ส่งผ่านเครือข่าย TLS 1.2+ คือ version ที่ปลอดภัย (1.0 และ 1.1 ถูก deprecated แล้ว)</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าใช้ HTTP ธรรมดา JWT token จะถูก intercept ได้ง่ายในเครือข่ายสาธารณะ สำหรับ financial dashboard ที่มีข้อมูลงบประมาณ การเข้ารหัส in-transit เป็น baseline security requirement</p></div>
+      <div class="block"><h4>สถานะในโปรเจกต์</h4>
+        <p>App-level: <code>Strict-Transport-Security</code> header ตั้งค่าเมื่อ <code>DEBUG=false</code> (<code>main.py:87</code>) ✓ — บอก browser ว่าให้ใช้ HTTPS เท่านั้น</p>
+        <p>Infra-level: HTTP→HTTPS redirect และ TLS certificate management ต้องทำที่ reverse proxy (Nginx, Caddy, Traefik) ซึ่งยังไม่มี config</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <ul>
+          <li>ตั้งค่า reverse proxy (Nginx/Caddy) ให้รับ port 443 พร้อม TLS certificate (Let's Encrypt)</li>
+          <li>Redirect HTTP (port 80) → HTTPS (port 443) อัตโนมัติ</li>
+          <li>ตั้งค่า <code>ssl_protocols TLSv1.2 TLSv1.3</code> ใน Nginx config</li>
+          <li>ตรวจสอบ <code>DEBUG=false</code> ใน production เพื่อให้ HSTS header ทำงาน</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. SQL Injection -->
+  <div class="item" id="sql-injection">
+    <div class="item-head">
+      <div><div class="item-title">5. SQL Injection Prevention</div><div class="item-sub">ใช้ parameterized query เสมอ ห้าม string concatenation ใน SQL</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>SQL Injection คือ attack ที่ใส่ SQL code ใน user input เช่น <code>year=2025; DROP TABLE erp_2025--</code> ถ้า code ทำ string concat จะกลายเป็น SQL ที่ทำลายข้อมูล Parameterized query แก้ปัญหานี้ด้วยการส่ง user input เป็น parameter แยกจาก SQL statement</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>SQL Injection เป็น OWASP Top 10 อันดับ 1 มาหลายปี ถ้าถูก exploit ผู้โจมตีสามารถอ่าน แก้ไข หรือลบข้อมูลทั้ง database ได้ สำหรับ financial data ความเสียหายร้ายแรงมาก</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>ทุก SQL query ใช้ <code>%(name)s</code> parameterized syntax ผ่าน <code>psycopg3 AsyncClientCursor</code></p>
+        <pre>await cur.execute(
+    "SELECT 1 FROM finance_coordinator WHERE username = %(username)s",
+    {"username": username}  # user input เป็น param แยก
+)</pre>
+        <p>ไม่มี f-string หรือ string concat ใน SQL ทั้ง codebase</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Rate Limiting -->
+  <div class="item" id="rate-limiting">
+    <div class="item-head">
+      <div><div class="item-title">6. Rate Limiting</div><div class="item-sub">จำกัด request ต่อ IP ต่อหน่วยเวลา ด้วย slowapi</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Rate limiting คือการจำกัดจำนวน request ที่แต่ละ IP หรือ user ส่งได้ใน time window เช่น 100 request/minute เมื่อเกิน limit จะตอบ <code>429 Too Many Requests</code></p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ป้องกัน 3 สถานการณ์: (1) DDoS attack ที่ส่ง request จำนวนมากเพื่อทำให้ server ล่ม (2) brute force attack ที่ลอง password หลายครั้ง (3) scraping ที่ดึงข้อมูลเกินควร</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>Global: 100 req/min per IP (<code>main.py:45</code>) · Auth endpoints: 10 req/min per IP (<code>auth.py:27</code>)</p>
+        <p>ใช้ <code>slowapi</code> + <code>SlowAPIMiddleware</code> · ตอบ <code>429</code> พร้อม <code>Retry-After</code> header อัตโนมัติ</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Secret Management -->
+  <div class="item" id="secret-mgmt">
+    <div class="item-head">
+      <div><div class="item-title">7. Secret Management</div><div class="item-sub">เก็บ credential / API key ใน Vault หรือ secret manager ห้ามเก็บใน .env ที่ commit เข้า repo</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="partial">Partial</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Secret management คือกระบวนการเก็บ credential (password, API key, JWT secret) อย่างปลอดภัย เพื่อไม่ให้ secret หลุดผ่าน version control, log, หรือ environment ที่ไม่ควรเห็น tools ที่ใช้ได้แก่ HashiCorp Vault, AWS Secrets Manager, Azure Key Vault</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Secret ที่ commit เข้า git จะอยู่ใน history ตลอดไปแม้จะ delete ภายหลัง มี bots ที่ scan GitHub อัตโนมัติหา API key และนำไปใช้ภายในนาที default value ที่ลืมเปลี่ยนเป็น vulnerability ที่พบบ่อยมาก</p></div>
+      <div class="block"><h4>สถานะในโปรเจกต์</h4>
+        <p>ใช้ <code>.env</code> file ที่อยู่ใน <code>.gitignore</code> ✓ — ไม่ commit secret เข้า repo</p>
+        <p><code>.env.example</code> มี placeholder แทน value จริง ✓</p>
+        <p>แต่: default <code>JWT_SECRET_KEY=change-me-in-production</code> ใน <code>config.py:52</code> — ถ้าลืมตั้งใน production จะเป็น vulnerability ร้ายแรง</p>
+        <p>ยังไม่ใช้ Vault หรือ cloud secret manager — เป็น plain text ใน file system</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <ul>
+          <li>เพิ่ม startup validation: ถ้า <code>JWT_SECRET_KEY == "change-me-in-production"</code> และ <code>DEBUG=false</code> → crash ทันที</li>
+          <li>Production: ย้ายไปใช้ Azure Key Vault (เข้ากันกับ Entra ID) หรือ AWS Secrets Manager</li>
+          <li>Rotate JWT secret ทุก 90 วัน กำหนด schedule และ process</li>
+          <li>ตรวจสอบว่า <code>.env</code> ไม่ถูก backup ไปยัง cloud storage โดยไม่ตั้งใจ</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Token Refresh & Revocation -->
+  <div class="item" id="token-refresh">
+    <div class="item-head">
+      <div><div class="item-title">8. Token Refresh &amp; Revocation</div><div class="item-sub">รองรับ silent refresh, revoke token เมื่อ logout หรือเมื่อตรวจพบพฤติกรรมผิดปกติ</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p><strong>Refresh token</strong> คือ long-lived token ที่ใช้ขอ access token ใหม่โดยที่ user ไม่ต้อง login ซ้ำ <strong>Token revocation</strong> คือความสามารถในการยกเลิก token ที่ยังไม่หมดอายุ เช่น หลัง logout หรือเมื่อ token ถูก compromise</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>JWT เป็น stateless — ถ้าถูกขโมย server ไม่มีทางรู้ว่าควร reject ได้จนกว่า expiry ในกรณี financial system ถ้า user แจ้งว่า token ถูกขโมย ควรยกเลิกได้ทันที ไม่ต้องรอ 1 ชั่วโมง</p></div>
+      <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ไม่มี <code>POST /auth/refresh</code> endpoint · ไม่มี refresh token · ไม่มี logout/revoke endpoint · token หมดอายุ = user ต้อง login ใหม่เท่านั้น</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <ul>
+          <li>เพิ่ม <code>POST /auth/logout</code>: blacklist JWT jti (unique id) ใน Redis จนถึง expiry</li>
+          <li>เพิ่ม <code>POST /auth/refresh</code>: รับ long-lived refresh token (30 วัน) → issue access token ใหม่ (1 ชั่วโมง)</li>
+          <li>แก้ <code>deps.py</code> ให้ check Redis blacklist ก่อน allow request</li>
+          <li>ใน security headers เพิ่ม <code>Clear-Site-Data</code> เมื่อ logout</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. Audit Log -->
+  <div class="item" id="audit-log">
+    <div class="item-head">
+      <div><div class="item-title">9. Audit Log (Immutable)</div><div class="item-sub">บันทึกทุก action บนข้อมูลการเงิน: ใคร ทำอะไร เมื่อไร IP อะไร แก้ไขย้อนหลังไม่ได้</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Audit log คือ immutable record ของทุก action ที่เกิดในระบบ ระบุ: user ที่ทำ, action ที่ทำ, timestamp, IP address, resource ที่ถูกกระทำ และ result "Immutable" หมายถึงแก้ไขหรือลบย้อนหลังไม่ได้ (append-only)</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>สำหรับ financial system audit log เป็น requirement ด้าน compliance (การตรวจสอบบัญชี) และ forensics (สืบสวนเมื่อมีการ fraud หรือ data breach) ถ้าไม่มีจะไม่รู้ว่าใคร access ข้อมูลอะไร เมื่อไร ทำให้ตรวจสอบย้อนหลังไม่ได้</p></div>
+      <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>มีเพียง <code>logs/app.log</code> (rotating file) ที่ log login success/fail เท่านั้น ไม่มี: ใครดูข้อมูลไหน เมื่อไร · ไม่มี immutable storage · log ถูก rotate ทุก 10MB ทำให้ข้อมูลเก่าหายได้</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ (สำคัญมาก)</h4>
+        <ul>
+          <li>สร้าง <code>audit_log</code> table ใน DB: <code>id, user_id, action, resource, ip_address, timestamp, result</code></li>
+          <li>เพิ่ม audit logging middleware ที่บันทึกทุก authenticated request ไปยัง table นี้</li>
+          <li>ให้ table เป็น append-only: ไม่มี UPDATE/DELETE — ใช้ DB-level permission</li>
+          <li>Log ข้อมูลขั้นต่ำ: <code>GET /finance</code> → บันทึก user, params ที่ใช้ filter, timestamp</li>
+          <li>Retain audit log อย่างน้อย 7 ปีตาม best practice financial compliance</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. PDPA -->
+  <div class="item" id="pdpa">
+    <div class="item-head">
+      <div><div class="item-title">10. PDPA / Data Privacy</div><div class="item-sub">ปฏิบัติตาม PDPA สำหรับข้อมูลส่วนบุคคล รวมถึง data minimization และ right to erasure</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>PDPA (พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562) คือกฎหมายไทยที่กำหนดว่าต้องเก็บข้อมูลส่วนบุคคลเท่าที่จำเป็น (data minimization), ได้รับ consent, มีกระบวนการให้ผู้ใช้ขอลบข้อมูลได้ (right to erasure)</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>องค์กรที่ฝ่าฝืน PDPA มีโทษปรับสูงสุด 5 ล้านบาทต่อกรรม ข้อมูลที่ระบบมีที่เป็น personal data ได้แก่ username (อาจเป็น email), display name, job_title จาก Entra</p></div>
+      <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ไม่มี data minimization policy · ไม่มี consent mechanism · ไม่มี right to erasure · ไม่มี data retention policy · ไม่มี privacy notice</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <ul>
+          <li>ระบุว่าข้อมูลไหนใน system เป็น personal data และ data subject คือใคร</li>
+          <li>เพิ่ม <code>DELETE /admin/users/{username}</code>: anonymize/delete ข้อมูล personal data ตามคำขอ</li>
+          <li>กำหนด data retention: coordinator records เก็บนานแค่ไหน หลังจากนั้น anonymize</li>
+          <li>จัดทำ Privacy Notice และ Data Processing Agreement</li>
+          <li>ตรวจสอบกับ legal team ว่า data ใดบ้างที่เข้าข่าย PDPA</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Security Headers -->
+  <div class="item" id="security-headers">
+    <div class="item-head">
+      <div><div class="item-title">11. Security Headers</div><div class="item-sub">ตั้งค่า HTTP headers: CSP, X-Frame-Options, X-Content-Type-Options, HSTS</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Security headers คือ HTTP response headers ที่บอก browser ว่าต้องทำงานอย่างไรเพื่อความปลอดภัย เช่น <code>X-Frame-Options: DENY</code> ป้องกัน clickjacking, <code>X-Content-Type-Options: nosniff</code> ป้องกัน MIME sniffing, <code>HSTS</code> บังคับ HTTPS</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Headers เหล่านี้เป็น defense-in-depth ที่ป้องกัน attack class ต่างๆ: clickjacking (iframe embedding), XSS via MIME type confusion, downgrade attacks (HTTP แทน HTTPS) ส่วนใหญ่ตั้งครั้งเดียวได้ประโยชน์สูง</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><code>main.py:79-88</code> middleware ตั้งทุก response:</p>
+        <pre>X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Strict-Transport-Security: max-age=31536000; includeSubDomains  # production only</pre>
+        <p>ยังไม่มี <code>Content-Security-Policy</code> — ควรเพิ่มเพื่อป้องกัน XSS ที่ซับซ้อนขึ้น</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-architecture.html" style="color:var(--accent)">Architecture →</a>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation — Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;}
+    .block ul{padding-left:18px;}
+    .block li{margin-bottom:5px;}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
+    .block-pass h4{color:var(--green);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
+    .block-warn h4{color:var(--red);}
+    .block-partial{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-partial h4{color:var(--yellow);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html" class="active">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div class="nav-btn"><a href="checklist-data-pipeline.html">← Data Pipeline</a><a href="checklist.html">กลับ Index →</a></div>
+  <h2>Documentation <small>— 4 requirements &nbsp; Pass 1 / Partial 1 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">เอกสารที่จำเป็นสำหรับ developer, operator และ auditor</p>
+
+  <div class="item" id="adr"><div class="item-head"><div><div class="item-title">1. Architecture Decision Records (ADR)</div><div class="item-sub">บันทึกการตัดสินใจด้าน architecture สำคัญ พร้อม context และ trade-off</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>ADR คือ document สั้นๆ ที่บันทึกการตัดสินใจด้าน architecture แต่ละครั้ง ได้แก่: (1) Context — ทำไมถึงต้องตัดสินใจ (2) Decision — ตัดสินใจอะไร (3) Consequences — ผลที่ตามมา ทั้ง positive และ negative ตัวอย่าง: "ทำไมถึงเลือก Redis แทน Memcached" หรือ "ทำไมถึงใช้ psycopg3 แทน SQLAlchemy"</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>6 เดือนต่อมา developer ใหม่ (หรือตัวเองก็ตาม) จะไม่รู้ว่าทำไมถึงเลือก design นี้ และอาจ refactor ออกไปโดยไม่รู้ว่า design เดิมมี reason ที่ดี ADR เก็บ "ความรู้ที่อยู่ในหัว" ให้ทีมทุกคนเข้าถึงได้</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี ADR directory หรือ document ใดๆ การตัดสินใจ architecture (เช่น SSH tunnel approach, Fernet encryption, DRAFT_MODE) ไม่ได้ถูก document ไว้</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>สร้าง <code>backend/docs/adr/</code> directory</li>
+      <li>เขียน ADR สำหรับ decision สำคัญที่มีอยู่แล้ว: SSH tunnel, Fernet encryption, Draft Mode, psycopg3 choice</li>
+      <li>ใช้ template: Title / Status / Context / Decision / Consequences</li>
+    </ul>
+    <pre># backend/docs/adr/001-ssh-tunnel-db-connection.md
+# Status: Accepted
+# Context: Database อยู่บน internal network ไม่เปิด port ออก internet
+# Decision: ใช้ SSH tunnel ผ่าน bastion host
+# Consequences:
+#   + ไม่ต้องเปิด DB port ออก internet (security)
+#   - เพิ่ม latency เล็กน้อย, ต้องมี SSH key management</pre>
+    </div>
+  </div></div>
+
+  <div class="item" id="dev-setup"><div class="item-head"><div><div class="item-title">2. Developer Setup Guide</div><div class="item-sub">คู่มือ step-by-step ให้ developer ใหม่ setup local environment และรัน project ได้ภายใน 30 นาที</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Developer Setup Guide คือ document ที่บอก developer ใหม่ว่าต้องทำอะไรบ้างตั้งแต่ clone repo จนถึงรัน server ได้ รวมถึง: prerequisites, environment variables ที่ต้องตั้ง, วิธี run migrations, วิธีรัน dev server</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี setup guide developer ใหม่ต้องใช้เวลาหลายวันถามคนโน้นคนนี้ เสียเวลาทั้งทีม ยิ่งถ้า developer เดิมลาออกไปแล้ว ความรู้นั้นหายไปด้วย</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี <code>README.md</code> หรือ <code>backend/docs/backend.html</code> ที่ cover การ setup project รวมถึง SSH config, environment variables, และวิธีรัน server</p></div>
+  </div></div>
+
+  <div class="item" id="runbook"><div class="item-head"><div><div class="item-title">3. Runbook / Operations Guide</div><div class="item-sub">คู่มือสำหรับ ops team: วิธี restart service, วิธี check logs, วิธีจัดการ incident</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Runbook คือ document สำหรับ operations team (ไม่ใช่ developer) บอกวิธีจัดการ task routine และ incident เช่น: "วิธี restart API server", "วิธีดู error logs", "ถ้า Redis down ทำอะไร", "ถ้า DB connection pool exhausted ทำอะไร"</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อเกิด incident ตี 2 ops team ต้องจัดการได้โดยไม่ต้องโทรหา developer ถ้าไม่มี runbook ทุกปัญหาเล็กๆ กลายเป็นต้องรอ developer ซึ่งทำให้ MTTR (Mean Time To Recover) นานขึ้น</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี runbook หรือ operations guide ใดๆ</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>เขียน runbook ครอบคลุม scenarios หลัก:</li>
+      <li><strong>Restart service</strong>: command ที่ใช้, สิ่งที่ต้อง check หลัง restart</li>
+      <li><strong>Check logs</strong>: log file อยู่ที่ไหน, format เป็นอย่างไร, วิธี filter error</li>
+      <li><strong>Redis down</strong>: symptom, immediate action (restart), escalation path</li>
+      <li><strong>DB connection error</strong>: ตรวจ SSH tunnel, ตรวจ DB status, วิธี reconnect</li>
+      <li><strong>High error rate</strong>: วิธีดู Sentry dashboard, วิธี rollback ถ้าจำเป็น</li>
+    </ul></div>
+  </div></div>
+
+  <div class="item" id="data-dictionary"><div class="item-head"><div><div class="item-title">4. Data Dictionary</div><div class="item-sub">อธิบาย schema ของทุก table, field name, data type และ business meaning</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Partial</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Data Dictionary คือ document ที่อธิบายทุก table และ field ใน database ว่า: ชื่อคืออะไร, data type อะไร, และสำคัญที่สุด <strong>ความหมายทาง business</strong> คืออะไร เช่น <code>gl_id</code> ย่อมาจากอะไร, <code>cost_ctr_id</code> แตกต่างจาก <code>cost_owner</code> อย่างไร</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Database schema บอก technical structure แต่ไม่บอก business meaning developer ใหม่ต้องเดาว่า <code>erp_2025</code> table มี column อะไรที่ relate กับ budget vs actual ถ้ามี data dictionary เข้าใจทันที</p></div>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p>มี migration SQL files ที่แสดง table structure แต่ไม่มี document ที่อธิบาย business meaning ของแต่ละ field migration files อยู่ที่ <code>backend/migrations/</code> แต่ไม่มี comment อธิบาย field</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>สร้าง <code>backend/docs/data-dictionary.html</code> (หรือ markdown)</li>
+      <li>Document ทุก table: <code>erp_2025</code>, <code>cost_center_master</code>, <code>finance_coordinator</code> และ master tables อื่นๆ</li>
+      <li>แต่ละ field ระบุ: ชื่อ, type, nullable, business meaning, ตัวอย่างค่า</li>
+      <li>ระบุ relationships: FK ไปยัง table ไหน, join ยังไง</li>
+    </ul>
+    <pre># ตัวอย่าง Data Dictionary entry
+## erp_2025
+| Field        | Type    | Description                              |
+|-------------|---------|------------------------------------------|
+| gl_id       | VARCHAR | GL Account ID จาก ERP (General Ledger)  |
+| fiscal_year | INT     | ปีงบประมาณ (พ.ศ.) เช่น 2568             |
+| fiscal_month| INT     | เดือน 1-12 นับจากตุลาคม (ต.ค.=1)       |
+| amount      | NUMERIC | ยอดเงิน (บาท) ค่าลบ = รายจ่าย         |</pre>
+    </div>
+  </div></div>
+
+  <div style="padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-top:8px">
+    <p style="font-size:13px;font-weight:700;margin-bottom:10px">สรุปภาพรวม Checklist ทั้งหมด</p>
+    <p style="font-size:13px;color:var(--muted)">ครบ 60 requirements ใน 10 หมวดหมู่ · <a href="checklist.html" style="color:var(--accent)">ดู Index และสรุปผล</a></p>
+    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
+      <div style="font-size:13px"><span style="color:var(--green);font-weight:700">23 Pass</span> <span style="color:var(--muted)">พร้อม production</span></div>
+      <div style="font-size:13px"><span style="color:var(--yellow);font-weight:700">11 Partial</span> <span style="color:var(--muted)">ต้องปรับปรุง</span></div>
+      <div style="font-size:13px"><span style="color:var(--red);font-weight:700">26 Fail</span> <span style="color:var(--muted)">ต้องสร้างใหม่</span></div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px">ตรวจสอบ 2026-06-15</p>
+  </div>
+</main>
+</body>
+</html>

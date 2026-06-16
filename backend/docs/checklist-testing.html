@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing — Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;}
+    .block ul{padding-left:18px;}
+    .block li{margin-bottom:5px;}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
+    .block-pass h4{color:var(--green);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
+    .block-warn h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html" class="active">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div class="nav-btn"><a href="checklist-concurrency.html">← Concurrency</a><a href="checklist-cicd.html">Deployment &amp; CI/CD →</a></div>
+  <h2>Testing <small>— 4 requirements &nbsp; Pass 2 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การทดสอบ API, services, performance และ database queries</p>
+
+  <div class="item" id="unit-tests"><div class="item-head"><div><div class="item-title">1. Unit Tests</div><div class="item-sub">ครอบคลุม service layer และ business logic ด้วย pytest และ coverage ≥ 80%</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Unit test คือการทดสอบ function หรือ class แต่ละตัวแยกอิสระ โดย mock dependencies ออก เช่น mock DB connection หรือ Redis เพื่อทดสอบเฉพาะ business logic ของ function นั้น ตรงๆ โดยไม่ต้องมี infra จริง</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Unit test ทำให้ developer มั่นใจว่า logic ที่เขียนถูกต้อง และ detect regression ได้เร็วเมื่อ refactor หรือ add feature ใหม่ ใน financial system สำคัญมากเพราะ bug ในการคำนวณตัวเลขส่งผลกระทบโดยตรงต่อการตัดสินใจ</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <p>มี <code>pytest</code> ใน requirements.txt, มีโครงสร้าง test directory และ unit tests สำหรับ service layer</p>
+      <pre>backend/tests/
+  unit/
+    test_auth_service.py    # test login logic, token validation
+    test_finance_service.py # test cache key generation, query params
+  conftest.py               # fixtures: mock DB, mock Redis</pre>
+    </div>
+  </div></div>
+
+  <div class="item" id="integration-tests"><div class="item-head"><div><div class="item-title">2. Integration Tests</div><div class="item-sub">ทดสอบ API endpoint จริงกับ test database ด้วย pytest-asyncio และ httpx.AsyncClient</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Integration test ทดสอบหลาย component ทำงานร่วมกัน เช่น ส่ง HTTP request จริงไปยัง FastAPI endpoint ซึ่ง query test database จริง ตรวจสอบว่า layer ต่างๆ integrate กันได้ถูกต้อง ไม่ใช่แค่ unit แยกๆ</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Unit test mock ทุกอย่างออก แต่ integration test จับ bug ที่เกิดจาก interface ระหว่าง layer เช่น SQL query ที่ unit test mock ผ่านแต่ query จริงพัง เพราะ column name ผิด หรือ auth middleware ไม่ตรงกับ endpoint ที่คาดหวัง</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <p>มี integration tests ที่ใช้ <code>httpx.AsyncClient</code> กับ FastAPI test client และ test database แยก</p>
+      <pre>backend/tests/
+  integration/
+    test_auth_endpoints.py   # POST /auth/login, /auth/me
+    test_finance_endpoints.py # GET /finance, GET /budget
+    test_coordinator.py      # GET/POST/PATCH coordinator API</pre>
+    </div>
+  </div></div>
+
+  <div class="item" id="load-testing"><div class="item-head"><div><div class="item-title">3. Load Testing</div><div class="item-sub">ทดสอบ performance ด้วย k6 หรือ Locust เพื่อหา bottleneck และกำหนด capacity</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Load testing คือการจำลอง concurrent users จำนวนมากส่ง request พร้อมกัน เพื่อ: (1) หา throughput สูงสุดที่ system รองรับได้ (2) หา bottleneck (DB, Redis, CPU) (3) ตรวจสอบ response time ว่าอยู่ใน SLA ภายใต้ load จริง</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ระบบอาจ perform ดีตอน dev (1-2 concurrent users) แต่พังตอน production เมื่อมีหลายสิบ users พร้อมกัน load test ช่วย identify ปัญหาก่อน go-live เช่น DB connection pool exhausted, Redis timeout, หรือ memory leak</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี load testing scripts หรือ baseline performance metrics ยังไม่รู้ว่า system รองรับ concurrent users ได้กี่คน</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>ติดตั้ง <strong>k6</strong> (JavaScript) หรือ <strong>Locust</strong> (Python) สำหรับ load testing</li>
+      <li>เขียน test scenario: GET /finance ด้วย 50 concurrent users นาน 5 นาที</li>
+      <li>กำหนด success criteria: p95 response time &lt; 2 วินาที, error rate &lt; 1%</li>
+      <li>ทดสอบ Redis cache hit/miss ratio ภายใต้ load</li>
+      <li>ทดสอบ DB connection pool behavior เมื่อ concurrent query สูง</li>
+    </ul></div>
+  </div></div>
+
+  <div class="item" id="db-perf-test"><div class="item-head"><div><div class="item-title">4. DB Query Performance Test</div><div class="item-sub">ทดสอบ SQL query performance ด้วย EXPLAIN ANALYZE เพื่อ detect slow query</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p><code>EXPLAIN ANALYZE</code> เป็น PostgreSQL command ที่แสดง execution plan จริงของ query พร้อม actual time ใช้ชี้ให้เห็นว่า query ใช้ index หรือ Seq Scan, nested loop หรือ hash join และ actual vs estimated rows</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard ใช้ CTE query ซับซ้อนบน table ขนาดใหญ่ ถ้า query ไม่ใช้ index จะช้ามากเมื่อข้อมูลเพิ่มขึ้น ควรทดสอบ query time กับ dataset จริง ไม่ใช่แค่ dev data ที่มีน้อย row</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>มี indexes ใน migration 004 แต่ไม่มี systematic query performance testing ไม่มี slow query log หรือ query time assertions ใน tests</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>รัน <code>EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)</code> กับ main finance query</li>
+      <li>ตรวจสอบว่า indexes ใน migration 004 ถูก used จริงหรือ planner เลือก Seq Scan แทน</li>
+      <li>เพิ่ม <code>pg_stat_statements</code> extension เพื่อ track slow queries อัตโนมัติ</li>
+      <li>เขียน pytest fixture ที่ assert query time &lt; X ms กับ test dataset ที่มีข้อมูลเพียงพอ</li>
+      <li>ตั้ง <code>log_min_duration_statement = 200</code> ใน PostgreSQL config เพื่อ log slow queries</li>
+    </ul>
+    <pre>-- ตัวอย่างวิธี analyze
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT ... FROM erp_2025
+WHERE fiscal_year = 2025 AND cost_ctr_id = 'CC001';
+-- ดู "Index Scan using idx_erp_fiscal_year" vs "Seq Scan"</pre>
+    </div>
+  </div></div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-cicd.html" style="color:var(--accent)">Deployment & CI/CD →</a>
+  </div>
+</main>
+</body>
+</html>

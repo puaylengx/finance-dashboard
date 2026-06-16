@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seamless Dashboard — Backend Documentation</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c8efb;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --cyan: #22d3ee;
+      --text: #e2e8f0;
+      --muted: #8892b0;
+      --code-bg: #141824;
+      --sidebar-w: 260px;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      display: flex;
+    }
+
+    /* ── Sidebar ──────────────────────────────── */
+    nav {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: fixed;
+      top: 0; left: 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    nav .logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    nav .logo h1 { font-size: 14px; color: var(--accent); font-weight: 700; letter-spacing: .5px; }
+    nav .logo p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    nav .group-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 14px 20px 4px;
+    }
+    nav a {
+      display: block;
+      padding: 6px 20px 6px 28px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 2px solid transparent;
+      transition: all .15s;
+    }
+    nav a:hover, nav a.active {
+      color: var(--text);
+      background: rgba(108,142,251,.08);
+      border-left-color: var(--accent);
+    }
+
+    /* ── Main ─────────────────────────────────── */
+    main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 960px;
+      padding: 48px 40px 80px;
+    }
+
+    /* ── Sections ─────────────────────────────── */
+    section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    h2 {
+      font-size: 22px; font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 24px;
+    }
+    h2 .section-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px;
+      background: var(--accent); color: #fff;
+      border-radius: 6px; font-size: 13px; font-weight: 700;
+      margin-right: 10px;
+    }
+    h3 { font-size: 16px; font-weight: 600; color: var(--accent2); margin: 24px 0 12px; }
+    h4 { font-size: 14px; font-weight: 600; color: var(--cyan); margin: 16px 0 8px; }
+    p  { color: var(--text); margin-bottom: 12px; }
+
+    /* ── Cards ────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      text-align: center;
+    }
+    .stat-card .val { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .stat-card .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── Code ─────────────────────────────────── */
+    pre, code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin: 12px 0;
+      line-height: 1.6;
+    }
+    code { color: var(--cyan); background: rgba(34,211,238,.08); padding: 2px 6px; border-radius: 4px; }
+    pre code { color: inherit; background: none; padding: 0; }
+    .kw  { color: #c792ea; }
+    .str { color: #c3e88d; }
+    .cmt { color: #546e7a; font-style: italic; }
+    .fn  { color: #82aaff; }
+    .num { color: #f78c6c; }
+    .key { color: var(--cyan); }
+
+    /* ── Tables ───────────────────────────────── */
+    table {
+      width: 100%; border-collapse: collapse;
+      margin: 12px 0; font-size: 13px;
+    }
+    th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: .5px;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(46,50,80,.5);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(108,142,251,.04); }
+
+    /* ── Badges ───────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
+    }
+    .badge-get    { background: rgba(52,211,153,.15); color: var(--green); }
+    .badge-post   { background: rgba(251,191,36,.15);  color: var(--yellow); }
+    .badge-patch  { background: rgba(96,165,250,.15);  color: var(--blue); }
+    .badge-200    { background: rgba(52,211,153,.15); color: var(--green); }
+    .badge-201    { background: rgba(52,211,153,.12); color: #6ee7b7; }
+    .badge-400    { background: rgba(251,191,36,.15);  color: var(--yellow); }
+    .badge-401    { background: rgba(248,113,113,.15); color: var(--red); }
+    .badge-403    { background: rgba(248,113,113,.15); color: var(--red); }
+    .badge-404    { background: rgba(248,113,113,.12); color: #fca5a5; }
+    .badge-429    { background: rgba(167,139,250,.15); color: var(--accent2); }
+    .badge-500    { background: rgba(248,113,113,.2);  color: #ef4444; }
+    .badge-503    { background: rgba(251,191,36,.2);   color: #f59e0b; }
+    .badge-fa     { background: rgba(108,142,251,.15); color: var(--accent); }
+    .badge-all    { background: rgba(52,211,153,.12);  color: var(--green); }
+    .badge-admin  { background: rgba(167,139,250,.15); color: var(--accent2); }
+    .badge-draft  { background: rgba(251,191,36,.12);  color: var(--yellow); }
+
+    /* ── Callouts ─────────────────────────────── */
+    .callout {
+      border-left: 3px solid;
+      padding: 12px 16px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 14px 0;
+      font-size: 13.5px;
+    }
+    .callout-info    { border-color: var(--accent);  background: rgba(108,142,251,.08); }
+    .callout-warn    { border-color: var(--yellow);  background: rgba(251,191,36,.08); }
+    .callout-success { border-color: var(--green);   background: rgba(52,211,153,.08); }
+    .callout-danger  { border-color: var(--red);     background: rgba(248,113,113,.08); }
+    .callout strong  { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── File tree ────────────────────────────── */
+    .tree { font-family: monospace; font-size: 13px; line-height: 2; }
+    .tree .dir  { color: var(--accent2); }
+    .tree .file { color: var(--text); }
+    .tree .note { color: var(--muted); font-style: italic; }
+
+    /* ── Flow diagram ─────────────────────────── */
+    .flow {
+      display: flex; align-items: center;
+      flex-wrap: wrap; gap: 0;
+      margin: 16px 0;
+    }
+    .flow-step {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      font-size: 13px;
+      text-align: center;
+      min-width: 110px;
+    }
+    .flow-step .step-num { font-size: 10px; color: var(--muted); display: block; }
+    .flow-step .step-lbl { font-weight: 600; color: var(--text); }
+    .flow-arrow { color: var(--muted); padding: 0 6px; font-size: 18px; }
+
+    /* ── Test steps ───────────────────────────── */
+    .test-steps { counter-reset: step; }
+    .test-step  { display: flex; gap: 14px; margin-bottom: 18px; }
+    .test-step::before {
+      counter-increment: step;
+      content: counter(step);
+      flex-shrink: 0;
+      width: 26px; height: 26px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      margin-top: 2px;
+    }
+
+    /* ── Misc ─────────────────────────────────── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 4px; color: var(--text); }
+    li code { font-size: 12px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) {
+      nav { display: none; }
+      main { margin-left: 0; padding: 24px 16px; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+    .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 8px; font-size: 12px; color: var(--muted); margin: 2px; }
+    .endpoint-url { font-family: monospace; font-size: 13px; color: var(--cyan); }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="logo">
+    <h1>Seamless Dashboard</h1>
+    <p>Backend Documentation v1.0</p>
+  </div>
+
+  <div class="group-label">Overview</div>
+  <a href="#overview">Architecture</a>
+  <a href="#structure">Project Structure</a>
+  <a href="#setup">Setup & Run</a>
+
+  <div class="group-label">Core</div>
+  <a href="#config">Configuration</a>
+  <a href="#database">Database</a>
+  <a href="#cache">Redis Cache</a>
+  <a href="#security">Security</a>
+  <a href="#logging">Logging</a>
+
+  <div class="group-label">API v1</div>
+  <a href="#auth">Authentication</a>
+  <a href="#finance">Finance / Budget</a>
+  <a href="#io">IO Dashboard</a>
+  <a href="#coordinator">Coordinator CRUD</a>
+
+  <div class="group-label">Data</div>
+  <a href="#schema">DB Schema</a>
+  <a href="#migrations">Migrations</a>
+
+  <div class="group-label">Quality</div>
+  <a href="#tests">Testing</a>
+  <a href="#checklist">Checklist</a>
+</nav>
+
+<!-- ── Main ─────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Header -->
+  <div style="margin-bottom:48px">
+    <h1 style="font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">
+      Seamless Dashboard — Backend
+    </h1>
+    <p style="color:var(--muted);font-size:15px">
+      FastAPI · PostgreSQL (SSH/Direct) · Redis · MS Entra ID · JWT · Rate Limiting · Async
+    </p>
+    <div class="card-grid" style="margin-top:24px">
+      <div class="stat-card"><div class="val">v1.0</div><div class="lbl">API Version</div></div>
+      <div class="stat-card"><div class="val">5</div><div class="lbl">Endpoints Groups</div></div>
+      <div class="stat-card"><div class="val">47</div><div class="lbl">Source Files</div></div>
+      <div class="stat-card"><div class="val">3</div><div class="lbl">Test Suites</div></div>
+    </div>
+  </div>
+
+  <!-- ── 1. Architecture ──────────────────────────────────────────────── -->
+  <section id="overview">
+    <h2><span class="section-num">1</span>Architecture Overview</h2>
+
+    <p>ระบบใช้สถาปัตยกรรม <strong>Modular Monolith</strong> แบ่งเป็น layer ที่อิสระต่อกัน รองรับการย้ายไป Microservices ในอนาคต</p>
+
+    <div class="card">
+      <div class="flow">
+        <div class="flow-step"><span class="step-num">Client</span><span class="step-lbl">Frontend / MSAL</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">Middleware</span><span class="step-lbl">CORS · Rate Limit · Headers</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">API Layer</span><span class="step-lbl">FastAPI Routers</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">Services</span><span class="step-lbl">Business Logic</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">Data</span><span class="step-lbl">PostgreSQL · Redis</span></div>
+      </div>
+    </div>
+
+    <h3>Tech Stack</h3>
+    <table>
+      <tr><th>Layer</th><th>Technology</th><th>เหตุผล</th></tr>
+      <tr><td>Web Framework</td><td><code>FastAPI 0.115+</code></td><td>Async-first, auto OpenAPI docs, Pydantic v2</td></tr>
+      <tr><td>Server</td><td><code>uvicorn[standard]</code></td><td>ASGI, high-performance, WebSocket ready</td></tr>
+      <tr><td>Database Driver</td><td><code>psycopg[binary,pool]</code> (v3)</td><td>Async, connection pool, compat syntax กับ psycopg2</td></tr>
+      <tr><td>Cache</td><td><code>redis[asyncio]</code></td><td>Async Redis, ลด DB load สำหรับ heavy queries</td></tr>
+      <tr><td>Auth (JWT)</td><td><code>python-jose[cryptography]</code></td><td>HS256 JWT signing + RS256 สำหรับ Entra ID</td></tr>
+      <tr><td>Auth (Entra)</td><td><code>msal</code> + <code>httpx</code></td><td>JWKS validation จาก Azure</td></tr>
+      <tr><td>Rate Limiting</td><td><code>slowapi</code></td><td>Decorator-based, per-IP limiting</td></tr>
+      <tr><td>Encryption</td><td><code>cryptography</code> (Fernet)</td><td>Symmetric encryption สำหรับ sensitive data</td></tr>
+      <tr><td>Monitoring</td><td><code>sentry-sdk[fastapi]</code></td><td>Error tracking, performance tracing</td></tr>
+      <tr><td>SSH Tunnel</td><td><code>sshtunnel</code> + <code>paramiko</code></td><td>เชื่อมต่อ DB ผ่าน SSH (production network)</td></tr>
+    </table>
+  </section>
+
+  <!-- ── 2. Project Structure ─────────────────────────────────────────── -->
+  <section id="structure">
+    <h2><span class="section-num">2</span>Project Structure</h2>
+    <pre><div class="tree">
+backend/
+├── <span class="dir">app/</span>
+│   ├── main.py                    <span class="note">← FastAPI app, middleware, lifespan</span>
+│   ├── <span class="dir">core/</span>
+│   │   ├── config.py              <span class="note">← Pydantic Settings (env vars)</span>
+│   │   ├── database.py            <span class="note">← Async psycopg3 pool, SSH/direct</span>
+│   │   ├── redis_client.py        <span class="note">← Async Redis connection</span>
+│   │   ├── security.py            <span class="note">← JWT, Fernet encryption, role helpers</span>
+│   │   └── logging.py             <span class="note">← Rotating file + colored console</span>
+│   ├── <span class="dir">api/v1/</span>
+│   │   ├── deps.py                <span class="note">← Auth dependencies (get_current_user…)</span>
+│   │   ├── router.py              <span class="note">← v1 router aggregator</span>
+│   │   └── <span class="dir">endpoints/</span>
+│   │       ├── auth.py            <span class="note">← /auth/* endpoints</span>
+│   │       ├── finance.py         <span class="note">← /finance, /budget</span>
+│   │       ├── io.py              <span class="note">← /io</span>
+│   │       └── coordinator.py     <span class="note">← /admin/coordinators CRUD</span>
+│   ├── <span class="dir">schemas/</span>                   <span class="note">← Pydantic request/response models</span>
+│   │   ├── common.py
+│   │   ├── auth.py
+│   │   ├── finance.py
+│   │   └── coordinator.py
+│   └── <span class="dir">services/</span>                  <span class="note">← Business logic + SQL queries</span>
+│       ├── auth_service.py
+│       ├── finance_service.py
+│       ├── coordinator_service.py
+│       └── cache_service.py
+├── <span class="dir">migrations/</span>
+│   ├── 001_create_finance_tables.sql
+│   ├── 002_create_master_tables.sql
+│   ├── 003_create_coordinator.sql
+│   ├── 004_create_indexes.sql     <span class="note">← 15 performance indexes</span>
+│   └── migrate.py                 <span class="note">← CLI migration runner</span>
+├── <span class="dir">tests/</span>
+│   ├── conftest.py                <span class="note">← Shared fixtures, mock DB/Redis</span>
+│   ├── <span class="dir">unit/</span>                      <span class="note">← test_security.py, test_permissions.py</span>
+│   └── <span class="dir">integration/</span>               <span class="note">← test_auth.py, test_finance.py, test_coordinator.py</span>
+├── <span class="dir">docs/</span>
+│   └── backend.html               <span class="note">← ไฟล์นี้</span>
+├── openapi.yaml                   <span class="note">← Static OpenAPI 3.1 spec</span>
+├── .env.example
+└── requirements.txt
+</div></pre>
+  </section>
+
+  <!-- ── 3. Setup ──────────────────────────────────────────────────────── -->
+  <section id="setup">
+    <h2><span class="section-num">3</span>Setup &amp; Run</h2>
+
+    <h3>Prerequisites</h3>
+    <ul>
+      <li>Python 3.12+</li>
+      <li>PostgreSQL 14+ (local หรือ remote via SSH)</li>
+      <li>Redis 7+ (optional — ถ้าไม่มีจะ disable cache อัตโนมัติ)</li>
+    </ul>
+
+    <h3>ติดตั้งและเริ่มใช้งาน</h3>
+    <pre><span class="cmt"># 1. สร้าง virtual environment</span>
+cd backend
+python -m venv .venv
+source .venv/bin/activate   <span class="cmt"># Windows: .venv\Scripts\activate</span>
+
+<span class="cmt"># 2. ติดตั้ง dependencies</span>
+pip install -r requirements.txt
+
+<span class="cmt"># 3. ตั้งค่า environment</span>
+cp .env.example .env
+<span class="cmt"># แก้ไข .env ด้วย DB credentials ของคุณ</span>
+
+<span class="cmt"># 4. Run migrations</span>
+python migrations/migrate.py
+
+<span class="cmt"># 5. Start server</span>
+uvicorn app.main:app --reload --port 8000</pre>
+
+    <div class="callout callout-success">
+      <strong>✓ พร้อมใช้งาน</strong>
+      เปิด <code>http://localhost:8000/api/docs</code> เพื่อดู Swagger UI<br>
+      หรือ <code>http://localhost:8000/api/redoc</code> สำหรับ ReDoc
+    </div>
+
+    <h3>Environment Variables สำคัญ</h3>
+    <table>
+      <tr><th>Variable</th><th>Default</th><th>คำอธิบาย</th></tr>
+      <tr><td><code>DB_MODE</code></td><td><code>direct</code></td><td><code>direct</code> หรือ <code>ssh</code></td></tr>
+      <tr><td><code>DB_HOST / DB_PORT / DB_NAME</code></td><td>localhost/5432/ic_finance</td><td>PostgreSQL connection</td></tr>
+      <tr><td><code>REDIS_URL</code></td><td>redis://localhost:6379/0</td><td>Redis connection (optional)</td></tr>
+      <tr><td><code>JWT_SECRET_KEY</code></td><td>change-me</td><td><strong style="color:var(--red)">ต้องเปลี่ยนใน production!</strong></td></tr>
+      <tr><td><code>DRAFT_MODE</code></td><td><code>true</code></td><td>เปิด /auth/draft-login (ปิดใน production)</td></tr>
+      <tr><td><code>AZURE_TENANT_ID</code></td><td>—</td><td>จำเป็นสำหรับ /auth/entra-login จริง</td></tr>
+      <tr><td><code>ALLOWED_ORIGINS</code></td><td>http://localhost:5173</td><td>CORS origins (comma-separated)</td></tr>
+      <tr><td><code>LOG_LEVEL</code></td><td><code>INFO</code></td><td>DEBUG / INFO / WARNING / ERROR</td></tr>
+      <tr><td><code>SENTRY_DSN</code></td><td>—</td><td>Error tracking (optional)</td></tr>
+    </table>
+  </section>
+
+  <!-- ── 4. Config ─────────────────────────────────────────────────────── -->
+  <section id="config">
+    <h2><span class="section-num">4</span>Configuration</h2>
+
+    <p>ใช้ <code>pydantic-settings</code> โหลดจาก <code>.env</code> อัตโนมัติ ค่าทุกตัวมี type validation</p>
+
+    <pre><span class="cmt"># app/core/config.py</span>
+<span class="kw">from</span> pydantic_settings <span class="kw">import</span> BaseSettings
+
+<span class="kw">class</span> <span class="fn">Settings</span>(BaseSettings):
+    db_mode: Literal[<span class="str">"ssh"</span>, <span class="str">"direct"</span>] = <span class="str">"direct"</span>
+    draft_mode: bool = <span class="kw">True</span>            <span class="cmt"># ปิดใน production</span>
+    jwt_secret_key: str = <span class="str">"change-me"</span>  <span class="cmt"># ต้องเปลี่ยน!</span>
+    redis_ttl_default: int = <span class="num">300</span>        <span class="cmt"># 5 min cache TTL</span>
+    ...</pre>
+
+    <div class="callout callout-warn">
+      <strong>⚠ Production Checklist</strong>
+      <code>DRAFT_MODE=false</code> · <code>JWT_SECRET_KEY</code> ที่ random · <code>DEBUG=false</code> · <code>AZURE_*</code> ครบ
+    </div>
+  </section>
+
+  <!-- ── 5. Database ───────────────────────────────────────────────────── -->
+  <section id="database">
+    <h2><span class="section-num">5</span>Database</h2>
+
+    <p>ใช้ <strong>psycopg3 (psycopg[binary,pool])</strong> แบบ async พร้อม connection pool รองรับทั้ง Direct และ SSH Tunnel</p>
+
+    <div class="two-col">
+      <div class="card">
+        <h4>Direct Mode</h4>
+        <pre><span class="str">DB_MODE=direct</span>
+DB_HOST=your-pg-host
+DB_PORT=5432
+DB_NAME=ic_finance
+DB_USER=postgres
+DB_PASSWORD=secret</pre>
+      </div>
+      <div class="card">
+        <h4>SSH Tunnel Mode</h4>
+        <pre><span class="str">DB_MODE=ssh</span>
+SSH_HOST=jump.server.com
+SSH_PORT=22
+SSH_USERNAME=your-user
+SSH_KEY_PATH=/path/to/key
+<span class="cmt"># DB_HOST = ปลาย tunnel</span></pre>
+      </div>
+    </div>
+
+    <h3>Connection Pool</h3>
+    <pre><span class="cmt"># app/core/database.py</span>
+_pool = AsyncConnectionPool(
+    conninfo=conninfo,
+    min_size=<span class="num">2</span>,      <span class="cmt"># DB_POOL_MIN_SIZE</span>
+    max_size=<span class="num">20</span>,     <span class="cmt"># DB_POOL_MAX_SIZE</span>
+    kwargs={<span class="str">"cursor_factory"</span>: AsyncClientCursor},
+    <span class="cmt"># AsyncClientCursor ใช้ %(name)s syntax แบบ psycopg2</span>
+)
+
+<span class="cmt"># Usage</span>
+<span class="kw">async with</span> get_db() <span class="kw">as</span> conn:
+    <span class="kw">async with</span> conn.cursor() <span class="kw">as</span> cur:
+        <span class="kw">await</span> cur.execute(sql, params)</pre>
+
+    <div class="callout callout-info">
+      <strong>ℹ AsyncClientCursor</strong>
+      psycopg3 ใช้ <code>AsyncClientCursor</code> เพื่อให้ syntax <code>%(name)s</code> เหมือน psycopg2 ทุกประการ
+      โดยเฉพาะ pattern <code>%(param)s IS NULL</code> ที่ใช้ใน finance queries
+    </div>
+  </section>
+
+  <!-- ── 6. Cache ──────────────────────────────────────────────────────── -->
+  <section id="cache">
+    <h2><span class="section-num">6</span>Redis Cache</h2>
+
+    <p>Cache ลด DB load สำหรับ query หนักๆ — ถ้า Redis ไม่พร้อม ระบบทำงานต่อได้โดยอัตโนมัติ (cache disabled gracefully)</p>
+
+    <table>
+      <tr><th>Key Pattern</th><th>TTL</th><th>เก็บอะไร</th></tr>
+      <tr><td><code>seamless:v1:finance:{role}:{hash}</code></td><td>300s (5 min)</td><td>Finance dashboard payload</td></tr>
+      <tr><td><code>seamless:v1:budget:{role}:{hash}</code></td><td>300s (5 min)</td><td>Budget dashboard payload</td></tr>
+      <tr><td><code>seamless:v1:io:{role}:{hash}</code></td><td>300s (5 min)</td><td>IO dashboard payload</td></tr>
+      <tr><td><code>seamless:coordinator:{username}</code></td><td>600s (10 min)</td><td>Coordinator lookup result (1/0)</td></tr>
+    </table>
+
+    <pre><span class="cmt"># Cache invalidation หลัง toggle coordinator</span>
+<span class="kw">await</span> invalidate_coordinator_cache(username)
+<span class="cmt"># → ลบ seamless:coordinator:{username}</span></pre>
+  </section>
+
+  <!-- ── 7. Security ───────────────────────────────────────────────────── -->
+  <section id="security">
+    <h2><span class="section-num">7</span>Security</h2>
+
+    <h3>JWT Token</h3>
+    <pre><span class="cmt"># Payload structure</span>
+{
+  <span class="key">"sub"</span>: <span class="str">"username"</span>,
+  <span class="key">"role"</span>: <span class="str">"fa"</span>,           <span class="cmt"># fa | bba | hld | sci | ss | thm | faa | mba | mm</span>
+  <span class="key">"position"</span>: <span class="str">"chief"</span>,    <span class="cmt"># chief | chairman | head (optional)</span>
+  <span class="key">"coordinator"</span>: <span class="kw">true</span>,    <span class="cmt"># optional — เข้าผ่าน coordinator table</span>
+  <span class="key">"iat"</span>: <span class="num">1717300000</span>,
+  <span class="key">"exp"</span>: <span class="num">1717303600</span>       <span class="cmt"># JWT_EXPIRES_SECONDS (default 3600)</span>
+}</pre>
+
+    <h3>Rate Limiting</h3>
+    <table>
+      <tr><th>Endpoint</th><th>Limit</th></tr>
+      <tr><td>Auth endpoints (<code>/auth/*</code>)</td><td>10 requests / minute per IP</td></tr>
+      <tr><td>ทุก endpoint อื่น</td><td>100 requests / minute per IP</td></tr>
+    </table>
+
+    <h3>Security Headers (ทุก Response)</h3>
+    <pre>X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only</span></pre>
+
+    <h3>Encryption</h3>
+    <p>ใช้ <strong>Fernet</strong> (AES-128-CBC + HMAC-SHA256) สำหรับ encrypt ข้อมูล sensitive ก่อนบันทึก ตั้งค่าผ่าน <code>ENCRYPTION_KEY</code></p>
+
+    <h3>SQL Injection Prevention</h3>
+    <p>Query ทั้งหมดใช้ parameterized queries (<code>%(name)s</code>) — ไม่มีการ string-format SQL โดยตรง</p>
+  </section>
+
+  <!-- ── 8. Logging ────────────────────────────────────────────────────── -->
+  <section id="logging">
+    <h2><span class="section-num">8</span>Logging</h2>
+
+    <p>Log ทุกครั้งที่มี login, query error, cache hit/miss, และ unhandled exceptions</p>
+
+    <div class="two-col">
+      <div class="card">
+        <h4>Console (Colored)</h4>
+        <pre style="font-size:12px"><span style="color:#22d3ee">DEBUG</span>    Cache HIT: seamless:v1:finance:fa:a1b2
+<span style="color:#34d399">INFO</span>     Entra login OK: alice → role=fa pos=chief
+<span style="color:#fbbf24">WARNING</span>  Draft login denied: name=bob
+<span style="color:#f87171">ERROR</span>    Finance query failed: connection refused</pre>
+      </div>
+      <div class="card">
+        <h4>File (Rotating)</h4>
+        <pre style="font-size:12px">logs/app.log
+  maxBytes = 10 MB
+  backupCount = 10
+  encoding = utf-8</pre>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">เปลี่ยน level ด้วย <code>LOG_LEVEL=DEBUG</code></p>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>ℹ Sentry Integration</strong>
+      ตั้งค่า <code>SENTRY_DSN=https://...</code> เพื่อส่ง error และ performance trace ไปยัง Sentry อัตโนมัติ
+    </div>
+  </section>
+
+  <!-- ── 9. Authentication ─────────────────────────────────────────────── -->
+  <section id="auth">
+    <h2><span class="section-num">9</span>Authentication</h2>
+
+    <h3>Auth Flow</h3>
+    <div class="card">
+      <div class="flow" style="flex-wrap:wrap;gap:8px">
+        <div class="flow-step"><span class="step-num">1 · Frontend</span><span class="step-lbl">MSAL Login</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">2 · POST</span><span class="step-lbl">/entra-login</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">3 · Backend</span><span class="step-lbl">Validate JWKS</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">4 · Extract</span><span class="step-lbl">jobTitle → role</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">5 · Check</span><span class="step-lbl">Position / Coordinator</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">6 · Issue</span><span class="step-lbl">JWT</span></div>
+      </div>
+    </div>
+
+    <h3>job_title Parsing</h3>
+    <table>
+      <tr><th>job_title (จาก Entra)</th><th>role</th><th>position</th><th>เข้าได้?</th></tr>
+      <tr><td><code>dept,fa,chief</code></td><td>fa</td><td>chief</td><td><span style="color:var(--green)">✓ ทันที</span></td></tr>
+      <tr><td><code>dept,fa,chairman</code></td><td>fa</td><td>chairman</td><td><span style="color:var(--green)">✓ ทันที</span></td></tr>
+      <tr><td><code>dept,bba,head</code></td><td>bba</td><td>head</td><td><span style="color:var(--green)">✓ ทันที</span></td></tr>
+      <tr><td><code>dept,fa</code></td><td>fa</td><td>—</td><td><span style="color:var(--yellow)">✓ ถ้าอยู่ใน coordinator</span></td></tr>
+      <tr><td><code>faculty,lecturer,sci</code></td><td>sci</td><td>—</td><td><span style="color:var(--yellow)">✓ ถ้าอยู่ใน coordinator</span></td></tr>
+      <tr><td><code>staff,it</code></td><td>it</td><td>—</td><td><span style="color:var(--red)">✗ 403</span></td></tr>
+    </table>
+
+    <h3>Endpoints</h3>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span class="badge badge-post">POST</span>
+        <span class="endpoint-url">/api/v1/auth/entra-login</span>
+        <span class="badge badge-fa">Production</span>
+      </div>
+      <p>แลก MS Entra ID access token → JWT ของระบบ ต้องตั้งค่า <code>AZURE_TENANT_ID</code></p>
+      <pre>{
+  <span class="key">"access_token"</span>: <span class="str">"eyJ0eXAiOiJKV1QiLCJhbGci..."</span>   <span class="cmt">// MS Entra token</span>
+}</pre>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span class="badge badge-post">POST</span>
+        <span class="endpoint-url">/api/v1/auth/draft-login</span>
+        <span class="badge badge-draft">DRAFT_MODE=true เท่านั้น</span>
+      </div>
+      <p>Simulate Entra ID โดยไม่เชื่อมต่อ Azure — ใช้สำหรับ dev/testing</p>
+      <pre>{
+  <span class="key">"job_title"</span>: <span class="str">"dept,fa,chief"</span>,
+  <span class="key">"name"</span>:      <span class="str">"Finance Chief"</span>
+}</pre>
+      <p><strong>Response (success):</strong></p>
+      <pre>{
+  <span class="key">"token"</span>:       <span class="str">"eyJhbGciOiJIUzI1NiJ9..."</span>,
+  <span class="key">"token_type"</span>:  <span class="str">"bearer"</span>,
+  <span class="key">"expires_in"</span>:  <span class="num">3600</span>,
+  <span class="key">"role"</span>:        <span class="str">"fa"</span>,
+  <span class="key">"position"</span>:    <span class="str">"chief"</span>,
+  <span class="key">"coordinator"</span>: <span class="kw">false</span>,
+  <span class="key">"name"</span>:        <span class="str">"Finance Chief"</span>
+}</pre>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span class="badge badge-get">GET</span>
+        <span class="endpoint-url">/api/v1/auth/me</span>
+      </div>
+      <p>ดูข้อมูล user จาก JWT ที่ถืออยู่</p>
+      <pre>Authorization: Bearer &lt;token&gt;</pre>
+    </div>
+
+    <h3>วิธีทดสอบ Authentication</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>Draft login — ทดสอบด้วย FA + position (chief)</strong>
+          <pre>curl -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"dept,fa,chief","name":"Test Chief"}'</pre>
+          <p>ต้องได้ <code>200</code> + token ที่มี <code>"position":"chief"</code></p>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Draft login — ทดสอบ division role ที่ไม่มีสิทธิ์</strong>
+          <pre>curl -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"staff,it","name":"IT User"}'</pre>
+          <p>ต้องได้ <code>403</code> — ไม่มี position และไม่ได้เป็น coordinator</p>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ /me ด้วย token ที่ได้</strong>
+          <pre>curl -X GET http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer &lt;token จากขั้นที่ 1&gt;"</pre>
+          <p>ต้องได้ username, role, position, expires_at</p>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ DRAFT_MODE=false ใน production</strong>
+          <pre><span class="cmt"># ใน .env</span>
+DRAFT_MODE=false
+
+<span class="cmt"># เรียก draft-login</span>
+curl -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -d '{"job_title":"dept,fa,chief","name":"Test"}'
+<span class="cmt"># → 404 Not found</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 10. Finance / Budget ──────────────────────────────────────────── -->
+  <section id="finance">
+    <h2><span class="section-num">10</span>Finance / Budget</h2>
+
+    <table>
+      <tr>
+        <th>Endpoint</th><th>Method</th><th>Access</th><th>คำอธิบาย</th>
+      </tr>
+      <tr>
+        <td><code>/api/v1/finance</code></td>
+        <td><span class="badge badge-get">GET</span></td>
+        <td><span class="badge badge-fa">FA only</span></td>
+        <td>Dashboard ยอดใช้จ่าย dept + division แยกกัน</td>
+      </tr>
+      <tr>
+        <td><code>/api/v1/budget</code></td>
+        <td><span class="badge badge-get">GET</span></td>
+        <td><span class="badge badge-all">All roles</span></td>
+        <td>Budget dashboard — Non-FA เห็นเฉพาะ dept ตัวเอง</td>
+      </tr>
+    </table>
+
+    <h3>Query Parameters</h3>
+    <table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+      <tr><td><code>year</code></td><td>int</td><td>2025</td><td>Calendar year (ค.ศ.)</td></tr>
+      <tr><td><code>pa_year</code></td><td>int?</td><td>null</td><td>PA Year — ปีงบประมาณ (override year ถ้าส่งมา)</td></tr>
+      <tr><td><code>month_from</code></td><td>int?</td><td>null</td><td>Fiscal month เริ่มต้น (ต.ค.=1 … ก.ย.=12)</td></tr>
+      <tr><td><code>month_to</code></td><td>int?</td><td>null</td><td>Fiscal month สิ้นสุด</td></tr>
+      <tr><td><code>gl_group</code></td><td>str?</td><td>null</td><td>GL Group code — exact match</td></tr>
+      <tr><td><code>cost_center</code></td><td>str?</td><td>null</td><td>Cost center description — ILIKE search</td></tr>
+      <tr><td><code>cost_owner</code></td><td>str?</td><td>null</td><td>FA เท่านั้น — Non-FA force เป็น role ตัวเอง</td></tr>
+      <tr><td><code>q</code></td><td>str?</td><td>null</td><td>Keyword search ใน details, gl_description</td></tr>
+    </table>
+
+    <h3>Response Structure</h3>
+    <pre>{
+  <span class="key">"kpis"</span>: {
+    <span class="key">"total_amount"</span>:       <span class="num">45230000.00</span>,
+    <span class="key">"total_budget"</span>:       <span class="num">900000000.00</span>,
+    <span class="key">"doc_count"</span>:          <span class="num">1240</span>,
+    <span class="key">"avg_amount_per_doc"</span>: <span class="num">36475.81</span>
+  },
+  <span class="key">"trend_month"</span>:                    <span class="cmt">// แนวโน้มรายเดือน</span>
+  <span class="key">"table_by_gl"</span>,                    <span class="cmt">// GL summary — dept เท่านั้น</span>
+  <span class="key">"table_by_cost_center"</span>,           <span class="cmt">// Cost center summary — dept เท่านั้น</span>
+  <span class="key">"pivot_table_by_gl_detail"</span>,       <span class="cmt">// GL drilldown — dept เท่านั้น</span>
+  <span class="key">"table_by_gl_division"</span>,           <span class="cmt">// GL summary — division เท่านั้น</span>
+  <span class="key">"table_by_cost_center_division"</span>,  <span class="cmt">// Cost center — division</span>
+  <span class="key">"pivot_table_by_gl_detail_division"</span>, <span class="cmt">// GL drilldown — division</span>
+  <span class="key">"table_by_gl_all"</span>,               <span class="cmt">// รวมทั้งหมด</span>
+  <span class="key">"table_by_cost_center_all"</span>,       <span class="cmt">// รวมทั้งหมด</span>
+  <span class="key">"pivot_table_by_gl_detail_all"</span>    <span class="cmt">// รวมทั้งหมด</span>
+}</pre>
+
+    <div class="callout callout-warn">
+      <strong>⚠ Cost Owner Enforcement</strong>
+      Non-FA: ค่า <code>cost_owner</code> ที่ส่งมาจะถูก <strong>ignore</strong> — backend force เป็น <code>role.upper()</code> เสมอ
+      เพื่อป้องกัน user ดูข้อมูลของ dept อื่น
+    </div>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ขอ token ก่อน</strong>
+          <pre>TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>เรียก finance dashboard (FA เท่านั้น)</strong>
+          <pre>curl "http://localhost:8000/api/v1/finance?year=2025" \
+  -H "Authorization: Bearer $TOKEN"</pre>
+          <p>ต้องได้ <code>200</code> พร้อม JSON ที่มี kpis, trend_month, table_by_gl</p>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ access control — Division role กับ /finance</strong>
+          <pre>DIV_TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"dept,bba,head","name":"BBA Head"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+curl "http://localhost:8000/api/v1/finance?year=2025" \
+  -H "Authorization: Bearer $DIV_TOKEN"
+<span class="cmt"># → 403 Requires FA role</span>
+
+curl "http://localhost:8000/api/v1/budget?year=2025" \
+  -H "Authorization: Bearer $DIV_TOKEN"
+<span class="cmt"># → 200 (เห็นเฉพาะข้อมูล BBA ตัวเอง)</span></pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ caching — เรียกซ้ำและดู log</strong>
+          <pre><span class="cmt"># เรียกครั้งที่ 1 → Cache MISS (query DB)</span>
+curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $TOKEN"
+
+<span class="cmt"># เรียกครั้งที่ 2 → Cache HIT (ใน log จะเห็น "Cache HIT:")</span>
+curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 11. IO ────────────────────────────────────────────────────────── -->
+  <section id="io">
+    <h2><span class="section-num">11</span>IO Dashboard</h2>
+
+    <table>
+      <tr><th>Endpoint</th><th>Method</th><th>Access</th><th>คำอธิบาย</th></tr>
+      <tr>
+        <td><code>/api/v1/io</code></td>
+        <td><span class="badge badge-get">GET</span></td>
+        <td><span class="badge badge-all">All roles</span></td>
+        <td>Internal Order — Goods, Project, Work breakdown</td>
+      </tr>
+    </table>
+
+    <h3>Response Structure</h3>
+    <pre>{
+  <span class="key">"kpis"</span>: {
+    <span class="key">"total_amount"</span>:            <span class="num">12400000.00</span>,
+    <span class="key">"total_amount_io_goods"</span>:   <span class="num">7200000.00</span>,
+    <span class="key">"count_io_goods"</span>:          <span class="num">14</span>,
+    <span class="key">"total_amount_io_project"</span>: <span class="num">5200000.00</span>,
+    <span class="key">"count_io_project"</span>:        <span class="num">6</span>
+  },
+  <span class="key">"spending_by_dept"</span>:            <span class="cmt">// การใช้จ่ายแยก dept</span>
+  <span class="key">"spending_by_division"</span>:        <span class="cmt">// การใช้จ่ายแยก division</span>
+  <span class="key">"pivot_table_by_io_goods"</span>:     <span class="cmt">// IO Goods drilldown</span>
+  <span class="key">"pivot_table_by_io_project"</span>:   <span class="cmt">// IO Project drilldown</span>
+  <span class="key">"pivot_table_by_io_work"</span>       <span class="cmt">// IO Work drilldown</span>
+}</pre>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>เรียก IO dashboard</strong>
+          <pre>curl "http://localhost:8000/api/v1/io?year=2025" \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Filter ด้วย month range</strong>
+          <pre>curl "http://localhost:8000/api/v1/io?year=2025&amp;month_from=1&amp;month_to=6" \
+  -H "Authorization: Bearer $TOKEN"
+<span class="cmt"># fiscal month 1-6 = ต.ค. - มี.ค.</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 12. Coordinator ───────────────────────────────────────────────── -->
+  <section id="coordinator">
+    <h2><span class="section-num">12</span>Coordinator Management</h2>
+
+    <p>จัดการรายชื่อ coordinator ใน <code>finance_coordinator</code> table — <strong>ต้อง FA + position เท่านั้น</strong></p>
+
+    <table>
+      <tr><th>Endpoint</th><th>Method</th><th>คำอธิบาย</th></tr>
+      <tr>
+        <td><code>/api/v1/admin/coordinators</code></td>
+        <td><span class="badge badge-get">GET</span></td>
+        <td>ดูรายชื่อทั้งหมด (active + inactive)</td>
+      </tr>
+      <tr>
+        <td><code>/api/v1/admin/coordinators</code></td>
+        <td><span class="badge badge-post">POST</span></td>
+        <td>เพิ่ม coordinator ใหม่ (หรือ reactivate)</td>
+      </tr>
+      <tr>
+        <td><code>/api/v1/admin/coordinators/{id}</code></td>
+        <td><span class="badge badge-patch">PATCH</span></td>
+        <td>Toggle active ↔ inactive (soft delete)</td>
+      </tr>
+    </table>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ขอ token ที่เป็น FA + position</strong>
+          <pre>FA_TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>เพิ่ม coordinator</strong>
+          <pre>curl -X POST http://localhost:8000/api/v1/admin/coordinators \
+  -H "Authorization: Bearer $FA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"john.doe@example.com"}'
+<span class="cmt"># → 201 Created</span></pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ดูรายชื่อทั้งหมด</strong>
+          <pre>curl http://localhost:8000/api/v1/admin/coordinators \
+  -H "Authorization: Bearer $FA_TOKEN"</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Toggle deactivate (สมมติ id=1)</strong>
+          <pre>curl -X PATCH http://localhost:8000/api/v1/admin/coordinators/1 \
+  -H "Authorization: Bearer $FA_TOKEN"
+<span class="cmt"># → active จะเปลี่ยนเป็น false</span></pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบว่า coordinator เข้า draft-login ได้</strong>
+          <pre><span class="cmt"># john.doe ต้องอยู่ใน finance_coordinator แล้ว</span>
+curl -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"dept,bba","name":"john.doe@example.com"}'
+<span class="cmt"># → 200 พร้อม "coordinator": true</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 13. DB Schema ─────────────────────────────────────────────────── -->
+  <section id="schema">
+    <h2><span class="section-num">13</span>Database Schema</h2>
+
+    <h3>erp_2025 — ตารางหลักข้อมูล ERP</h3>
+    <pre>fiscal_year, fiscal_month, trimester, day, month, year
+doc_no, doc_date, funds_ctr
+cost_ctr_id  → FK: master_cost_ctr.cost_center_id
+cost_owner   → FK: master_cost_ctr.cost_center_id
+gl_id        → FK: master_gl.gl_id
+io_goods     → FK: master_io_goods.io_good_id
+io_project   → FK: master_io_project.io_project_id
+io_work      → FK: master_io_work.io_work_id
+io_activity  → FK: master_io_activities.io_activity_id
+amount NUMERIC(18,2)
+details TEXT
+mu_strategy, ic_strategy</pre>
+
+    <h3>Master Tables</h3>
+    <table>
+      <tr><th>Table</th><th>Primary Key</th><th>ใช้ใน</th></tr>
+      <tr><td><code>master_cost_ctr</code></td><td>cost_center_id</td><td>cost_ctr_id, cost_owner</td></tr>
+      <tr><td><code>master_gl</code></td><td>gl_id</td><td>gl_id</td></tr>
+      <tr><td><code>master_fund</code></td><td>fund_id</td><td>funds_ctr</td></tr>
+      <tr><td><code>master_io_goods</code></td><td>io_good_id</td><td>io_goods</td></tr>
+      <tr><td><code>master_io_project</code></td><td>io_project_id</td><td>io_project</td></tr>
+      <tr><td><code>master_io_work</code></td><td>io_work_id</td><td>io_work</td></tr>
+      <tr><td><code>master_io_activities</code></td><td>io_activity_id</td><td>io_activity</td></tr>
+      <tr><td><code>master_ic_strategy</code></td><td>ic_strategy_id</td><td>ic_strategy</td></tr>
+      <tr><td><code>master_mu_strategy</code></td><td>mu_strategy_id</td><td>mu_strategy</td></tr>
+    </table>
+
+    <h3>finance_coordinator — ตาราง Access Control</h3>
+    <pre>id         SERIAL PRIMARY KEY
+username   TEXT NOT NULL UNIQUE    <span class="cmt">-- ตรวจสอบกับ Entra username</span>
+active     BOOLEAN DEFAULT TRUE    <span class="cmt">-- soft delete</span>
+created_at, updated_at, created_by, updated_by</pre>
+  </section>
+
+  <!-- ── 14. Migrations ───────────────────────────────────────────────── -->
+  <section id="migrations">
+    <h2><span class="section-num">14</span>Migrations</h2>
+
+    <table>
+      <tr><th>File</th><th>สร้างอะไร</th></tr>
+      <tr><td><code>001_create_finance_tables.sql</code></td><td>ตาราง <code>erp_2025</code></td></tr>
+      <tr><td><code>002_create_master_tables.sql</code></td><td>ตาราง master ทั้งหมด (9 ตาราง)</td></tr>
+      <tr><td><code>003_create_coordinator.sql</code></td><td>ตาราง <code>finance_coordinator</code> + indexes</td></tr>
+      <tr><td><code>004_create_indexes.sql</code></td><td>15 performance indexes บน erp_2025 + master tables</td></tr>
+    </table>
+
+    <pre><span class="cmt"># รัน migrations ทั้งหมด</span>
+python migrations/migrate.py
+
+<span class="cmt"># Output ที่ควรเห็น</span>
+[direct] Connected to 'ic_finance' successfully!
+  RUN   001_create_finance_tables.sql ... OK
+  RUN   002_create_master_tables.sql ... OK
+  RUN   003_create_coordinator.sql ... OK
+  RUN   004_create_indexes.sql ... OK
+
+Done — 4 migration(s) applied.</pre>
+
+    <div class="callout callout-info">
+      <strong>ℹ Idempotent</strong>
+      Migration ใช้ <code>CREATE TABLE IF NOT EXISTS</code> และ <code>CREATE INDEX IF NOT EXISTS</code>
+      รันซ้ำหลายครั้งได้อย่างปลอดภัย — ตาราง <code>schema_migrations</code> track ว่า file ไหนรันไปแล้ว
+    </div>
+  </section>
+
+  <!-- ── 15. Tests ─────────────────────────────────────────────────────── -->
+  <section id="tests">
+    <h2><span class="section-num">15</span>Testing</h2>
+
+    <h3>รัน Tests</h3>
+    <pre><span class="cmt"># รัน tests ทั้งหมด พร้อม coverage</span>
+pytest
+
+<span class="cmt"># รันเฉพาะ unit tests</span>
+pytest tests/unit/
+
+<span class="cmt"># รันเฉพาะ integration tests</span>
+pytest tests/integration/
+
+<span class="cmt"># รันเฉพาะ file เดียว พร้อม verbose</span>
+pytest tests/unit/test_security.py -v
+
+<span class="cmt"># ดู coverage รายละเอียด</span>
+pytest --cov-report=html
+open htmlcov/index.html</pre>
+
+    <h3>Test Suites</h3>
+    <table>
+      <tr><th>File</th><th>ประเภท</th><th>ทดสอบอะไร</th></tr>
+      <tr>
+        <td><code>unit/test_security.py</code></td>
+        <td>Unit</td>
+        <td>extract_claims, JWT create/decode, Fernet encryption, params_hash</td>
+      </tr>
+      <tr>
+        <td><code>unit/test_permissions.py</code></td>
+        <td>Unit</td>
+        <td>POSITION_ROLES, DIVISION_ROLES, ILIKE_ROOT_OVERRIDE, edge cases</td>
+      </tr>
+      <tr>
+        <td><code>integration/test_auth.py</code></td>
+        <td>Integration</td>
+        <td>login, entra-login (503/403), draft-login (success/denied/404 in prod), /me</td>
+      </tr>
+      <tr>
+        <td><code>integration/test_finance.py</code></td>
+        <td>Integration</td>
+        <td>/finance (FA only), /budget (all roles), /io, input validation</td>
+      </tr>
+      <tr>
+        <td><code>integration/test_coordinator.py</code></td>
+        <td>Integration</td>
+        <td>List, Add, Toggle coordinator — permission checks ทุก case</td>
+      </tr>
+    </table>
+
+    <h3>Fixtures ที่ใช้บ่อย (conftest.py)</h3>
+    <pre><span class="cmt"># เรียกใน test function ได้เลย</span>
+<span class="fn">fa_token</span>          <span class="cmt"># JWT สำหรับ FA + chief</span>
+<span class="fn">division_token</span>    <span class="cmt"># JWT สำหรับ BBA division</span>
+<span class="fn">coordinator_token</span> <span class="cmt"># JWT สำหรับ coordinator</span>
+<span class="fn">auth_headers_fa</span>   <span class="cmt"># {"Authorization": "Bearer &lt;fa_token&gt;"}</span>
+<span class="fn">client</span>            <span class="cmt"># httpx.AsyncClient connected to app</span>
+<span class="fn">mock_db</span>           <span class="cmt"># mock ที่ไม่ต้องใช้ DB จริง</span>
+<span class="fn">mock_redis</span>        <span class="cmt"># disable Redis ในระหว่าง test</span></pre>
+
+    <h3>ตัวอย่าง Test ที่เขียนเอง</h3>
+    <pre><span class="kw">import</span> pytest
+<span class="kw">from</span> unittest.mock <span class="kw">import</span> AsyncMock, patch
+
+<span class="fn">@pytest.mark.asyncio</span>
+<span class="kw">async def</span> <span class="fn">test_budget_division_sees_own_dept_only</span>(client, division_token):
+    captured = {}
+
+    <span class="kw">async def</span> <span class="fn">mock_get_dashboard</span>(role, params, cache_prefix):
+        captured[<span class="str">"role"</span>] = role
+        <span class="kw">return</span> {<span class="str">"kpis"</span>: {<span class="str">"total_amount"</span>: <span class="num">0</span>}}
+
+    <span class="kw">with</span> patch(<span class="str">"app.services.finance_service.get_dashboard"</span>,
+               AsyncMock(side_effect=mock_get_dashboard)):
+        resp = <span class="kw">await</span> client.get(
+            <span class="str">"/api/v1/budget?year=2025"</span>,
+            headers={<span class="str">"Authorization"</span>: <span class="fn">f</span><span class="str">"Bearer {division_token}"</span>},
+        )
+
+    <span class="fn">assert</span> resp.status_code == <span class="num">200</span>
+    <span class="fn">assert</span> captured[<span class="str">"role"</span>] == <span class="str">"bba"</span>  <span class="cmt"># role ถูกส่งต่อไปยัง service</span></pre>
+  </section>
+
+  <!-- ── 16. Checklist ─────────────────────────────────────────────────── -->
+  <section id="checklist">
+    <h2><span class="section-num">16</span>Requirement Checklist</h2>
+
+    <table>
+      <tr><th>Requirement</th><th>สถานะ</th><th>Implementation</th></tr>
+      <tr>
+        <td>API Versioning</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td><code>/api/v1/</code> prefix — เพิ่ม v2 ได้โดยไม่กระทบ v1</td>
+      </tr>
+      <tr>
+        <td>RESTful + JSON</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>FastAPI + Pydantic response models ทุก endpoint</td>
+      </tr>
+      <tr>
+        <td>Error Handling</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>200/201/400/401/403/404/422/429/500/503 พร้อม detail ชัดเจน</td>
+      </tr>
+      <tr>
+        <td>OpenAPI Docs</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>Auto-generated Swagger UI + static <code>openapi.yaml</code></td>
+      </tr>
+      <tr>
+        <td>PostgreSQL SSH/Direct</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td><code>DB_MODE=ssh|direct</code> เลือกได้ใน <code>.env</code></td>
+      </tr>
+      <tr>
+        <td>DB Optimization (Indexing)</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>15 indexes ใน <code>migrations/004_create_indexes.sql</code></td>
+      </tr>
+      <tr>
+        <td>Data Integrity (Transactions)</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td><code>conn.commit()</code> explicit หลัง write, rollback อัตโนมัติเมื่อ error</td>
+      </tr>
+      <tr>
+        <td>Redis Caching</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>Finance/Budget/IO 5 min TTL, Coordinator lookup 10 min TTL</td>
+      </tr>
+      <tr>
+        <td>JWT Authentication</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>HS256 JWT พร้อม role, position, coordinator claims</td>
+      </tr>
+      <tr>
+        <td>MS Entra ID</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>JWKS validation + jobTitle parsing + draft mode สำหรับ dev</td>
+      </tr>
+      <tr>
+        <td>Authorization (coordinator table)</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>ตรวจสอบ <code>finance_coordinator</code> + Redis cache</td>
+      </tr>
+      <tr>
+        <td>Data Encryption</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>Fernet symmetric encryption, <code>ENCRYPTION_KEY</code> env var</td>
+      </tr>
+      <tr>
+        <td>SQL Injection Protection</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>Parameterized queries ทุกจุด — ไม่มี string format SQL</td>
+      </tr>
+      <tr>
+        <td>XSS Protection</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td><code>X-XSS-Protection</code> header + JSON-only responses</td>
+      </tr>
+      <tr>
+        <td>Rate Limiting (DDoS)</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>slowapi: 100/min default, 10/min auth — per IP</td>
+      </tr>
+      <tr>
+        <td>Clean Architecture</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>Endpoints → Services → Core layers แยกอิสระ</td>
+      </tr>
+      <tr>
+        <td>Centralized Logging</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>Rotating file log + console colored + Sentry integration</td>
+      </tr>
+      <tr>
+        <td>Async Concurrency</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>FastAPI async + psycopg3 async pool + Redis async — ไม่ block I/O</td>
+      </tr>
+      <tr>
+        <td>Unit Tests</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>test_security.py, test_permissions.py — 20+ test cases</td>
+      </tr>
+      <tr>
+        <td>Integration Tests</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>test_auth.py, test_finance.py, test_coordinator.py — mock DB/Redis</td>
+      </tr>
+    </table>
+
+    <div style="margin-top:32px;padding:20px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+      <p style="color:var(--muted);font-size:13px;margin:0">
+        <strong style="color:var(--text)">Seamless Dashboard Backend v1.0</strong><br>
+        FastAPI · psycopg3 · Redis · MS Entra ID · JWT<br>
+        Docs generated: 2026-06-02
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`nav a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

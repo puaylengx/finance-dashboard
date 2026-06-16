@@ -1,0 +1,1108 @@
+openapi: 3.1.0
+
+info:
+  title: Seamless Dashboard API
+  version: "1.0.0"
+  description: |
+    REST API สำหรับ Seamless Data Dashboard — ข้อมูลการเงิน งบประมาณ และ IO ของหน่วยงาน
+
+    ## Authentication
+    ทุก protected endpoint ต้องส่ง JWT ใน header:
+    ```
+    Authorization: Bearer <token>
+    ```
+
+    รับ token ได้จาก:
+    - `/api/v1/auth/entra-login` — Production (MS Entra ID token)
+    - `/api/v1/auth/draft-login` — Dev/Staging (simulate ด้วย job_title)
+    - `/api/v1/auth/login` — Dev (local account + password)
+
+    ## Claims-Based Access Control
+
+    | Role | `/finance` | `/budget` | `/io` | `/admin/coordinators` |
+    |------|-----------|-----------|-------|----------------------|
+    | `fa` + position | ✓ ดูทั้งหมด | ✓ ดูทั้งหมด | ✓ ดูทั้งหมด | ✓ จัดการได้ |
+    | `fa` (ไม่มี position) | ✓ ดูทั้งหมด | ✓ ดูทั้งหมด | ✓ ดูทั้งหมด | ✗ 403 |
+    | Division (bba/hld/sci/…) | ✗ 403 | ✓ เฉพาะ dept ตัวเอง | ✓ เฉพาะ dept ตัวเอง | ✗ 403 |
+
+    > **Non-FA:** `cost_owner` ที่ส่งมาจะถูก **ignore** — backend force เป็น role ของ user เสมอ
+
+    ## ปีงบประมาณ (Fiscal Year)
+
+    ระบบรองรับ 2 รูปแบบการกรอง:
+
+    | Parameter | ความหมาย | ตัวอย่าง |
+    |-----------|---------|---------|
+    | `year` | Calendar year (ค.ศ.) | `year=2025` |
+    | `pa_year` | PA Year — ปีงบประมาณ (เริ่ม ต.ค.) | `pa_year=2025` |
+
+    เลือกใช้ได้แบบใดแบบหนึ่ง ถ้าส่ง `pa_year` จะ override `year`
+
+servers:
+  - url: http://localhost:8000
+    description: Backend (uvicorn dev)
+  - url: http://localhost:5173
+    description: Frontend dev server (proxy → :8000)
+
+tags:
+  - name: Authentication
+    description: รับและแลก token
+  - name: Finance
+    description: ยอดใช้จ่าย — FA เท่านั้น
+  - name: IO
+    description: Internal Order (Goods / Project / Work)
+  - name: Coordinator Management
+    description: จัดการรายชื่อ coordinator — FA + position เท่านั้น
+  - name: System
+    description: Health check
+
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+
+  # ── SYSTEM ───────────────────────────────────────────────────────────────
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        "200":
+          description: Server online
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  # ── AUTH ─────────────────────────────────────────────────────────────────
+  /api/v1/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login ด้วย username + password (local accounts)
+      description: |
+        ใช้สำหรับ dev — ตรวจสอบ credentials จาก `AUTH_USERS_JSON` env var
+        แล้วออก JWT
+
+        Production ควรใช้ `/api/v1/auth/entra-login` แทน
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  format: password
+                  example: yourpassword
+      responses:
+        "200":
+          description: Login สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        "401":
+          $ref: '#/components/responses/InvalidCredentials'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/entra-login:
+    post:
+      tags: [Authentication]
+      summary: แลก MS Entra ID token เป็น API JWT (Production)
+      description: |
+        **Production flow:**
+        1. Frontend login ด้วย MSAL → ได้ MS access token
+        2. ส่ง access token มาที่ endpoint นี้
+        3. Backend validate token กับ JWKS ของ Azure
+        4. Extract `jobTitle` → ตรวจสอบ position / coordinator
+        5. ออก JWT ของระบบ
+
+        **Access granted เมื่อ:**
+        - `jobTitle` มี `chairman`, `chief`, หรือ `head`
+        - หรือ `username` อยู่ใน `finance_coordinator` table
+
+        > ต้องตั้งค่า `AZURE_TENANT_ID` และ `AZURE_CLIENT_ID` ใน `.env`
+        > หากยังไม่ได้เชื่อมต่อ Azure → ใช้ `/auth/draft-login` แทน (ต้องตั้ง `DRAFT_MODE=true`)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [access_token]
+              properties:
+                access_token:
+                  type: string
+                  description: MS Entra ID access token
+                  example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6..."
+      responses:
+        "200":
+          description: Token แลกสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        "403":
+          $ref: '#/components/responses/AccessDenied'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+        "503":
+          description: Azure Entra ID ยังไม่ได้ตั้งค่า (AZURE_TENANT_ID / AZURE_CLIENT_ID ว่าง)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                detail: "MS Entra ID ยังไม่ได้ตั้งค่า (ตั้งค่า DRAFT_MODE=true แล้วใช้ /api/v1/auth/draft-login)"
+
+  /api/v1/auth/draft-login:
+    post:
+      tags: [Authentication]
+      summary: "[Draft] Simulate Entra ID login ด้วย job_title (Dev/Staging เท่านั้น)"
+      description: |
+        **ใช้สำหรับ Dev/Staging เท่านั้น** — จำลอง MS Entra ID โดยรับ `job_title` โดยตรง
+        โดยไม่ต้องเชื่อมต่อ Azure จริง
+
+        ใช้ logic เดียวกับ `/entra-login` ทุกประการ:
+        - `job_title` มี `chairman`, `chief`, หรือ `head` → เข้าได้ (scoped ตาม dept)
+        - `name` อยู่ใน `finance_coordinator` table → เข้าได้
+        - อื่น ๆ → 403
+
+        **ต้องตั้งค่า `DRAFT_MODE=true`** ใน `.env` (default: true)
+        — ตั้ง `DRAFT_MODE=false` ใน production เพื่อปิด endpoint นี้
+
+        **กฎการ parse `job_title`:** split ด้วย `,` → lowercase
+        - last segment = role
+        - ถ้า last segment เป็น `chief`/`chairman`/`head` → เป็น position, segment ก่อนหน้า = role
+
+        | job_title | role | position | เข้าได้? |
+        |-----------|------|----------|---------|
+        | `dept,fa,chief` | `fa` | `chief` | ✓ |
+        | `dept,fa,chairman` | `fa` | `chairman` | ✓ |
+        | `dept,bba,head` | `bba` | `head` | ✓ |
+        | `dept,fa` | `fa` | — | ต้องอยู่ใน coordinator |
+        | `faculty,lecturer,sci` | `sci` | — | ต้องอยู่ใน coordinator |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftLoginRequest'
+            examples:
+              fa_chief:
+                summary: Finance Admin ที่มี position
+                value:
+                  job_title: "dept,fa,chief"
+                  name: "Finance Chief"
+              fa_plain:
+                summary: Finance Admin (ไม่มี position)
+                value:
+                  job_title: "dept,fa"
+                  name: "Finance Staff"
+              bba_coordinator:
+                summary: Division coordinator (ต้องมีชื่อใน finance_coordinator)
+                value:
+                  job_title: "faculty,bba"
+                  name: "BBA Coordinator"
+              sci:
+                summary: SCI Division
+                value:
+                  job_title: "faculty,lecturer,sci"
+                  name: "SCI Lecturer"
+      responses:
+        "200":
+          description: Login สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        "403":
+          $ref: '#/components/responses/AccessDenied'
+        "404":
+          description: Draft mode ถูกปิด (`DRAFT_MODE=false`) — ใช้ `/entra-login` แทน
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                detail: "Not found"
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/me:
+    get:
+      tags: [Authentication]
+      summary: ดูข้อมูล user จาก JWT ที่ถืออยู่
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ข้อมูล user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+              example:
+                username: "finance_chief"
+                role: "fa"
+                position: "chief"
+                coordinator: false
+                expires_at: "2026-06-02T10:30:00+00:00"
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── FINANCE ──────────────────────────────────────────────────────────────
+  /api/v1/finance:
+    get:
+      tags: [Finance]
+      summary: Finance dashboard — dept + division breakdown (FA เท่านั้น)
+      description: |
+        ข้อมูลยอดใช้จ่ายรวมทั้ง department และ division แยกกัน
+
+        **Required role:** `fa`
+
+        **Response ประกอบด้วย:**
+        - `kpis` — ยอดรวม, จำนวน doc, ค่าเฉลี่ย
+        - `trend_month` — แนวโน้มรายเดือน
+        - `table_by_gl`, `table_by_cost_center`, `pivot_table_by_gl_detail` — ข้อมูล **department**
+        - `table_by_gl_division`, `table_by_cost_center_division`, `pivot_table_by_gl_detail_division` — ข้อมูล **division**
+        - `table_by_gl_all`, `table_by_cost_center_all`, `pivot_table_by_gl_detail_all` — รวมทั้งหมด
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/year'
+        - $ref: '#/components/parameters/pa_year'
+        - $ref: '#/components/parameters/month_from'
+        - $ref: '#/components/parameters/month_to'
+        - $ref: '#/components/parameters/gl_group'
+        - $ref: '#/components/parameters/cost_center'
+        - $ref: '#/components/parameters/cost_owner'
+        - $ref: '#/components/parameters/q'
+      responses:
+        "200":
+          description: Finance dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancePayload'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/budget:
+    get:
+      tags: [Finance]
+      summary: Budget dashboard — ทุก role ที่ได้รับสิทธิ์
+      description: |
+        โครงสร้าง response เหมือน `/api/v1/finance` ทุกประการ
+
+        **Non-FA:** `cost_owner` ที่ส่งมาจะถูก ignore — backend force เป็น role ของ user เสมอ
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/year'
+        - $ref: '#/components/parameters/pa_year'
+        - $ref: '#/components/parameters/month_from'
+        - $ref: '#/components/parameters/month_to'
+        - $ref: '#/components/parameters/gl_group'
+        - $ref: '#/components/parameters/cost_center'
+        - $ref: '#/components/parameters/cost_owner'
+        - $ref: '#/components/parameters/q'
+      responses:
+        "200":
+          description: Budget dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancePayload'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # ── IO ───────────────────────────────────────────────────────────────────
+  /api/v1/io:
+    get:
+      tags: [IO]
+      summary: IO dashboard — Goods + Project + Work (ทุก role)
+      description: |
+        ข้อมูล Internal Order แบ่งเป็น IO Goods, IO Project, IO Work
+
+        **Non-FA:** `cost_owner` ถูก force เป็น role ของ user เสมอ
+
+        **หมายเหตุ:** endpoint นี้ไม่รับ `gl_group`
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/year'
+        - $ref: '#/components/parameters/pa_year'
+        - $ref: '#/components/parameters/month_from'
+        - $ref: '#/components/parameters/month_to'
+        - $ref: '#/components/parameters/cost_center'
+        - $ref: '#/components/parameters/cost_owner'
+        - $ref: '#/components/parameters/q'
+      responses:
+        "200":
+          description: IO dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IoPayload'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  # ── COORDINATOR MANAGEMENT ───────────────────────────────────────────────
+  /api/v1/admin/coordinators:
+    get:
+      tags: [Coordinator Management]
+      summary: ดูรายชื่อ coordinator ทั้งหมด
+      description: |
+        **Required:** FA role + position (chief/chairman/head)
+
+        แสดงรายชื่อ coordinator ทั้ง active และ inactive เรียงตาม active DESC, created_at DESC
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: รายชื่อ coordinator
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoordinatorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags: [Coordinator Management]
+      summary: เพิ่ม coordinator ใหม่ (หรือ reactivate ถ้ามีอยู่แล้ว)
+      description: |
+        **Required:** FA role + position
+
+        ถ้า username มีอยู่แล้ว (inactive) จะ **reactivate** แทนการ insert ใหม่
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoordinatorCreate'
+            example:
+              username: "john.doe@example.com"
+      responses:
+        "201":
+          description: เพิ่ม/reactivate coordinator สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinatorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/coordinators/{coord_id}:
+    patch:
+      tags: [Coordinator Management]
+      summary: Toggle coordinator active ↔ inactive (soft delete)
+      description: |
+        **Required:** FA role + position
+
+        Toggle สถานะ `active` — ถ้า active=true จะเปลี่ยนเป็น false และในทางกลับกัน
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: coord_id
+          in: path
+          required: true
+          description: ID ของ coordinator ใน finance_coordinator table
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Toggle สำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoordinatorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token จาก `/api/v1/auth/entra-login` หรือ `/api/v1/auth/draft-login`
+
+  # ── PARAMETERS ─────────────────────────────────────────────────────────────
+  parameters:
+    year:
+      name: year
+      in: query
+      description: Calendar year (ค.ศ.)
+      schema:
+        type: integer
+        minimum: 2000
+        maximum: 2100
+        default: 2025
+      example: 2025
+
+    pa_year:
+      name: pa_year
+      in: query
+      description: |
+        PA Year — ปีงบประมาณ (เริ่ม ต.ค.)
+
+        ถ้าส่ง `pa_year` จะ override `year`
+        เช่น `pa_year=2025` = ต.ค. 2024 – ก.ย. 2025
+      schema:
+        type: integer
+        minimum: 2000
+        maximum: 2100
+        nullable: true
+
+    month_from:
+      name: month_from
+      in: query
+      description: |
+        Fiscal month เริ่มต้น (ต.ค. = 1 … ก.ย. = 12)
+
+        | Fiscal | Calendar |
+        |--------|----------|
+        | 1 | ตุลาคม |
+        | 2 | พฤศจิกายน |
+        | 3 | ธันวาคม |
+        | 4 | มกราคม |
+        | 5 | กุมภาพันธ์ |
+        | 6 | มีนาคม |
+        | 7 | เมษายน |
+        | 8 | พฤษภาคม |
+        | 9 | มิถุนายน |
+        | 10 | กรกฎาคม |
+        | 11 | สิงหาคม |
+        | 12 | กันยายน |
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 12
+        nullable: true
+
+    month_to:
+      name: month_to
+      in: query
+      description: Fiscal month สิ้นสุด (ต.ค. = 1 … ก.ย. = 12)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 12
+        nullable: true
+
+    gl_group:
+      name: gl_group
+      in: query
+      description: GL Group code — exact match
+      schema:
+        type: string
+        nullable: true
+      example: "Personnel"
+
+    cost_center:
+      name: cost_center
+      in: query
+      description: Cost center description — ILIKE search
+      schema:
+        type: string
+        nullable: true
+      example: "Finance"
+
+    cost_owner:
+      name: cost_owner
+      in: query
+      description: |
+        Cost owner — exact `cost_center_id` หรือ ILIKE description
+
+        **FA:** ใช้ค่าที่ส่งมา
+        **Non-FA:** ค่านี้จะถูก **ignore** — backend force เป็น role ของ user เสมอ
+      schema:
+        type: string
+        nullable: true
+      example: "HR"
+
+    q:
+      name: q
+      in: query
+      description: Keyword search ใน `details`, `gl_description`, `order_description`
+      schema:
+        type: string
+        nullable: true
+        maxLength: 200
+
+  # ── SCHEMAS ─────────────────────────────────────────────────────────────────
+  schemas:
+
+    # ── Auth ──────────────────────────────────────────────────────────────────
+    DraftLoginRequest:
+      type: object
+      required: [job_title, name]
+      properties:
+        job_title:
+          type: string
+          description: Entra ID jobTitle claim (comma-separated)
+          example: "dept,fa,chief"
+          maxLength: 200
+        name:
+          type: string
+          description: Display name
+          example: "Finance Chief"
+          maxLength: 100
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token (HS256)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          example: "bearer"
+        expires_in:
+          type: integer
+          description: อายุ token (วินาที)
+          example: 3600
+        role:
+          type: string
+          description: Role ของ user (lowercase)
+          example: "fa"
+        position:
+          type: string
+          nullable: true
+          description: Position เช่น chief / chairman / head
+          example: "chief"
+        coordinator:
+          type: boolean
+          description: true ถ้า user เข้าผ่าน coordinator table
+          example: false
+        name:
+          type: string
+          description: Display name
+          example: "Finance Chief"
+
+    UserInfo:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "finance_chief"
+        role:
+          type: string
+          example: "fa"
+        position:
+          type: string
+          nullable: true
+          example: "chief"
+        coordinator:
+          type: boolean
+          example: false
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-06-02T10:30:00+00:00"
+
+    # ── Coordinator ───────────────────────────────────────────────────────────
+    CoordinatorCreate:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          description: "Username หรือ email — ตัวอักษร ตัวเลข - . @ เท่านั้น"
+          example: "john.doe@example.com"
+          maxLength: 100
+          pattern: '^[\w\-\.@]+$'
+
+    CoordinatorResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "john.doe@example.com"
+        active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-10-01T09:00:00+07:00"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_by:
+          type: string
+          nullable: true
+          example: "finance_chief"
+        updated_by:
+          type: string
+          nullable: true
+
+    # ── Finance / Budget Payload ──────────────────────────────────────────────
+    Kpis:
+      type: object
+      properties:
+        total_amount:
+          type: number
+          format: double
+          example: 45230000.00
+        total_budget:
+          type: number
+          format: double
+          example: 900000000.00
+        doc_count:
+          type: integer
+          example: 1240
+        avg_amount_per_doc:
+          type: number
+          format: double
+          example: 36475.81
+
+    TrendMonthItem:
+      type: object
+      properties:
+        month:
+          type: string
+          example: "October"
+        month_number:
+          type: integer
+          description: Calendar month (1–12)
+          example: 10
+        fiscal_month:
+          type: integer
+          description: Fiscal month (ต.ค.=1 … ก.ย.=12)
+          example: 1
+        pa_month:
+          type: integer
+          example: 1
+        pa_year:
+          type: integer
+          example: 2025
+        total:
+          type: number
+          format: double
+          example: 3240000.00
+
+    GlItem:
+      type: object
+      properties:
+        gl_id:
+          type: string
+          example: "51010"
+        gl_description:
+          type: string
+          example: "เงินเดือน"
+        gl_group:
+          type: string
+          example: "Personnel"
+        total:
+          type: number
+          format: double
+          example: 12000000.00
+
+    CostCenterItem:
+      type: object
+      properties:
+        cost_center_eng:
+          type: string
+          example: "FIN"
+        cost_center_description:
+          type: string
+          example: "Finance"
+        total:
+          type: number
+          format: double
+          example: 5400000.00
+
+    DetailsBreakdownItem:
+      type: object
+      properties:
+        details:
+          type: string
+          example: "ค่าใช้จ่ายสำนักงาน"
+        amount:
+          type: number
+          format: double
+          example: 150000.00
+
+    PivotGlItem:
+      type: object
+      properties:
+        gl_id:
+          type: string
+          example: "51010"
+        gl_description:
+          type: string
+          example: "เงินเดือน"
+        total_amount:
+          type: number
+          format: double
+          example: 12000000.00
+        details_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetailsBreakdownItem'
+
+    FinancePayload:
+      type: object
+      properties:
+        kpis:
+          $ref: '#/components/schemas/Kpis'
+        trend_month:
+          type: array
+          description: แนวโน้มรายเดือน เรียงตาม month_number
+          items:
+            $ref: '#/components/schemas/TrendMonthItem'
+        table_by_gl:
+          type: array
+          description: GL summary — department เท่านั้น
+          items:
+            $ref: '#/components/schemas/GlItem'
+        table_by_cost_center:
+          type: array
+          description: Cost center summary — department เท่านั้น (เรียงตาม total DESC)
+          items:
+            $ref: '#/components/schemas/CostCenterItem'
+        pivot_table_by_gl_detail:
+          type: array
+          description: GL drilldown — department เท่านั้น
+          items:
+            $ref: '#/components/schemas/PivotGlItem'
+        table_by_gl_division:
+          type: array
+          description: GL summary — division (BBA/HLD/SCI/SS/THM/FAA/MBA/MM)
+          items:
+            $ref: '#/components/schemas/GlItem'
+        table_by_cost_center_division:
+          type: array
+          description: Cost center summary — division เท่านั้น
+          items:
+            $ref: '#/components/schemas/CostCenterItem'
+        pivot_table_by_gl_detail_division:
+          type: array
+          description: GL drilldown — division เท่านั้น
+          items:
+            $ref: '#/components/schemas/PivotGlItem'
+        table_by_gl_all:
+          type: array
+          description: GL summary — รวมทั้งหมด (dept + division)
+          items:
+            $ref: '#/components/schemas/GlItem'
+        table_by_cost_center_all:
+          type: array
+          description: Cost center summary — รวมทั้งหมด
+          items:
+            $ref: '#/components/schemas/CostCenterItem'
+        pivot_table_by_gl_detail_all:
+          type: array
+          description: GL drilldown — รวมทั้งหมด
+          items:
+            $ref: '#/components/schemas/PivotGlItem'
+
+    # ── IO Payload ────────────────────────────────────────────────────────────
+    IoKpis:
+      type: object
+      properties:
+        total_amount:
+          type: number
+          format: double
+          example: 12400000.00
+        total_budget:
+          type: number
+          format: double
+          example: 900000000.00
+        total_amount_io_goods:
+          type: number
+          format: double
+          example: 7200000.00
+        count_io_goods:
+          type: integer
+          example: 14
+        total_amount_io_project:
+          type: number
+          format: double
+          example: 5200000.00
+        count_io_project:
+          type: integer
+          example: 6
+
+    SpendingItem:
+      type: object
+      properties:
+        cost_center_eng:
+          type: string
+          example: "FIN"
+        cost_center_description:
+          type: string
+          example: "Finance"
+        total:
+          type: number
+          format: double
+          example: 3200000.00
+
+    IoOrderBreakdownItem:
+      type: object
+      properties:
+        order_description:
+          type: string
+          example: "ครุภัณฑ์สำนักงาน"
+        details:
+          type: string
+          example: "โต๊ะทำงาน"
+        amount:
+          type: number
+          format: double
+          example: 45000.00
+
+    IoGoodsItem:
+      type: object
+      properties:
+        io_goods:
+          type: string
+          description: IO Goods ID
+          example: "100001"
+        io_goods_description:
+          type: string
+          example: "โครงการจัดซื้อครุภัณฑ์"
+        total_amount:
+          type: number
+          format: double
+          example: 320000.00
+        order_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/IoOrderBreakdownItem'
+
+    IoProjectItem:
+      type: object
+      properties:
+        io_project:
+          type: string
+          description: IO Project ID
+          example: "200001"
+        io_project_description:
+          type: string
+          example: "โครงการพัฒนาระบบสารสนเทศ"
+        total_amount:
+          type: number
+          format: double
+          example: 850000.00
+        order_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/IoOrderBreakdownItem'
+
+    IoWorkItem:
+      type: object
+      properties:
+        io_work:
+          type: string
+          description: IO Work ID
+          example: "300001"
+        io_work_description:
+          type: string
+          example: "งานซ่อมบำรุง"
+        total_amount:
+          type: number
+          format: double
+          example: 420000.00
+        order_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/IoOrderBreakdownItem'
+
+    IoPayload:
+      type: object
+      properties:
+        kpis:
+          $ref: '#/components/schemas/IoKpis'
+        spending_by_dept:
+          type: array
+          description: การใช้จ่ายแยกตาม department (เรียงตาม total DESC)
+          items:
+            $ref: '#/components/schemas/SpendingItem'
+        spending_by_division:
+          type: array
+          description: การใช้จ่ายแยกตาม division (BBA/HLD/SCI/SS/THM/FAA/MBA/MM)
+          items:
+            $ref: '#/components/schemas/SpendingItem'
+        pivot_table_by_io_goods:
+          type: array
+          description: IO Goods drilldown เรียงตาม io_goods
+          items:
+            $ref: '#/components/schemas/IoGoodsItem'
+        pivot_table_by_io_project:
+          type: array
+          description: IO Project drilldown เรียงตาม io_project
+          items:
+            $ref: '#/components/schemas/IoProjectItem'
+        pivot_table_by_io_work:
+          type: array
+          description: IO Work drilldown เรียงตาม io_work
+          items:
+            $ref: '#/components/schemas/IoWorkItem'
+
+    # ── Error ─────────────────────────────────────────────────────────────────
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Invalid credentials"
+
+  # ── RESPONSES ───────────────────────────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: Token หาย หมดอายุ หรือไม่ถูกต้อง
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            missing:
+              summary: ไม่ได้แนบ token
+              value:
+                detail: "Not authenticated"
+            expired:
+              summary: Token หมดอายุ
+              value:
+                detail: "Invalid or expired token: Signature has expired."
+
+    InvalidCredentials:
+      description: Username หรือ password ไม่ถูกต้อง
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Invalid credentials"
+
+    AccessDenied:
+      description: |
+        ตรวจสอบ Entra token สำเร็จ แต่ไม่มีสิทธิ์เข้าถึง —
+        ไม่มี position และไม่ได้อยู่ใน coordinator table
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "ไม่มีสิทธิ์เข้าถึง (โปรดติดต่องานการเงิน หน่วยงบประมาณ)"
+
+    Forbidden:
+      description: Token ถูกต้อง แต่ role ไม่มีสิทธิ์เข้าถึง endpoint นี้
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Requires FA role"
+
+    NotFound:
+      description: ไม่พบ resource ที่ระบุ
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Coordinator not found"
+
+    ValidationError:
+      description: Request body หรือ query params ไม่ถูกต้อง
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    loc:
+                      type: array
+                      items:
+                        type: string
+                    msg:
+                      type: string
+                    type:
+                      type: string
+
+    RateLimited:
+      description: ส่ง request มากเกินไป — กรุณารอและลองใหม่
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Rate limit exceeded: 10 per 1 minute"
+
+    InternalError:
+      description: Database query ล้มเหลว
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Internal server error"

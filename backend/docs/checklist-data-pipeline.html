@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Pipeline — Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;}
+    .block ul{padding-left:18px;}
+    .block li{margin-bottom:5px;}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
+    .block-pass h4{color:var(--green);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
+    .block-warn h4{color:var(--red);}
+    .block-partial{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-partial h4{color:var(--yellow);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html" class="active">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div class="nav-btn"><a href="checklist-cicd.html">← Deployment &amp; CI/CD</a><a href="checklist-documentation.html">Documentation →</a></div>
+  <h2>Data Pipeline <small>— 3 requirements &nbsp; Partial 1 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">กระบวนการ import ข้อมูลจาก ERP, data validation และ reconciliation</p>
+
+  <div class="item" id="etl"><div class="item-head"><div><div class="item-title">1. ETL / Data Import Process</div><div class="item-sub">กระบวนการ import ข้อมูลจาก ERP ไปยัง PostgreSQL มี error handling และ retry mechanism</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>ETL (Extract, Transform, Load) คือกระบวนการ: (1) <strong>Extract</strong> ดึงข้อมูลจาก ERP source (2) <strong>Transform</strong> แปลง format, clean, validate (3) <strong>Load</strong> บันทึกลง PostgreSQL table <code>erp_2025</code> กระบวนการนี้ควรมี scheduled run, error handling, และ idempotent (run ซ้ำได้โดยไม่ duplicate)</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard แสดงข้อมูลจาก ERP ถ้ากระบวนการ import ไม่ reliable ข้อมูลที่แสดงจะไม่ครบหรือผิดพลาด ผู้บริหารตัดสินใจบนข้อมูลเก่าหรือผิด ซึ่งส่งผลกระทบต่อการเงินองค์กร</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ข้อมูลใน <code>erp_2025</code> table มีอยู่แล้ว (จาก ERP) แต่ไม่มี documented ETL process ในโปรเจกต์นี้ ไม่ชัดเจนว่าข้อมูลมาจากไหนและ update บ่อยแค่ไหน</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>Document ETL process ที่ใช้อยู่ปัจจุบัน (ถ้ามี): ใครรัน, บ่อยแค่ไหน, เอาข้อมูลจากไหน</li>
+      <li>ถ้ายังไม่มี: สร้าง ETL script พร้อม: idempotent upsert, error logging, retry บน failure</li>
+      <li>เพิ่ม monitoring: รู้เมื่อ ETL run ล้มเหลว (alert ไป email/Line)</li>
+      <li>เพิ่ม data freshness indicator ใน dashboard: แสดง "ข้อมูล ณ วันที่ ..."</li>
+    </ul>
+    <pre># ตัวอย่าง upsert pattern (idempotent)
+INSERT INTO erp_2025 (gl_id, fiscal_year, amount, ...)
+VALUES (%(gl_id)s, %(year)s, %(amount)s, ...)
+ON CONFLICT (gl_id, fiscal_year)
+DO UPDATE SET amount = EXCLUDED.amount, updated_at = NOW();</pre>
+    </div>
+  </div></div>
+
+  <div class="item" id="data-validation"><div class="item-head"><div><div class="item-title">2. Data Validation Rules</div><div class="item-sub">ตรวจสอบ data quality ก่อน import: range check, format check, referential integrity</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Data validation rules คือ rules ที่ตรวจสอบว่าข้อมูลที่จะ import เข้า DB ถูกต้องตาม business rules ได้แก่: (1) <strong>Format check</strong>: fiscal_year เป็น 4 หลัก, amount เป็น numeric (2) <strong>Range check</strong>: fiscal_month ระหว่าง 1-12 (3) <strong>Referential check</strong>: cost_ctr_id มีอยู่ใน master table</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>"Garbage in, garbage out" — ถ้า import ข้อมูลผิดเข้า DB แล้วค่อยมา detect ทีหลัง เสียต้นทุนมากกว่าการ validate ก่อน import นอกจากนั้น finance data ที่ผิดอาจส่งผลกระทบต่อการรายงานทางการเงิน</p></div>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p>มี DB-level constraints: NOT NULL, FOREIGN KEY, CHECK บน migration แต่ไม่มี application-level pre-import validation หรือ data quality report</p>
+    <pre>-- จาก migration: DB-level validation มีอยู่
+ALTER TABLE erp_2025
+  ADD CONSTRAINT chk_fiscal_month CHECK (fiscal_month BETWEEN 1 AND 12);
+-- แต่ไม่มี pre-import validation script</pre>
+    </div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>เพิ่ม pre-import validation script ที่ check data ก่อน insert (fail fast)</li>
+      <li>สร้าง data quality report: "import X rows, rejected Y rows, reason: ..."</li>
+      <li>เพิ่ม Pydantic model สำหรับ validate แต่ละ row ก่อน insert</li>
+      <li>เก็บ rejected rows ใน <code>import_errors</code> table เพื่อ review ภายหลัง</li>
+    </ul></div>
+  </div></div>
+
+  <div class="item" id="reconciliation"><div class="item-head"><div><div class="item-title">3. Reconciliation Process</div><div class="item-sub">ตรวจสอบความถูกต้องระหว่างข้อมูลใน dashboard กับ ERP source เป็นระยะ</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Reconciliation คือกระบวนการ cross-check ว่าข้อมูลใน PostgreSQL ตรงกับ ERP source หรือไม่ เช่น ยอดรวมใน dashboard ต้องเท่ากับยอดรวมใน ERP report ถ้า reconcile ไม่ผ่าน แสดงว่ามีปัญหาใน ETL หรือ transformation</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>แม้จะมี ETL ที่ดี ก็ยังอาจเกิด bug ใน transformation ที่ทำให้ตัวเลขผิดโดยไม่รู้ตัว Reconciliation เป็น "double-check" ที่ catch ปัญหาเหล่านี้ ก่อนที่ผู้บริหารจะเห็นตัวเลขผิดใน dashboard</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี reconciliation process ไม่มีการ cross-check ระหว่าง dashboard data กับ ERP source เป็นระยะ</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>สร้าง scheduled job ที่ compare aggregate sum ระหว่าง PostgreSQL กับ ERP ทุกสัปดาห์</li>
+      <li>ถ้า reconcile ไม่ผ่าน (difference &gt; tolerance): alert ทันที</li>
+      <li>เขียน reconciliation report: แสดง expected vs actual พร้อม difference</li>
+      <li>เก็บ reconciliation history เพื่อ audit</li>
+    </ul>
+    <pre># ตัวอย่าง reconciliation check
+SELECT fiscal_year, SUM(amount) as dashboard_total
+FROM erp_2025
+GROUP BY fiscal_year;
+-- compare กับ ERP report total
+-- ถ้า |dashboard_total - erp_total| > threshold → alert</pre>
+    </div>
+  </div></div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-documentation.html" style="color:var(--accent)">Documentation →</a>
+  </div>
+</main>
+</body>
+</html>

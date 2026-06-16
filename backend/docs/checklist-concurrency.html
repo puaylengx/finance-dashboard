@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concurrency — Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;}
+    .block ul{padding-left:18px;}
+    .block li{margin-bottom:5px;}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
+    .block-pass h4{color:var(--green);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
+    .block-warn h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html" class="active">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div class="nav-btn"><a href="checklist-logging.html">← Logging</a><a href="checklist-testing.html">Testing →</a></div>
+  <h2>Concurrency <small>— 3 requirements &nbsp; Pass 1 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การรองรับ concurrent users และการจัดการ race condition ใน financial data</p>
+
+  <div class="item" id="async"><div class="item-head"><div><div class="item-title">1. Async FastAPI</div><div class="item-sub">ใช้ async/await ทั่วทั้ง codebase รองรับ concurrent request โดยไม่ block event loop</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Async programming ใน Python ใช้ <code>async/await</code> ทำให้ thread เดียวสามารถรอ I/O (DB query, Redis, HTTP call) โดยไม่ block และ switch ไปทำ request อื่นได้ระหว่างรอ ทำให้ server เดียวรับ concurrent request ได้มากกว่า synchronous แบบ thread-per-request</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard query DB และ Redis ซึ่งมี latency ถ้าใช้ sync programming server จะ block ระหว่างรอ ทำให้ไม่สามารถรับ request อื่นได้ async ทำให้ server รับ 100 concurrent request ด้วย memory เท่ากับรับ 10 request แบบ sync</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <p>ทุก endpoint, service function, DB call และ Redis call ใช้ <code>async def</code> และ <code>await</code></p>
+      <pre>async def get_finance(...):          # endpoint
+    return await finance_service.get_dashboard(...)  # service
+
+async def get_dashboard(...):
+    cached = await get_cached(key)    # Redis async
+    async with get_db() as conn:      # DB async pool
+        await cur.execute(sql, params)</pre>
+    </div>
+  </div></div>
+
+  <div class="item" id="db-lock"><div class="item-head"><div><div class="item-title">2. Database Lock Strategy</div><div class="item-sub">กำหนด locking strategy: optimistic lock สำหรับ read-heavy, pessimistic สำหรับ financial write</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p><strong>Optimistic locking</strong>: assume ไม่มี conflict — write โดยไม่ lock แต่ check version ก่อน commit ถ้า version เปลี่ยน (คนอื่น update แล้ว) → retry <strong>Pessimistic locking</strong>: lock row ก่อน read เลย (<code>SELECT FOR UPDATE</code>) ป้องกัน concurrent update แต่ throughput ต่ำกว่า</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า 2 admin toggle coordinator พร้อมกัน โดยไม่มี lock อาจเกิด race condition ที่ผลลัพธ์ขึ้นอยู่กับ timing ทำให้ active status ผิดพลาด สำหรับข้อมูลการเงิน inconsistency นี้เป็นปัญหาร้ายแรง</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี explicit locking strategy ปัจจุบัน write operation มีเฉพาะ coordinator CRUD ซึ่งมี concurrent write น้อยมากในทางปฏิบัติ แต่ไม่ได้ protected อย่างเป็นทางการ</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>Coordinator toggle: เพิ่ม <code>SELECT FOR UPDATE</code> ก่อน update เพื่อป้องกัน concurrent toggle</li>
+      <li>เพิ่ม <code>updated_at</code> check เพื่อ detect concurrent modification (optimistic lock)</li>
+      <li>ถ้ามี financial write ในอนาคต: กำหนด locking strategy ตาม business requirement</li>
+    </ul></div>
+  </div></div>
+
+  <div class="item" id="idempotency"><div class="item-head"><div><div class="item-title">3. Idempotency Keys</div><div class="item-sub">ทุก write API รองรับ idempotency key ป้องกัน duplicate submission จาก client retry</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item-body">
+    <div class="block"><h4>คืออะไร</h4><p>Idempotency key คือ unique ID ที่ client ส่งมาพร้อม request เพื่อบอกว่า "ถ้า request นี้ถูกส่งซ้ำ ให้ถือว่าเป็น request เดิม" server เก็บผลของ request ที่ใช้ key นี้แล้ว และตอบผลเดิมโดยไม่ process ซ้ำ</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Network ไม่ reliable — client อาจส่ง request แล้วไม่ได้รับ response (timeout) และ retry ถ้าไม่มี idempotency key การ retry จะสร้าง resource ซ้ำ เช่น coordinator ถูก add 2 ครั้ง (แต่ UNIQUE constraint ช่วยได้กรณีนี้)</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี <code>Idempotency-Key</code> header support · ปัจจุบัน UNIQUE constraint บน <code>coordinator.username</code> ป้องกัน duplicate add ได้บางส่วน แต่ไม่ใช่ proper idempotency</p></div>
+    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+      <li>รับ <code>Idempotency-Key: {uuid}</code> header ใน write endpoints</li>
+      <li>เก็บ <code>key → response</code> ใน Redis ด้วย TTL 24 ชั่วโมง</li>
+      <li>ถ้า key ซ้ำ: ตอบ cached response แทน process ใหม่</li>
+      <li>สำคัญมากถ้าเพิ่ม financial write operations ในอนาคต</li>
+    </ul></div>
+  </div></div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-testing.html" style="color:var(--accent)">Testing →</a>
+  </div>
+</main>
+</body>
+</html>

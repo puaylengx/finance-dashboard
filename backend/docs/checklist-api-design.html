@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Design — Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}
+    .block li{margin-bottom:5px;}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
+    .block-pass h4{color:var(--green);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html" class="active">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist.html">← Summary</a>
+    <a href="checklist-data-management.html">Data Management →</a>
+  </div>
+  <h2>API Design <small>— 8 requirements &nbsp; Pass 6 / Partial 1 / Fail 1</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ออกแบบ API ให้ถูกต้อง สม่ำเสมอ และปลอดภัย ตามมาตรฐาน REST</p>
+
+  <!-- 1. API Versioning -->
+  <div class="item" id="api-versioning">
+    <div class="item-head">
+      <div><div class="item-title">1. API Versioning</div><div class="item-sub">กำหนด version ใน URL เช่น /api/v1/ เพื่อให้อัปเกรดโดยไม่ทำลาย client เดิม</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>การฝัง version number ไว้ใน URL path เช่น <code>/api/v1/finance</code> ทำให้สามารถออก <code>v2</code> ที่มี breaking change ได้โดย client เดิมที่ใช้ <code>v1</code> ยังทำงานได้ปกติ ไม่ต้อง migrate ทันที</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อ API เติบโตขึ้น การเปลี่ยน response format หรือ endpoint structure เป็นสิ่งหลีกเลี่ยงไม่ได้ ถ้าไม่มี versioning client ทุกตัวจะพังพร้อมกันเมื่อมี breaking change ซึ่งเป็นปัญหาใหญ่โดยเฉพาะเมื่อมี mobile app หรือ third-party integration</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>ทุก endpoint อยู่ภายใต้ <code>/api/v1/</code> ผ่าน <code>main.py:100</code></p>
+        <pre>app.include_router(v1_router, prefix="/api/v1")</pre>
+        <p>ถ้าต้องการ v2 สร้าง <code>api/v2/router.py</code> และ include_router ใหม่ได้ทันที โดยไม่กระทบ v1</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. RESTful + JSON -->
+  <div class="item" id="restful-json">
+    <div class="item-head">
+      <div><div class="item-title">2. RESTful + JSON</div><div class="item-sub">ใช้สถาปัตยกรรม RESTful ส่งข้อมูลในรูปแบบ JSON มาตรฐาน</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>REST (Representational State Transfer) คือ architectural style ที่ใช้ HTTP method แทน action: <code>GET</code>=อ่าน, <code>POST</code>=สร้าง, <code>PATCH</code>=แก้ไขบางส่วน, <code>DELETE</code>=ลบ และใช้ URL แทน resource เช่น <code>/coordinators/1</code> แทน <code>/getCoordinatorById?id=1</code> ข้อมูลรับส่งเป็น JSON</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>REST เป็น industry standard ที่ client ทุกประเภท (web, mobile, third-party) เข้าใจตรงกัน ความ stateless ของ REST ทำให้ scale ได้ง่าย เพราะ server ไม่ต้องจำ state ของ client</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>HTTP method ถูกต้องทุก endpoint: <code>GET /finance</code>, <code>POST /coordinators</code>, <code>PATCH /coordinators/{id}</code> FastAPI + Pydantic serialize/deserialize JSON อัตโนมัติ ไม่มีการ string-format response</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Error Handling -->
+  <div class="item" id="error-handling">
+    <div class="item-head">
+      <div><div class="item-title">3. Error Handling</div><div class="item-sub">ตอบ HTTP status code ที่เหมาะสม พร้อม error message ที่เข้าใจง่าย</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>การตอบ HTTP status code ที่สื่อความหมายถูกต้อง เช่น <code>401</code>=ยังไม่ได้ login, <code>403</code>=login แล้วแต่ไม่มีสิทธิ์, <code>404</code>=ไม่พบ resource, <code>422</code>=ข้อมูล input ผิด format พร้อม error message ที่ developer เข้าใจได้</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าทุก error ตอบ <code>200 OK</code> หรือ <code>500</code> หมด client จะไม่รู้ว่าเกิดอะไรขึ้น — ต้อง parse body เพื่อหา error ซึ่งซับซ้อนและเกิด bug ง่าย status code ที่ถูกต้องช่วยให้ frontend handle error ได้อัตโนมัติ</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>ครอบคลุมทุก case: <code>200</code> success, <code>201</code> created, <code>400</code> bad request, <code>401</code> unauthorized, <code>403</code> forbidden, <code>404</code> not found, <code>409</code> conflict, <code>422</code> validation (auto Pydantic), <code>429</code> rate limit, <code>500</code> internal, <code>503</code> service unavailable</p>
+        <p>Global exception handler ใน <code>main.py:91-97</code> catch unhandled error และตอบ <code>500</code> พร้อม <code>{"success": false, "error": "Internal server error"}</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. OpenAPI / Swagger -->
+  <div class="item" id="openapi">
+    <div class="item-head">
+      <div><div class="item-title">4. OpenAPI / Swagger</div><div class="item-sub">มี auto-generated docs ผ่าน FastAPI /docs และ /redoc พร้อม schema ครบถ้วน</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>OpenAPI Specification (เดิมชื่อ Swagger) คือมาตรฐานการเขียน API documentation ที่ machine-readable FastAPI generate spec นี้อัตโนมัติจาก code แล้วแสดงเป็น interactive UI ที่ทดสอบ API ได้โดยตรงจาก browser</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Developer ใหม่เข้าใจ API ได้ทันทีโดยไม่ต้องอ่าน code Frontend สามารถ generate TypeScript types จาก OpenAPI spec ได้อัตโนมัติ ลด human error จากการ copy-paste type definition</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><code>/api/docs</code> — Swagger UI interactive &nbsp;·&nbsp; <code>/api/redoc</code> — ReDoc readable &nbsp;·&nbsp; <code>/api/openapi.json</code> — machine-readable spec</p>
+        <p>นอกจากนี้ยังมี static <code>openapi.yaml</code> ใน backend root สำหรับ version control</p>
+        <p>ทุก endpoint มี <code>summary</code>, <code>response_model</code>, <code>responses</code> dict ครบ ทำให้ doc มีข้อมูลสมบูรณ์</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Pagination & Filtering -->
+  <div class="item" id="pagination">
+    <div class="item-head">
+      <div><div class="item-title">5. Pagination &amp; Filtering</div><div class="item-sub">ทุก list endpoint ต้องรองรับ cursor-based pagination, sorting, และ filtering</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p><strong>Pagination</strong> คือการแบ่งผลลัพธ์เป็นหน้าๆ — cursor-based ใช้ pointer ไปยัง record สุดท้ายแทนหน้าเลข (เสถียรกว่าเมื่อข้อมูลเพิ่ม) <strong>Filtering</strong> คือการกรองข้อมูลด้วย query parameter เช่น year, month, gl_group</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า list endpoint ส่งข้อมูลทั้งหมดในครั้งเดียว เมื่อข้อมูลมีแสนรายการ response จะใช้ memory มากและช้ามาก cursor-based pagination ทำให้ response size คงที่ไม่ว่าข้อมูลจะโตแค่ไหน</p></div>
+      <div class="block"><h4>สถานะในโปรเจกต์</h4>
+        <p><strong>Filtering</strong>: มีผ่าน query params — <code>year</code>, <code>month_from</code>, <code>month_to</code>, <code>gl_group</code>, <code>cost_center</code>, <code>q</code> ✓</p>
+        <p><strong>Pagination</strong>: ไม่มี — Finance/IO/Budget เป็น aggregate query (SQL GROUP BY + JSONB_AGG) ที่ส่งผลลัพธ์ทั้งหมดในครั้งเดียว Coordinator list ก็ไม่มี pagination</p>
+        <p>สำหรับ Finance/IO — เป็น dashboard aggregate (ไม่ใช่ row list) ดังนั้น pagination อาจไม่จำเป็น แต่ Coordinator list ควรมี</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <ul>
+          <li>เพิ่ม pagination ให้ <code>GET /admin/coordinators</code>: <code>?limit=20&amp;cursor=last_id</code></li>
+          <li>พิจารณาว่า Finance/IO pivot tables จะโตมากพอที่ต้องการ pagination ไหม — ถ้าใช่เพิ่ม <code>?page_size</code></li>
+          <li>เพิ่ม sorting parameter เช่น <code>?sort=total_amount&amp;order=desc</code> สำหรับ table responses</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. API Request Validation -->
+  <div class="item" id="request-validation">
+    <div class="item-head">
+      <div><div class="item-title">6. API Request Validation</div><div class="item-sub">ใช้ Pydantic schema validation ทุก request body และ query parameter</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>การตรวจสอบ input ทุกตัวก่อนเข้า business logic ได้แก่ type checking (int ต้องเป็น int), range validation (year ต้องอยู่ระหว่าง 2000-2100), required fields, และ max length ก่อนที่ code จะเริ่มทำงาน</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ป้องกัน garbage data เข้า database, ลด bug ใน business logic, และเป็น first line of defense ด้าน security (ป้องกัน oversized input, unexpected types) FastAPI + Pydantic ทำให้ validation เป็น declarative ไม่ต้องเขียน if-else เอง</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>Pydantic v2 ครอบคลุมทุก endpoint: <code>FinanceQueryParams</code> validate year (2000-2100), month (1-12), q (max 200 chars) · <code>CoordinatorCreate</code> validate username · <code>EntraLoginRequest</code>, <code>DraftLoginRequest</code> validate request body</p>
+        <p>FastAPI auto-return <code>422 Unprocessable Entity</code> พร้อม field-level error detail เมื่อ validation fail</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Response Envelope -->
+  <div class="item" id="response-envelope">
+    <div class="item-head">
+      <div><div class="item-title">7. Response Envelope</div><div class="item-sub">Standardize response format: { data, meta, error } เพื่อให้ client parse ได้สม่ำเสมอ</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Response envelope คือ wrapper format ที่สม่ำเสมอทุก endpoint เช่น <code>{"success": true, "data": {...}, "meta": {"page": 1}}</code> แทนที่จะส่ง raw object บางครั้งและ <code>{"error": "..."}</code> อีกครั้งหนึ่ง</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Frontend สามารถเขียน generic response handler ชุดเดียว แทนที่จะต้องรู้ว่า endpoint ไหนส่ง format ไหน ลด bug จากการ handle response ผิด format ทำให้ code frontend clean ขึ้นมาก</p></div>
+      <div class="block"><h4>สถานะในโปรเจกต์</h4>
+        <p><code>schemas/common.py</code> มี <code>APIResponse{success, data, message}</code> และ <code>ErrorResponse{success, error, detail}</code> แต่ใช้จริงแค่บางส่วน:</p>
+        <ul>
+          <li>Error responses: ใช้ <code>{"success": false, "error": "..."}</code> สม่ำเสมอ ✓</li>
+          <li>Finance/IO/Budget: ส่ง raw dict จาก PostgreSQL โดยตรง — ไม่ wrap ด้วย envelope ✗</li>
+          <li>Coordinator, Auth: ใช้ Pydantic model โดยตรง — ไม่ wrap ✗</li>
+        </ul>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <ul>
+          <li>ตัดสินใจก่อนว่าจะ wrap หรือไม่ — ถ้า frontend ออกแบบรองรับแล้ว อาจเปลี่ยน response breaking</li>
+          <li>ถ้า wrap: ครอบ finance/IO/coordinator response ด้วย <code>{"success": true, "data": {...}}</code></li>
+          <li>อัปเดต <code>response_model</code> ทุก endpoint เป็น <code>APIResponse[T]</code></li>
+          <li>อัปเดต OpenAPI docs และ frontend ให้ match format ใหม่</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. CORS Configuration -->
+  <div class="item" id="cors">
+    <div class="item-head">
+      <div><div class="item-title">8. CORS Configuration</div><div class="item-sub">กำหนด allowed origins อย่างเข้มงวด ไม่ใช้ wildcard * ใน production</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>CORS (Cross-Origin Resource Sharing) คือ browser security mechanism ที่กำหนดว่า website ไหน (origin) สามารถเรียก API ได้ ถ้าไม่ตั้งค่า browser จะ block request จาก domain อื่น ถ้าตั้ง <code>*</code> (wildcard) แสดงว่าทุก website เรียก API ได้ ซึ่งเป็น security risk</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า API ใช้ cookie-based auth หรือ Authorization header wildcard CORS อนุญาตให้ malicious website ดึงข้อมูลด้วย credentials ของ user ที่กำลัง login อยู่ (CSRF-like attack) การระบุ origin ที่ชัดเจนป้องกันปัญหานี้</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><code>main.py:69-76</code> ใช้ <code>settings.get_allowed_origins()</code> แทน <code>["*"]</code></p>
+        <p>รองรับทั้ง comma-separated: <code>ALLOWED_ORIGINS=http://localhost:5173,https://app.example.com</code> และ JSON array format อนุญาตเฉพาะ <code>GET, POST, PATCH, DELETE, OPTIONS</code> เท่านั้น</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-data-management.html" style="color:var(--accent)">Data Management →</a>
+  </div>
+</main>
+</body>
+</html>

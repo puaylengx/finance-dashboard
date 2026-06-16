@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Requirement Checklist — Index</title>
+  <style>
+    :root {
+      --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;
+      --accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;
+      --red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;
+      --sidebar-w:220px;--radius:8px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.6;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:8px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:1000px;padding:40px 36px 80px;}
+    section{margin-bottom:48px;scroll-margin-top:20px;}
+    h2{font-size:19px;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:18px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{background:var(--surface2);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.5px;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);}
+    td{padding:9px 12px;border-bottom:1px solid rgba(46,50,80,.5);vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:rgba(108,142,251,.03);}
+    .pass{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .partial{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .fail{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    .p4{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,146,176,.18);color:var(--muted);}
+    .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:32px;}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;}
+    .stat .val{font-size:28px;font-weight:800;}
+    .stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
+    .legend{display:flex;gap:16px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:24px;font-size:12px;}
+    .legend-item{display:flex;align-items:center;gap:6px;}
+    a.cat-link{color:var(--accent);text-decoration:none;font-weight:600;}
+    a.cat-link:hover{text-decoration:underline;}
+    code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}.summary-grid{grid-template-columns:repeat(3,1fr);}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="group">Overview</div>
+  <a href="checklist.html" class="active">Index &amp; Summary</a>
+  <div class="group">หมวดหมู่</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+<main>
+  <div style="margin-bottom:32px">
+    <h1 style="font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">Requirement Checklist</h1>
+    <p style="color:var(--muted)">ตรวจสอบเมื่อ 2026-06-15 &nbsp;·&nbsp; 60 requirements &nbsp;·&nbsp; 10 หมวดหมู่</p>
+  </div>
+
+  <section>
+    <div class="summary-grid">
+      <div class="stat"><div class="val" style="color:var(--green)">23</div><div class="lbl">Pass ✓</div></div>
+      <div class="stat"><div class="val" style="color:var(--yellow)">11</div><div class="lbl">Partial ◑</div></div>
+      <div class="stat"><div class="val" style="color:var(--red)">26</div><div class="lbl">Fail ✗</div></div>
+      <div class="stat"><div class="val" style="color:#fca5a5">18</div><div class="lbl">P1 Critical</div></div>
+      <div class="stat"><div class="val" style="color:var(--yellow)">21</div><div class="lbl">P2 High</div></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="pass">Pass</span> มีครบถ้วน</div>
+      <div class="legend-item"><span class="partial">Partial</span> มีบางส่วน</div>
+      <div class="legend-item"><span class="fail">Fail</span> ยังไม่มี</div>
+      <div class="legend-item"><span class="p1">P1</span> Critical — ต้องมีก่อน production</div>
+      <div class="legend-item"><span class="p2">P2</span> High — ควรทำเร็วๆ นี้</div>
+      <div class="legend-item"><span class="p3">P3</span> Medium — สำหรับ scale</div>
+      <div class="legend-item"><span class="p4">P4</span> Low — อนาคต</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>ภาพรวมทุกหมวดหมู่</h2>
+    <table>
+      <tr><th>หมวดหมู่</th><th>รายการ</th><th style="color:var(--green)">Pass</th><th style="color:var(--yellow)">Partial</th><th style="color:var(--red)">Fail</th><th>รายละเอียด</th></tr>
+      <tr><td><a class="cat-link" href="checklist-api-design.html">API Design</a></td><td>8</td><td style="color:var(--green)">6</td><td style="color:var(--yellow)">1</td><td style="color:var(--red)">1</td><td style="color:var(--muted);font-size:12px">Pagination ยังขาด · Response Envelope ไม่ consistent</td></tr>
+      <tr><td><a class="cat-link" href="checklist-data-management.html">Data Management</a></td><td>10</td><td style="color:var(--green)">5</td><td style="color:var(--yellow)">2</td><td style="color:var(--red)">3</td><td style="color:var(--muted);font-size:12px">Read Replica / Backup / Retention ยังไม่มี</td></tr>
+      <tr><td><a class="cat-link" href="checklist-security.html">Security</a></td><td>11</td><td style="color:var(--green)">6</td><td style="color:var(--yellow)">2</td><td style="color:var(--red)">3</td><td style="color:var(--muted);font-size:12px">Audit Log (P1!) · Token Revocation · PDPA ยังขาด</td></tr>
+      <tr><td><a class="cat-link" href="checklist-architecture.html">Architecture</a></td><td>6</td><td style="color:var(--green)">2</td><td style="color:var(--yellow)">2</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">/ready endpoint · Background Queue ยังไม่มี</td></tr>
+      <tr><td><a class="cat-link" href="checklist-logging.html">Logging &amp; Monitoring</a></td><td>5</td><td style="color:var(--green)">0</td><td style="color:var(--yellow)">1</td><td style="color:var(--red)">4</td><td style="color:var(--muted);font-size:12px">Metrics / Tracing / Alerting / SLO ยังไม่มีทั้งหมด</td></tr>
+      <tr><td><a class="cat-link" href="checklist-concurrency.html">Concurrency</a></td><td>3</td><td style="color:var(--green)">1</td><td style="color:var(--yellow)">0</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">DB Lock Strategy · Idempotency ยังไม่มี</td></tr>
+      <tr><td><a class="cat-link" href="checklist-testing.html">Testing</a></td><td>4</td><td style="color:var(--green)">2</td><td style="color:var(--yellow)">0</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">Load Test · DB Query Perf Test ยังไม่มี</td></tr>
+      <tr><td><a class="cat-link" href="checklist-cicd.html">Deployment &amp; CI/CD</a></td><td>6</td><td style="color:var(--green)">0</td><td style="color:var(--yellow)">1</td><td style="color:var(--red)">5</td><td style="color:var(--muted);font-size:12px">ไม่มี Docker, CI/CD, Rollback, DR เลย</td></tr>
+      <tr><td><a class="cat-link" href="checklist-data-pipeline.html">Data Pipeline</a></td><td>3</td><td style="color:var(--green)">0</td><td style="color:var(--yellow)">1</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">ETL Process · Reconciliation ยังไม่มี</td></tr>
+      <tr><td><a class="cat-link" href="checklist-documentation.html">Documentation</a></td><td>4</td><td style="color:var(--green)">1</td><td style="color:var(--yellow)">1</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">ADR · Runbook ยังไม่มี</td></tr>
+      <tr style="font-weight:700;background:var(--surface2)"><td>รวม</td><td>60</td><td style="color:var(--green)">23</td><td style="color:var(--yellow)">11</td><td style="color:var(--red)">26</td><td></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>จุดเสี่ยงที่ต้องแก้ก่อน (P1 + Fail/Partial)</h2>
+    <table>
+      <tr><th>#</th><th>รายการ</th><th>หมวดหมู่</th><th>สถานะ</th><th>ความเสี่ยง</th></tr>
+      <tr><td>1</td><td><a class="cat-link" href="checklist-security.html#audit-log">Audit Log (Immutable)</a></td><td>Security</td><td><span class="fail">Fail</span> <span class="p1">P1</span></td><td style="color:var(--red);font-size:12px">ข้อมูลการเงิน — ไม่รู้ว่าใคร access อะไร เมื่อไร</td></tr>
+      <tr><td>2</td><td><a class="cat-link" href="checklist-security.html#secret-mgmt">Secret Management</a></td><td>Security</td><td><span class="partial">Partial</span> <span class="p1">P1</span></td><td style="color:var(--yellow);font-size:12px">Default JWT secret ถ้าลืมเปลี่ยนจะเป็น vulnerability</td></tr>
+      <tr><td>3</td><td><a class="cat-link" href="checklist-security.html#https">HTTPS / TLS</a></td><td>Security</td><td><span class="partial">Partial</span> <span class="p1">P1</span></td><td style="color:var(--yellow);font-size:12px">TLS termination ยังต้องทำที่ infra level</td></tr>
+      <tr><td>4</td><td><a class="cat-link" href="checklist-cicd.html#docker">Docker Containerization</a></td><td>CI/CD</td><td><span class="fail">Fail</span> <span class="p2">P2</span></td><td style="color:var(--yellow);font-size:12px">Deploy ไม่ได้โดยไม่มี Dockerfile</td></tr>
+      <tr><td>5</td><td><a class="cat-link" href="checklist-cicd.html#cicd-pipeline">CI/CD Pipeline</a></td><td>CI/CD</td><td><span class="fail">Fail</span> <span class="p2">P2</span></td><td style="color:var(--yellow);font-size:12px">Test และ deploy ด้วยมือทำให้เกิด human error</td></tr>
+      <tr><td>6</td><td><a class="cat-link" href="checklist-security.html#token-refresh">Token Refresh &amp; Revocation</a></td><td>Security</td><td><span class="fail">Fail</span> <span class="p2">P2</span></td><td style="color:var(--yellow);font-size:12px">Token ที่ถูก compromise ยกเลิกไม่ได้</td></tr>
+    </table>
+  </section>
+
+  <div style="padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted)">
+    <strong style="color:var(--text)">Seamless Dashboard — Requirement Checklist</strong> &nbsp;·&nbsp;
+    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; 60 items &nbsp;·&nbsp;
+    คลิกชื่อหมวดหมู่เพื่อดูรายละเอียดและคำอธิบายทุกข้อ
+  </div>
+</main>
+</body>
+</html>

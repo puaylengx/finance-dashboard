@@ -45,8 +45,9 @@ class TestFinanceEndpoint:
             resp = await client.get("/api/v1/finance?year=2025", headers=auth_headers_fa)
         assert resp.status_code == 200
         data = resp.json()
-        assert "kpis" in data
-        assert data["kpis"]["doc_count"] == 42
+        assert data["success"] is True
+        assert "kpis" in data["data"]
+        assert data["data"]["kpis"]["doc_count"] == 42
 
     async def test_finance_invalid_year(self, client, auth_headers_fa):
         resp = await client.get("/api/v1/finance?year=1999", headers=auth_headers_fa)
@@ -119,8 +120,9 @@ class TestFinanceTopN:
             )
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["table_by_gl"]) == 5
-        assert len(data["table_by_cost_center"]) == 5
+        assert data["success"] is True
+        assert len(data["data"]["table_by_gl"]) == 5
+        assert len(data["data"]["table_by_cost_center"]) == 5
 
     async def test_budget_top_n_limits_table_rows(self, client, auth_headers_division):
         with patch(
@@ -132,7 +134,8 @@ class TestFinanceTopN:
             )
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["table_by_gl"]) == 3
+        assert data["success"] is True
+        assert len(data["data"]["table_by_gl"]) == 3
 
 
 @pytest.mark.asyncio
@@ -150,7 +153,8 @@ class TestIOEndpoint:
             resp = await client.get("/api/v1/io?year=2025", headers=auth_headers_division)
         assert resp.status_code == 200
         data = resp.json()
-        assert "kpis" in data
+        assert data["success"] is True
+        assert "kpis" in data["data"]
 
     async def test_io_top_n_limits_table_rows(self, client, auth_headers_division):
         rows = [{"cost_center_description": f"CC{i}", "total": i} for i in range(25)]
@@ -171,8 +175,9 @@ class TestIOEndpoint:
             )
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["spending_by_dept"]) == 4
-        assert len(data["pivot_table_by_io_goods"]) == 4
+        assert data["success"] is True
+        assert len(data["data"]["spending_by_dept"]) == 4
+        assert len(data["data"]["pivot_table_by_io_goods"]) == 4
 
     async def test_io_top_n_invalid(self, client, auth_headers_division):
         resp = await client.get("/api/v1/io?year=2025&top_n=0", headers=auth_headers_division)

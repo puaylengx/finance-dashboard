@@ -33,8 +33,9 @@ class TestLoginEndpoint:
             )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["token"] == "test.jwt.token"
-        assert data["role"] == "fa"
+        assert data["success"] is True
+        assert data["data"]["token"] == "test.jwt.token"
+        assert data["data"]["role"] == "fa"
 
 
 @pytest.mark.asyncio
@@ -63,7 +64,8 @@ class TestDraftLoginEndpoint:
             )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["position"] == "chief"
+        assert data["success"] is True
+        assert data["data"]["position"] == "chief"
 
     async def test_draft_login_missing_body(self, client):
         resp = await client.post("/api/v1/auth/draft-login", json={})
@@ -119,9 +121,10 @@ class TestMeEndpoint:
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["username"] == "test_user"
-        assert data["role"] == "fa"
-        assert data["position"] == "chief"
+        assert data["success"] is True
+        assert data["data"]["username"] == "test_user"
+        assert data["data"]["role"] == "fa"
+        assert data["data"]["position"] == "chief"
 
     async def test_me_invalid_token(self, client):
         resp = await client.get(

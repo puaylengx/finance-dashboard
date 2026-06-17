@@ -226,7 +226,9 @@ class TestAddCoordinator:
                 headers=fa_chief_headers,
             )
         assert resp.status_code == 201
-        assert resp.json()["username"] == "alice"
+        body = resp.json()
+        assert body["success"] is True
+        assert body["data"]["username"] == "alice"
 
     async def test_passes_username_and_caller(self, client, fa_chief_headers):
         captured = {}
@@ -296,7 +298,9 @@ class TestToggleCoordinator:
                 "/api/v1/admin/coordinators/1", headers=fa_chief_headers
             )
         assert resp.status_code == 200
-        assert resp.json()["active"] is False
+        body = resp.json()
+        assert body["success"] is True
+        assert body["data"]["active"] is False
 
     async def test_not_found_returns_404(self, client, fa_chief_headers):
         with patch(

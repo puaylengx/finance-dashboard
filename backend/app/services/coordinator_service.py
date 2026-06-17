@@ -22,16 +22,56 @@ def _row_to_dict(description, row: tuple) -> dict:
     return r
 
 
-async def list_coordinators() -> list[dict]:
+async def list_coordinators(
+    q: str | None = None,
+    active: bool | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> dict:
+    conditions: list[str] = []
+    sql_params: dict = {}
+
+    if q:
+        conditions.append("username ILIKE %(q)s")
+        sql_params["q"] = f"%{q}%"
+    if active is not None:
+        conditions.append("active = %(active)s")
+        sql_params["active"] = active
+
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    offset = (page - 1) * page_size
+
     async with get_db() as conn:
         async with conn.cursor() as cur:
-            await cur.execute("""
+            await cur.execute(
+                f"SELECT COUNT(*) FROM finance_coordinator {where}", sql_params
+            )
+            total: int = (await cur.fetchone())[0]
+
+            sql_params["limit"] = page_size
+            sql_params["offset"] = offset
+            await cur.execute(
+                f"""
                 SELECT id, username, active, created_at, updated_at, created_by, updated_by
                 FROM finance_coordinator
+                {where}
                 ORDER BY active DESC, created_at DESC
-            """)
+                LIMIT %(limit)s OFFSET %(offset)s
+                """,
+                sql_params,
+            )
             rows = await cur.fetchall()
-            return [_row_to_dict(cur.description, r) for r in rows]
+            items = [_row_to_dict(cur.description, r) for r in rows]
+
+    total_pages = (total + page_size - 1) // page_size
+    return {
+        "success": True,
+        "data": items,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": total_pages,
+    }
 
 
 async def add_coordinator(username: str, created_by: str) -> dict:

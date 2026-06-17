@@ -5,6 +5,28 @@ from app.core.security import ILIKE_ROOT_OVERRIDE, is_division, is_fa
 from app.schemas.finance import FinanceQueryParams, IOQueryParams
 from app.services.cache_service import get_cached, set_cached
 
+_FINANCE_TABLE_KEYS = (
+    "table_by_gl", "table_by_cost_center",
+    "table_by_gl_division", "table_by_cost_center_division",
+    "table_by_gl_all", "table_by_cost_center_all",
+    "pivot_table_by_gl_detail", "pivot_table_by_gl_detail_division", "pivot_table_by_gl_detail_all",
+)
+
+_IO_TABLE_KEYS = (
+    "spending_by_dept", "spending_by_division",
+    "pivot_table_by_io_goods", "pivot_table_by_io_project", "pivot_table_by_io_work",
+)
+
+
+def _apply_top_n(result: dict, keys: tuple, top_n: int | None) -> dict:
+    if top_n is None or not isinstance(result, dict):
+        return result
+    for key in keys:
+        arr = result.get(key)
+        if isinstance(arr, list):
+            result[key] = arr[:top_n]
+    return result
+
 logger = get_logger(__name__)
 
 # ── SQL: Finance / Budget dashboard ──────────────────────────────────────────

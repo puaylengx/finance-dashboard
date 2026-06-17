@@ -70,7 +70,7 @@
     <a href="checklist-api-design.html">← API Design</a>
     <a href="checklist-security.html">Security →</a>
   </div>
-  <h2>Data Management <small>— 10 requirements &nbsp; Pass 6 / Partial 2 / Fail 2</small></h2>
+  <h2>Data Management <small>— 10 requirements &nbsp; Pass 7 / Partial 1 / Fail 2</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การจัดการ database, caching, migration, และความสมบูรณ์ของข้อมูล</p>
 
   <div class="item" id="postgresql"><div class="item-head"><div><div class="item-title">1. PostgreSQL (SSH/Direct)</div><div class="item-sub">รองรับการเชื่อมต่อทั้งแบบ SSH tunnel และ direct connection</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -128,11 +128,11 @@
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี custom <code>migrations/migrate.py</code> + 4 SQL files (001–004) ✓ — apply ตาม filename order · idempotent ผ่าน <code>schema_migrations</code> table · transaction per file (auto-rollback on error) · รองรับ SSH tunnel mode</p><p>Down migration ✓ — <code>python migrate.py --rollback</code> parse <code>-- DOWN:</code> block จากทุก SQL file และ execute ในลำดับย้อนกลับ (004→001) พร้อมลบ record ออกจาก <code>schema_migrations</code> อัตโนมัติ</p></div>
   </div></div>
 
-  <div class="item" id="soft-delete"><div class="item-head"><div><div class="item-title">8. Soft Delete</div><div class="item-sub">ใช้ is_deleted flag แทน hard delete เพื่อรักษา audit trail</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
+  <div class="item" id="soft-delete"><div class="item-head"><div><div class="item-title">8. Soft Delete</div><div class="item-sub">ใช้ active flag แทน hard delete เพื่อรักษา data และ audit trail</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
-    <div class="block"><h4>คืออะไร</h4><p>Soft delete คือการ "ลบ" ข้อมูลโดยการ set flag <code>is_deleted=true</code> แทนการลบ row จริง ข้อมูลยังอยู่ใน DB สามารถ restore ได้ ตรงข้ามกับ hard delete ที่ <code>DELETE FROM table</code> โดยตรง</p></div>
+    <div class="block"><h4>คืออะไร</h4><p>Soft delete คือการ "ลบ" ข้อมูลโดยการ set flag (<code>active=false</code> หรือ <code>is_deleted=true</code>) แทนการลบ row จริง ข้อมูลยังอยู่ใน DB สามารถ restore ได้ ตรงข้ามกับ hard delete ที่ <code>DELETE FROM table</code> โดยตรง</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>สำหรับ financial data การลบข้อมูลถาวรเป็น risk ถ้า hard delete ผิดพลาดจะกู้คืนไม่ได้ soft delete ยังรักษา audit trail ว่าเคยมีรายการนี้อยู่ และสามารถ restore ได้เมื่อ admin ต้องการ</p></div>
-    <div class="block"><h4>สถานะในโปรเจกต์</h4><p><code>finance_coordinator</code>: ใช้ <code>active BOOLEAN DEFAULT TRUE</code> (soft delete) ✓ — <code>PATCH /coordinators/{id}</code> toggle active/inactive แทนการลบจริง</p><p>ERP data (<code>erp_2025</code>): ไม่มี soft delete — เป็น read-only import data จาก ERP system ดังนั้นไม่ apply</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>finance_coordinator</code>: ใช้ <code>active BOOLEAN DEFAULT TRUE</code> — ไม่มี <code>DELETE</code> ใดๆ ในระบบ ทุก "ลบ" คือ toggle <code>active = NOT active</code> · <code>PATCH /coordinators/{id}</code> · <code>coordinator_service.py:106</code></p><p>การ enforce ครอบคลุม 3 ระดับ: Auth (<code>WHERE active = TRUE</code> ใน login check · <code>auth_service.py:53</code>) · API list (<code>?active=true/false</code> filter · <code>coordinator_service.py:37</code>) · Activate endpoint (<code>SET active = TRUE</code> สำหรับ restore · <code>coordinator_service.py:85</code>)</p><p>ERP / master tables (<code>erp_2025</code>, <code>master_*</code>): read-only import จาก ERP system — ไม่มี user-initiated delete ดังนั้นไม่ apply</p></div>
   </div></div>
 
   <div class="item" id="db-backup"><div class="item-head"><div><div class="item-title">9. Database Backup</div><div class="item-sub">ทำ full backup รายวัน + incremental รายชั่วโมง + PITR รองรับย้อนหลัง 30 วัน</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>

@@ -70,7 +70,7 @@
     <a href="checklist-api-design.html">← API Design</a>
     <a href="checklist-security.html">Security →</a>
   </div>
-  <h2>Data Management <small>— 10 requirements &nbsp; Pass 5 / Partial 3 / Fail 2</small></h2>
+  <h2>Data Management <small>— 10 requirements &nbsp; Pass 6 / Partial 2 / Fail 2</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การจัดการ database, caching, migration, และความสมบูรณ์ของข้อมูล</p>
 
   <div class="item" id="postgresql"><div class="item-head"><div><div class="item-title">1. PostgreSQL (SSH/Direct)</div><div class="item-sub">รองรับการเชื่อมต่อทั้งแบบ SSH tunnel และ direct connection</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -84,7 +84,7 @@
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Database index คือโครงสร้างข้อมูลเพิ่มเติมที่ทำให้ DB ค้นหาแถวที่ต้องการได้เร็วขึ้นมาก แทนที่จะ scan ทุกแถว (sequential scan) ใช้ B-tree index ค้นได้ใน O(log n) ซึ่งแตกต่างมากเมื่อมีหลายล้านแถว</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance query ของ system นี้ทำ JOIN หลาย table และ WHERE ด้วย <code>fiscal_year</code>, <code>cost_owner</code>, <code>gl_id</code> ทุก query ถ้าไม่มี index แต่ละ query อาจใช้เวลาหลายวินาทีแทนที่จะเป็น milliseconds</p></div>
-    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>migrations/004_create_indexes.sql</code> มี 16 indexes ครอบคลุม: <code>fiscal_year</code>, <code>fiscal_year+fiscal_month</code>, <code>year+month</code>, <code>gl_id</code>, <code>cost_ctr_id</code>, <code>cost_owner</code>, IO fields (partial indexes สำหรับ nullable columns), master table PKs</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>migrations/004_create_indexes.sql</code> มี 14 indexes ครอบคลุม: <code>fiscal_year</code>, <code>fiscal_year+fiscal_month</code>, <code>year+month</code>, <code>gl_id</code>, <code>cost_ctr_id</code>, <code>cost_owner</code>, IO fields (partial indexes สำหรับ nullable columns), master table PKs</p></div>
   </div></div>
 
   <div class="item" id="data-integrity"><div class="item-head"><div><div class="item-title">3. Data Integrity</div><div class="item-sub">ใช้ DB constraint (NOT NULL, FK, CHECK) และจัดการ transaction ด้วย ACID</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -121,16 +121,11 @@
     </ul></div>
   </div></div>
 
-  <div class="item" id="db-migration"><div class="item-head"><div><div class="item-title">7. Database Migration</div><div class="item-sub">ใช้ Alembic จัดการ schema migration แบบ version-controlled</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
+  <div class="item" id="db-migration"><div class="item-head"><div><div class="item-title">7. Database Migration</div><div class="item-sub">จัดการ schema migration แบบ version-controlled พร้อม rollback</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
-    <div class="block"><h4>คืออะไร</h4><p>Database migration คือกระบวนการเปลี่ยน DB schema อย่างมีระเบียบผ่าน versioned files เช่น <code>001_add_column.sql</code> Alembic คือ migration tool มาตรฐานของ Python/SQLAlchemy ที่รองรับ up (apply) และ down (rollback) migration</p></div>
-    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าแก้ DB โดยตรงโดยไม่มี migration file ทีม dev จะไม่รู้ว่า production DB มี schema อะไรบ้าง เมื่อ deploy ใหม่ DB จะไม่ match code ทำให้ error down migration ทำให้ rollback เมื่อ deploy ใหม่มีปัญหาได้</p></div>
-    <div class="block"><h4>สถานะในโปรเจกต์</h4><p>มี custom <code>migrations/migrate.py</code> + raw SQL files (001-004) ✓ — idempotent ผ่าน <code>IF NOT EXISTS</code>, track ด้วย <code>schema_migrations</code> table ✓</p><p>แต่: ไม่ใช้ Alembic — ไม่มี down migration (rollback ไม่ได้) · ต้องเขียน SQL เอง ไม่มี auto-generate จาก model</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>ถ้าต้องการ rollback: เพิ่ม <code>down</code> section ใน migration files แต่ละไฟล์</li>
-      <li>พิจารณา migrate ไปใช้ Alembic เพื่อ auto-generate migration จาก SQLAlchemy models</li>
-      <li>อย่างน้อย document ว่าแต่ละ migration undo ได้อย่างไร</li>
-    </ul></div>
+    <div class="block"><h4>คืออะไร</h4><p>Database migration คือกระบวนการเปลี่ยน DB schema อย่างมีระเบียบผ่าน versioned files เช่น <code>001_create_tables.sql</code> ที่รัน up (apply) ตามลำดับ และมี down (rollback) เพื่อย้อนกลับได้เมื่อ deploy มีปัญหา</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าแก้ DB โดยตรงโดยไม่มี migration file ทีม dev จะไม่รู้ว่า production DB มี schema อะไรบ้าง เมื่อ deploy ใหม่ DB จะไม่ match code ทำให้ error · หาก deploy ใหม่มีปัญหา การ rollback schema ต้องทำแบบ manual และ error-prone</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี custom <code>migrations/migrate.py</code> + 4 SQL files (001–004) ✓ — apply ตาม filename order · idempotent ผ่าน <code>schema_migrations</code> table · transaction per file (auto-rollback on error) · รองรับ SSH tunnel mode</p><p>Down migration ✓ — <code>python migrate.py --rollback</code> parse <code>-- DOWN:</code> block จากทุก SQL file และ execute ในลำดับย้อนกลับ (004→001) พร้อมลบ record ออกจาก <code>schema_migrations</code> อัตโนมัติ</p></div>
   </div></div>
 
   <div class="item" id="soft-delete"><div class="item-head"><div><div class="item-title">8. Soft Delete</div><div class="item-sub">ใช้ is_deleted flag แทน hard delete เพื่อรักษา audit trail</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>

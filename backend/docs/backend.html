@@ -1097,7 +1097,7 @@ created_at, updated_at, created_by, updated_by</pre>
       <tr><td><code>001_create_finance_tables.sql</code></td><td>ตาราง <code>erp_2025</code></td></tr>
       <tr><td><code>002_create_master_tables.sql</code></td><td>ตาราง master ทั้งหมด (9 ตาราง)</td></tr>
       <tr><td><code>003_create_coordinator.sql</code></td><td>ตาราง <code>finance_coordinator</code> + indexes</td></tr>
-      <tr><td><code>004_create_indexes.sql</code></td><td>15 performance indexes บน erp_2025 + master tables</td></tr>
+      <tr><td><code>004_create_indexes.sql</code></td><td>14 performance indexes บน erp_2025 + master tables</td></tr>
     </table>
 
     <pre><span class="cmt"># รัน migrations ทั้งหมด</span>
@@ -1116,6 +1116,11 @@ Done — 4 migration(s) applied.</pre>
       <strong>ℹ Idempotent</strong>
       Migration ใช้ <code>CREATE TABLE IF NOT EXISTS</code> และ <code>CREATE INDEX IF NOT EXISTS</code>
       รันซ้ำหลายครั้งได้อย่างปลอดภัย — ตาราง <code>schema_migrations</code> track ว่า file ไหนรันไปแล้ว
+    </div>
+    <div class="callout callout-info">
+      <strong>ℹ Rollback (Down Migration)</strong>
+      <code>python migrate.py --rollback</code> parse <code>-- DOWN:</code> block จากทุก SQL file
+      และ execute ในลำดับย้อนกลับ (004→001) พร้อมลบ record ออกจาก <code>schema_migrations</code> อัตโนมัติ
     </div>
   </section>
 
@@ -1277,7 +1282,7 @@ open htmlcov/index.html</pre>
       <tr>
         <td>DB Optimization (Indexing)</td>
         <td><span style="color:var(--green)">✓</span></td>
-        <td>15 indexes ใน <code>migrations/004_create_indexes.sql</code></td>
+        <td>14 indexes ใน <code>migrations/004_create_indexes.sql</code></td>
       </tr>
       <tr>
         <td>Data Integrity (Transactions)</td>

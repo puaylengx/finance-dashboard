@@ -58,7 +58,7 @@ WITH base AS (
     erp.fiscal_month,
     MOD(erp.month + 5, 12) + 1                                    AS pa_month,
     CASE WHEN erp.month >= 7 THEN erp.year ELSE erp.year - 1 END  AS pa_year
-  FROM erp_2025 erp
+  FROM erp_transactions erp
     LEFT JOIN master_gl       gl      ON erp.gl_id       = gl.gl_id
     LEFT JOIN master_cost_ctr costCtr ON erp.cost_ctr_id = costCtr.cost_center_id
     LEFT JOIN master_cost_ctr costOwn ON erp.cost_owner  = costOwn.cost_center_id
@@ -222,7 +222,7 @@ WITH base AS (
     erp.fiscal_month,
     MOD(erp.month + 5, 12) + 1                                    AS pa_month,
     CASE WHEN erp.month >= 7 THEN erp.year ELSE erp.year - 1 END  AS pa_year
-  FROM erp_2025 erp
+  FROM erp_transactions erp
     LEFT JOIN master_io_goods   good    ON good.io_good_id       = erp.io_goods
     LEFT JOIN master_io_project project ON project.io_project_id = erp.io_project
     LEFT JOIN master_io_work    work    ON work.io_work_id        = erp.io_work

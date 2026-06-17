@@ -70,7 +70,7 @@
     <a href="checklist-api-design.html">← API Design</a>
     <a href="checklist-security.html">Security →</a>
   </div>
-  <h2>Data Management <small>— 10 requirements &nbsp; Pass 5 / Partial 2 / Fail 3</small></h2>
+  <h2>Data Management <small>— 10 requirements &nbsp; Pass 5 / Partial 3 / Fail 2</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การจัดการ database, caching, migration, และความสมบูรณ์ของข้อมูล</p>
 
   <div class="item" id="postgresql"><div class="item-head"><div><div class="item-title">1. PostgreSQL (SSH/Direct)</div><div class="item-sub">รองรับการเชื่อมต่อทั้งแบบ SSH tunnel และ direct connection</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -108,16 +108,16 @@
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>psycopg3 AsyncConnectionPool</code> min=2, max=20 · ปรับได้ผ่าน <code>DB_POOL_MIN_SIZE</code>, <code>DB_POOL_MAX_SIZE</code> · <code>database.py:55-62</code> · async — ไม่ block event loop ขณะรอ connection</p></div>
   </div></div>
 
-  <div class="item" id="read-replica"><div class="item-head"><div><div class="item-title">6. Read Replica</div><div class="item-sub">แยก read traffic ไปยัง PostgreSQL read replica เพื่อลดภาระ primary DB</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="read-replica"><div class="item-head"><div><div class="item-title">6. Read Replica</div><div class="item-sub">แยก read traffic ไปยัง PostgreSQL read replica เพื่อลดภาระ primary DB</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Read replica คือ PostgreSQL instance ที่ sync ข้อมูลจาก primary แบบ real-time (streaming replication) สำหรับ read-only query เท่านั้น ทำให้ primary DB รับเฉพาะ write operation ลด load ได้มาก</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard มีเฉพาะ read query (SELECT) เกือบทั้งหมด ถ้า concurrent users มากขึ้นจน primary DB เริ่ม overload read replica จะช่วยกระจาย load ได้โดยไม่ต้องเปลี่ยน code มาก</p></div>
-    <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ทุก query รวม read และ write ส่งไปยัง primary DB เดียวกัน Redis cache ช่วยลด read load บางส่วน แต่ไม่เพียงพอเมื่อ concurrent users สูงและมี cache miss บ่อย</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ (เมื่อ traffic เพิ่มขึ้น)</h4><ul>
+    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังไม่ได้ deploy · ผู้ใช้งานไม่มาก · Redis cache (TTL 300s) ช่วยลด read load ได้เพียงพอสำหรับ load ปัจจุบัน — ทบทวนเมื่อ concurrent users สูงขึ้นจริงหรือมี cache miss บ่อย</p></div>
+    <div class="block block-todo"><h4>เมื่อถึงเวลา (trigger: DB load สูง / cache miss บ่อย)</h4><ul>
       <li>ตั้ง PostgreSQL streaming replication: primary → replica</li>
-      <li>เพิ่ม <code>READ_REPLICA_URL</code> ใน config</li>
-      <li>แก้ <code>database.py</code> ให้มี 2 pool: write pool (primary) และ read pool (replica)</li>
-      <li>Route Finance/IO/Budget queries ไปยัง read pool</li>
+      <li>เพิ่ม <code>READ_REPLICA_HOST</code> ใน config (ค่า default = primary host ถ้ายังไม่มี replica)</li>
+      <li>เพิ่ม <code>get_read_db()</code> ใน <code>database.py</code> ที่ fallback ไป primary pool อัตโนมัติ</li>
+      <li>Route Finance/IO/Budget queries ไปยัง <code>get_read_db()</code></li>
     </ul></div>
   </div></div>
 

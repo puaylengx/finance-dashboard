@@ -70,7 +70,7 @@
     <a href="checklist-api-design.html">← API Design</a>
     <a href="checklist-security.html">Security →</a>
   </div>
-  <h2>Data Management <small>— 10 requirements &nbsp; Pass 7 / Partial 1 / Fail 2</small></h2>
+  <h2>Data Management <small>— 10 requirements &nbsp; Pass 7 / Partial 2 / Fail 1</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การจัดการ database, caching, migration, และความสมบูรณ์ของข้อมูล</p>
 
   <div class="item" id="postgresql"><div class="item-head"><div><div class="item-title">1. PostgreSQL (SSH/Direct)</div><div class="item-sub">รองรับการเชื่อมต่อทั้งแบบ SSH tunnel และ direct connection</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -135,12 +135,12 @@
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>finance_coordinator</code>: ใช้ <code>active BOOLEAN DEFAULT TRUE</code> — ไม่มี <code>DELETE</code> ใดๆ ในระบบ ทุก "ลบ" คือ toggle <code>active = NOT active</code> · <code>PATCH /coordinators/{id}</code> · <code>coordinator_service.py:106</code></p><p>การ enforce ครอบคลุม 3 ระดับ: Auth (<code>WHERE active = TRUE</code> ใน login check · <code>auth_service.py:53</code>) · API list (<code>?active=true/false</code> filter · <code>coordinator_service.py:37</code>) · Activate endpoint (<code>SET active = TRUE</code> สำหรับ restore · <code>coordinator_service.py:85</code>)</p><p>ERP / master tables (<code>erp_2025</code>, <code>master_*</code>): read-only import จาก ERP system — ไม่มี user-initiated delete ดังนั้นไม่ apply</p></div>
   </div></div>
 
-  <div class="item" id="db-backup"><div class="item-head"><div><div class="item-title">9. Database Backup</div><div class="item-sub">ทำ full backup รายวัน + incremental รายชั่วโมง + PITR รองรับย้อนหลัง 30 วัน</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="db-backup"><div class="item-head"><div><div class="item-title">9. Database Backup</div><div class="item-sub">ทำ full backup รายวัน + incremental รายชั่วโมง + PITR รองรับย้อนหลัง 30 วัน</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><strong>Full backup</strong> คือ snapshot ทั้ง database ณ เวลาหนึ่ง <strong>Incremental backup</strong> คือ backup เฉพาะ changes หลัง backup ครั้งล่าสุด <strong>PITR (Point-in-Time Recovery)</strong> คือความสามารถ restore DB ไปยังช่วงเวลาใดก็ได้ในอดีต</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า DB crash, hardware failure, หรือ ransomware — ถ้าไม่มี backup ข้อมูลการเงินทั้งหมดหาย PITR ช่วยให้ restore ได้ถึง 1 นาทีก่อนเกิดปัญหา แทนที่จะต้องย้อนไปถึง full backup ล่าสุด</p></div>
-    <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี backup script · ไม่มี backup schedule · ไม่มี restore procedure document เป็น infrastructure gap ที่ต้องจัดการนอก codebase</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
+    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ข้อมูลหลัก (<code>erp_2025</code>, <code>master_*</code>) มาจาก ERP system ซึ่งเป็น source of truth — หาก local DB หายสามารถ re-import ได้ · <code>finance_coordinator</code> เป็นข้อมูลเล็กน้อย (user-managed) · ความเสี่ยงต่ำกว่า use case ทั่วไปที่ DB คือแหล่งข้อมูลเดียว — ทบทวนเมื่อมีข้อมูลที่ไม่ได้มาจาก ERP เพิ่มขึ้น หรือเมื่อ RTO/RPO requirement ถูกกำหนด</p></div>
+    <div class="block block-todo"><h4>เมื่อถึงเวลา (trigger: มีข้อมูลนอก ERP / กำหนด RTO-RPO)</h4><ul>
       <li>ตั้ง <code>pg_dump</code> cron job: full backup รายวัน (เก็บ 30 วัน), incremental ด้วย WAL archiving รายชั่วโมง</li>
       <li>เก็บ backup ใน object storage แยก server (S3, Azure Blob) ไม่เก็บบน DB server เดียวกัน</li>
       <li>Enable PostgreSQL WAL archiving สำหรับ PITR</li>

@@ -10,6 +10,7 @@ class FinanceQueryParams(BaseModel):
     cost_center: str | None = None
     cost_owner: str | None = None
     q: str | None = None
+    top_n: int | None = Field(default=None, ge=1, le=500, description="Limit rows returned in each table array")
 
 
 class IOQueryParams(BaseModel):
@@ -20,3 +21,4 @@ class IOQueryParams(BaseModel):
     cost_owner: str | None = None
     cost_center: str | None = None
     q: str | None = None
+    top_n: int | None = Field(default=None, ge=1, le=500, description="Limit rows returned in each table array")

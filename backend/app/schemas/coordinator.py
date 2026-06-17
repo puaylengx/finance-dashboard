@@ -7,6 +7,13 @@ class CoordinatorCreate(BaseModel):
     username: str = Field(..., min_length=1, max_length=100, pattern=r"^[\w\-\.@]+$")
 
 
+class CoordinatorListParams(BaseModel):
+    q: str | None = Field(default=None, max_length=100)
+    active: bool | None = None
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=100)
+
+
 class CoordinatorResponse(BaseModel):
     id: int
     username: str

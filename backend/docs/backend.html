@@ -320,7 +320,7 @@
       <div class="stat-card"><div class="val">v1.0</div><div class="lbl">API Version</div></div>
       <div class="stat-card"><div class="val">5</div><div class="lbl">Endpoints Groups</div></div>
       <div class="stat-card"><div class="val">47</div><div class="lbl">Source Files</div></div>
-      <div class="stat-card"><div class="val">3</div><div class="lbl">Test Suites</div></div>
+      <div class="stat-card"><div class="val">10</div><div class="lbl">Test Suites</div></div>
     </div>
   </div>
 
@@ -770,6 +770,7 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
       <tr><td><code>cost_center</code></td><td>str?</td><td>null</td><td>Cost center description — ILIKE search</td></tr>
       <tr><td><code>cost_owner</code></td><td>str?</td><td>null</td><td>FA เท่านั้น — Non-FA force เป็น role ตัวเอง</td></tr>
       <tr><td><code>q</code></td><td>str?</td><td>null</td><td>Keyword search ใน details, gl_description</td></tr>
+      <tr><td><code>top_n</code></td><td>int?</td><td>null</td><td>จำกัดจำนวน rows ใน table arrays (1–500) — ใช้ลด payload size</td></tr>
     </table>
 
     <h3>Response Structure</h3>
@@ -859,6 +860,19 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
       </tr>
     </table>
 
+    <h3>Query Parameters</h3>
+    <table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+      <tr><td><code>year</code></td><td>int</td><td>2025</td><td>Calendar year (ค.ศ.)</td></tr>
+      <tr><td><code>pa_year</code></td><td>int?</td><td>null</td><td>PA Year — ปีงบประมาณ (override year)</td></tr>
+      <tr><td><code>month_from</code></td><td>int?</td><td>null</td><td>Fiscal month เริ่มต้น (ต.ค.=1 … ก.ย.=12)</td></tr>
+      <tr><td><code>month_to</code></td><td>int?</td><td>null</td><td>Fiscal month สิ้นสุด</td></tr>
+      <tr><td><code>cost_center</code></td><td>str?</td><td>null</td><td>Cost center description — ILIKE search</td></tr>
+      <tr><td><code>cost_owner</code></td><td>str?</td><td>null</td><td>FA เท่านั้น — Non-FA force เป็น role ตัวเอง</td></tr>
+      <tr><td><code>q</code></td><td>str?</td><td>null</td><td>Keyword search</td></tr>
+      <tr><td><code>top_n</code></td><td>int?</td><td>null</td><td>จำกัดจำนวน rows ใน table arrays (1–500) — ใช้ลด payload size</td></tr>
+    </table>
+
     <h3>Response Structure</h3>
     <pre>{
   <span class="key">"kpis"</span>: {
@@ -906,7 +920,7 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
       <tr>
         <td><code>/api/v1/admin/coordinators</code></td>
         <td><span class="badge badge-get">GET</span></td>
-        <td>ดูรายชื่อทั้งหมด (active + inactive)</td>
+        <td>ดูรายชื่อทั้งหมด พร้อม pagination, search และ active filter</td>
       </tr>
       <tr>
         <td><code>/api/v1/admin/coordinators</code></td>
@@ -919,6 +933,35 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
         <td>Toggle active ↔ inactive (soft delete)</td>
       </tr>
     </table>
+
+    <h3>GET Query Parameters</h3>
+    <table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>คำอธิบาย</th></tr>
+      <tr><td><code>q</code></td><td>str?</td><td>null</td><td>Search username (ILIKE <code>%q%</code>, max 100 chars)</td></tr>
+      <tr><td><code>active</code></td><td>bool?</td><td>null</td><td>Filter — <code>true</code>=active เท่านั้น, <code>false</code>=inactive เท่านั้น, null=ทั้งหมด</td></tr>
+      <tr><td><code>page</code></td><td>int</td><td>1</td><td>หน้าปัจจุบัน (≥ 1)</td></tr>
+      <tr><td><code>page_size</code></td><td>int</td><td>20</td><td>จำนวนรายการต่อหน้า (1–100)</td></tr>
+    </table>
+
+    <h3>GET Response (Paginated)</h3>
+    <pre>{
+  <span class="key">"success"</span>:     <span class="kw">true</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>:         <span class="num">1</span>,
+      <span class="key">"username"</span>:   <span class="str">"john.doe@example.com"</span>,
+      <span class="key">"active"</span>:     <span class="kw">true</span>,
+      <span class="key">"created_at"</span>: <span class="str">"2025-01-15T08:30:00+07:00"</span>,
+      <span class="key">"updated_at"</span>: <span class="kw">null</span>,
+      <span class="key">"created_by"</span>: <span class="str">"admin"</span>,
+      <span class="key">"updated_by"</span>: <span class="kw">null</span>
+    }
+  ],
+  <span class="key">"page"</span>:        <span class="num">1</span>,
+  <span class="key">"page_size"</span>:   <span class="num">20</span>,
+  <span class="key">"total"</span>:       <span class="num">45</span>,
+  <span class="key">"total_pages"</span>: <span class="num">3</span>
+}</pre>
 
     <h3>วิธีทดสอบ</h3>
     <div class="test-steps">
@@ -942,8 +985,12 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
       </div>
       <div class="test-step">
         <div>
-          <strong>ดูรายชื่อทั้งหมด</strong>
-          <pre>curl http://localhost:8000/api/v1/admin/coordinators \
+          <strong>ดูรายชื่อทั้งหมด (paginated)</strong>
+          <pre>curl "http://localhost:8000/api/v1/admin/coordinators?page=1&amp;page_size=20" \
+  -H "Authorization: Bearer $FA_TOKEN"
+
+<span class="cmt"># Search + filter</span>
+curl "http://localhost:8000/api/v1/admin/coordinators?q=john&amp;active=true" \
   -H "Authorization: Bearer $FA_TOKEN"</pre>
         </div>
       </div>
@@ -1059,33 +1106,68 @@ pytest tests/unit/test_security.py -v
 pytest --cov-report=html
 open htmlcov/index.html</pre>
 
-    <h3>Test Suites</h3>
+    <h3>Test Suites (10 files · 183 tests)</h3>
     <table>
-      <tr><th>File</th><th>ประเภท</th><th>ทดสอบอะไร</th></tr>
+      <tr><th>File</th><th>ประเภท</th><th>ทดสอบอะไร</th><th>Tests</th></tr>
       <tr>
         <td><code>unit/test_security.py</code></td>
         <td>Unit</td>
         <td>extract_claims, JWT create/decode, Fernet encryption, params_hash</td>
+        <td>18</td>
       </tr>
       <tr>
         <td><code>unit/test_permissions.py</code></td>
         <td>Unit</td>
         <td>POSITION_ROLES, DIVISION_ROLES, ILIKE_ROOT_OVERRIDE, edge cases</td>
+        <td>7</td>
+      </tr>
+      <tr>
+        <td><code>unit/test_deps.py</code></td>
+        <td>Unit</td>
+        <td>JWT dependency — valid/expired/invalid token, role/position checks</td>
+        <td>18</td>
+      </tr>
+      <tr>
+        <td><code>unit/test_cache_service.py</code></td>
+        <td>Unit</td>
+        <td>get_cached, set_cached, invalidate — Redis hit/miss/error paths</td>
+        <td>16</td>
+      </tr>
+      <tr>
+        <td><code>unit/test_pagination.py</code></td>
+        <td>Unit</td>
+        <td>PaginationParams, PaginatedResponse, top_n slicing (_apply_top_n)</td>
+        <td>22</td>
+      </tr>
+      <tr>
+        <td><code>unit/test_finance_service.py</code></td>
+        <td>Unit</td>
+        <td>_build_dashboard_params, _build_io_params, _run_query, get_dashboard, get_io — cache hit/miss/exception</td>
+        <td>32</td>
+      </tr>
+      <tr>
+        <td><code>unit/test_coordinator_service.py</code></td>
+        <td>Unit</td>
+        <td>_row_to_dict (TZ conversion), add_coordinator, toggle_coordinator — commit + cache invalidation</td>
+        <td>11</td>
       </tr>
       <tr>
         <td><code>integration/test_auth.py</code></td>
         <td>Integration</td>
         <td>login, entra-login (503/403), draft-login (success/denied/404 in prod), /me</td>
+        <td>12</td>
       </tr>
       <tr>
         <td><code>integration/test_finance.py</code></td>
         <td>Integration</td>
-        <td>/finance (FA only), /budget (all roles), /io, input validation</td>
+        <td>/finance (FA only), /budget (all roles), /io, top_n validation + slicing, 500 error paths</td>
+        <td>18</td>
       </tr>
       <tr>
         <td><code>integration/test_coordinator.py</code></td>
         <td>Integration</td>
-        <td>List, Add, Toggle coordinator — permission checks ทุก case</td>
+        <td>List (paginated, q/active/page filters), Add, Toggle — permission checks + SQL pagination logic</td>
+        <td>29</td>
       </tr>
     </table>
 
@@ -1221,12 +1303,12 @@ open htmlcov/index.html</pre>
       <tr>
         <td>Unit Tests</td>
         <td><span style="color:var(--green)">✓</span></td>
-        <td>test_security.py, test_permissions.py — 20+ test cases</td>
+        <td>7 files — security, permissions, deps, cache, pagination, finance service, coordinator service — 124 cases</td>
       </tr>
       <tr>
         <td>Integration Tests</td>
         <td><span style="color:var(--green)">✓</span></td>
-        <td>test_auth.py, test_finance.py, test_coordinator.py — mock DB/Redis</td>
+        <td>3 files — test_auth.py, test_finance.py, test_coordinator.py — 59 cases, mock DB/Redis</td>
       </tr>
     </table>
 
@@ -1234,7 +1316,7 @@ open htmlcov/index.html</pre>
       <p style="color:var(--muted);font-size:13px;margin:0">
         <strong style="color:var(--text)">Seamless Dashboard Backend v1.0</strong><br>
         FastAPI · psycopg3 · Redis · MS Entra ID · JWT<br>
-        Docs generated: 2026-06-02
+        Docs generated: 2026-06-17
       </p>
     </div>
   </section>

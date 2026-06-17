@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.v1.deps import require_fa_with_position
 from app.core.logging import get_logger
+from app.schemas.common import PaginatedResponse
 from app.schemas.coordinator import CoordinatorCreate, CoordinatorResponse
 from app.services import coordinator_service
 
@@ -11,12 +12,20 @@ logger = get_logger(__name__)
 
 @router.get(
     "",
-    response_model=list[CoordinatorResponse],
-    summary="List all coordinators (FA + position required)",
+    response_model=PaginatedResponse[CoordinatorResponse],
+    summary="List coordinators with pagination and filtering (FA + position required)",
 )
-async def list_coordinators(user: dict = Depends(require_fa_with_position)):
+async def list_coordinators(
+    q: str | None = Query(default=None, max_length=100, description="Search by username"),
+    active: bool | None = Query(default=None, description="Filter by active status"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    user: dict = Depends(require_fa_with_position),
+):
     try:
-        return await coordinator_service.list_coordinators()
+        return await coordinator_service.list_coordinators(
+            q=q, active=active, page=page, page_size=page_size
+        )
     except Exception as exc:
         logger.error("List coordinators failed: %s", exc)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")

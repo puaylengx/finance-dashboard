@@ -1,4 +1,14 @@
 -- migration: 002_create_master_tables
+-- DOWN:
+--   DROP TABLE IF EXISTS master_mu_strategy;
+--   DROP TABLE IF EXISTS master_ic_strategy;
+--   DROP TABLE IF EXISTS master_io_work;
+--   DROP TABLE IF EXISTS master_io_project;
+--   DROP TABLE IF EXISTS master_io_activities;
+--   DROP TABLE IF EXISTS master_io_goods;
+--   DROP TABLE IF EXISTS master_gl;
+--   DROP TABLE IF EXISTS master_fund;
+--   DROP TABLE IF EXISTS master_cost_ctr;
 
 CREATE TABLE IF NOT EXISTS master_cost_ctr (
   cost_center_id          TEXT NOT NULL,

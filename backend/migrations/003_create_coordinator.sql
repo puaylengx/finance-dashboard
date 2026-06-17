@@ -1,4 +1,6 @@
 -- migration: 003_create_coordinator
+-- DOWN: DROP TABLE IF EXISTS finance_coordinator CASCADE;
+--       (CASCADE ลบ idx_finance_coordinator_username และ idx_finance_coordinator_active อัตโนมัติ)
 
 CREATE TABLE IF NOT EXISTS finance_coordinator (
   id         SERIAL      PRIMARY KEY,

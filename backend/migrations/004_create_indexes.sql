@@ -1,5 +1,20 @@
 -- migration: 004_create_indexes
 -- Performance indexes for erp_2025 query patterns
+-- DOWN:
+--   DROP INDEX IF EXISTS idx_erp_fiscal_year;
+--   DROP INDEX IF EXISTS idx_erp_fiscal_year_month;
+--   DROP INDEX IF EXISTS idx_erp_year_month;
+--   DROP INDEX IF EXISTS idx_erp_gl_id;
+--   DROP INDEX IF EXISTS idx_erp_cost_ctr_id;
+--   DROP INDEX IF EXISTS idx_erp_cost_owner;
+--   DROP INDEX IF EXISTS idx_erp_io_goods;
+--   DROP INDEX IF EXISTS idx_erp_io_project;
+--   DROP INDEX IF EXISTS idx_erp_io_work;
+--   DROP INDEX IF EXISTS idx_master_cost_ctr_id;
+--   DROP INDEX IF EXISTS idx_master_gl_id;
+--   DROP INDEX IF EXISTS idx_master_io_goods_id;
+--   DROP INDEX IF EXISTS idx_master_io_project_id;
+--   DROP INDEX IF EXISTS idx_master_io_work_id;
 
 -- Primary lookup: fiscal_year (used in every dashboard query)
 CREATE INDEX IF NOT EXISTS idx_erp_fiscal_year

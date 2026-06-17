@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Run all pending SQL migrations against the configured database."""
+"""Run or rollback SQL migrations against the configured database.
+
+Usage:
+    python migrate.py              # apply all pending migrations
+    python migrate.py --rollback   # rollback all applied migrations in reverse order
+"""
 import os
 import sys
 from pathlib import Path
@@ -57,10 +62,40 @@ def _get_connection():
     return conn, tunnel
 
 
+def _extract_down_sql(sql_text):
+    """Parse -- DOWN: comment block and return a list of SQL statements."""
+    lines = sql_text.splitlines()
+    down_lines = []
+    in_down = False
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.upper().startswith("-- DOWN:"):
+            in_down = True
+            inline = stripped[len("-- DOWN:"):].strip()
+            if inline:
+                down_lines.append(inline)
+        elif in_down and stripped.startswith("--"):
+            content = stripped.lstrip("-").strip()
+            if content:
+                down_lines.append(content)
+        elif in_down:
+            break
+
+    if not down_lines:
+        return []
+
+    _SQL_KEYWORDS = ("DROP", "DELETE", "ALTER", "TRUNCATE", "UPDATE", "INSERT", "CREATE")
+    full_text = " ".join(down_lines)
+    return [
+        s.strip() for s in full_text.split(";")
+        if s.strip() and s.strip().upper().startswith(_SQL_KEYWORDS)
+    ]
+
+
 def run_migrations():
     conn, tunnel = _get_connection()
     try:
-        # สร้างตาราง tracking ถ้ายังไม่มี
         cur = conn.cursor()
         cur.execute(f"""
             CREATE TABLE IF NOT EXISTS {MIGRATIONS_TABLE} (
@@ -76,7 +111,6 @@ def run_migrations():
         applied   = 0
 
         for sql_file in sql_files:
-            # ตรวจว่า migration นี้รันไปแล้วหรือยัง
             cur = conn.cursor()
             cur.execute(
                 f"SELECT 1 FROM {MIGRATIONS_TABLE} WHERE filename = %s",
@@ -89,7 +123,6 @@ def run_migrations():
                 print(f"  SKIP  {sql_file.name}")
                 continue
 
-            # รัน migration
             print(f"  RUN   {sql_file.name} ...", end=" ", flush=True)
             sql = sql_file.read_text(encoding="utf-8")
 
@@ -117,5 +150,72 @@ def run_migrations():
             tunnel.stop()
 
 
+def rollback_migrations():
+    conn, tunnel = _get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_name = '{MIGRATIONS_TABLE}'
+            )
+        """)
+        exists = cur.fetchone()[0]
+        cur.close()
+
+        if not exists:
+            print("No migrations table found — nothing to rollback.")
+            return
+
+        sql_files = sorted(MIGRATIONS_DIR.glob("*.sql"), reverse=True)
+        rolled_back = 0
+
+        for sql_file in sql_files:
+            cur = conn.cursor()
+            cur.execute(
+                f"SELECT 1 FROM {MIGRATIONS_TABLE} WHERE filename = %s",
+                (sql_file.name,),
+            )
+            is_applied = cur.fetchone() is not None
+            cur.close()
+
+            if not is_applied:
+                print(f"  SKIP  {sql_file.name} (not applied)")
+                continue
+
+            statements = _extract_down_sql(sql_file.read_text(encoding="utf-8"))
+            if not statements:
+                print(f"  WARN  {sql_file.name} — no -- DOWN: block found, skipping")
+                continue
+
+            print(f"  DOWN  {sql_file.name} ...", end=" ", flush=True)
+            try:
+                cur = conn.cursor()
+                for stmt in statements:
+                    cur.execute(stmt)
+                cur.execute(
+                    f"DELETE FROM {MIGRATIONS_TABLE} WHERE filename = %s",
+                    (sql_file.name,),
+                )
+                cur.close()
+                conn.commit()
+                print("OK")
+                rolled_back += 1
+            except Exception as exc:
+                conn.rollback()
+                print(f"FAILED\n  Error: {exc}")
+                sys.exit(1)
+
+        print(f"\nDone — {rolled_back} migration(s) rolled back.")
+
+    finally:
+        conn.close()
+        if tunnel:
+            tunnel.stop()
+
+
 if __name__ == "__main__":
-    run_migrations()
+    if "--rollback" in sys.argv:
+        rollback_migrations()
+    else:
+        run_migrations()

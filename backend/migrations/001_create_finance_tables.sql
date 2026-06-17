@@ -1,5 +1,6 @@
 -- migration: 001_create_finance_tables
 -- Main ERP transaction table
+-- DOWN: DROP TABLE IF EXISTS erp_2025;
 
 CREATE TABLE IF NOT EXISTS erp_2025 (
   fiscal_year       BIGINT        NOT NULL,

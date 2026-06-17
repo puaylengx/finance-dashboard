@@ -73,9 +73,9 @@
 
   <div class="item" id="etl"><div class="item-head"><div><div class="item-title">1. ETL / Data Import Process</div><div class="item-sub">กระบวนการ import ข้อมูลจาก ERP ไปยัง PostgreSQL มี error handling และ retry mechanism</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
   <div class="item-body">
-    <div class="block"><h4>คืออะไร</h4><p>ETL (Extract, Transform, Load) คือกระบวนการ: (1) <strong>Extract</strong> ดึงข้อมูลจาก ERP source (2) <strong>Transform</strong> แปลง format, clean, validate (3) <strong>Load</strong> บันทึกลง PostgreSQL table <code>erp_2025</code> กระบวนการนี้ควรมี scheduled run, error handling, และ idempotent (run ซ้ำได้โดยไม่ duplicate)</p></div>
+    <div class="block"><h4>คืออะไร</h4><p>ETL (Extract, Transform, Load) คือกระบวนการ: (1) <strong>Extract</strong> ดึงข้อมูลจาก ERP source (2) <strong>Transform</strong> แปลง format, clean, validate (3) <strong>Load</strong> บันทึกลง PostgreSQL table <code>erp_transactions</code> กระบวนการนี้ควรมี scheduled run, error handling, และ idempotent (run ซ้ำได้โดยไม่ duplicate)</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard แสดงข้อมูลจาก ERP ถ้ากระบวนการ import ไม่ reliable ข้อมูลที่แสดงจะไม่ครบหรือผิดพลาด ผู้บริหารตัดสินใจบนข้อมูลเก่าหรือผิด ซึ่งส่งผลกระทบต่อการเงินองค์กร</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ข้อมูลใน <code>erp_2025</code> table มีอยู่แล้ว (จาก ERP) แต่ไม่มี documented ETL process ในโปรเจกต์นี้ ไม่ชัดเจนว่าข้อมูลมาจากไหนและ update บ่อยแค่ไหน</p></div>
+    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ข้อมูลใน <code>erp_transactions</code> table มีอยู่แล้ว (จาก ERP) แต่ไม่มี documented ETL process ในโปรเจกต์นี้ ไม่ชัดเจนว่าข้อมูลมาจากไหนและ update บ่อยแค่ไหน</p></div>
     <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
       <li>Document ETL process ที่ใช้อยู่ปัจจุบัน (ถ้ามี): ใครรัน, บ่อยแค่ไหน, เอาข้อมูลจากไหน</li>
       <li>ถ้ายังไม่มี: สร้าง ETL script พร้อม: idempotent upsert, error logging, retry บน failure</li>
@@ -83,7 +83,7 @@
       <li>เพิ่ม data freshness indicator ใน dashboard: แสดง "ข้อมูล ณ วันที่ ..."</li>
     </ul>
     <pre># ตัวอย่าง upsert pattern (idempotent)
-INSERT INTO erp_2025 (gl_id, fiscal_year, amount, ...)
+INSERT INTO erp_transactions (gl_id, fiscal_year, amount, ...)
 VALUES (%(gl_id)s, %(year)s, %(amount)s, ...)
 ON CONFLICT (gl_id, fiscal_year)
 DO UPDATE SET amount = EXCLUDED.amount, updated_at = NOW();</pre>
@@ -96,7 +96,7 @@ DO UPDATE SET amount = EXCLUDED.amount, updated_at = NOW();</pre>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>"Garbage in, garbage out" — ถ้า import ข้อมูลผิดเข้า DB แล้วค่อยมา detect ทีหลัง เสียต้นทุนมากกว่าการ validate ก่อน import นอกจากนั้น finance data ที่ผิดอาจส่งผลกระทบต่อการรายงานทางการเงิน</p></div>
     <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p>มี DB-level constraints: NOT NULL, FOREIGN KEY, CHECK บน migration แต่ไม่มี application-level pre-import validation หรือ data quality report</p>
     <pre>-- จาก migration: DB-level validation มีอยู่
-ALTER TABLE erp_2025
+ALTER TABLE erp_transactions
   ADD CONSTRAINT chk_fiscal_month CHECK (fiscal_month BETWEEN 1 AND 12);
 -- แต่ไม่มี pre-import validation script</pre>
     </div>
@@ -121,7 +121,7 @@ ALTER TABLE erp_2025
     </ul>
     <pre># ตัวอย่าง reconciliation check
 SELECT fiscal_year, SUM(amount) as dashboard_total
-FROM erp_2025
+FROM erp_transactions
 GROUP BY fiscal_year;
 -- compare กับ ERP report total
 -- ถ้า |dashboard_total - erp_total| > threshold → alert</pre>

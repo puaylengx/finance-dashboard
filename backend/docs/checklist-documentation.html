@@ -116,16 +116,16 @@
   <div class="item" id="data-dictionary"><div class="item-head"><div><div class="item-title">4. Data Dictionary</div><div class="item-sub">อธิบาย schema ของทุก table, field name, data type และ business meaning</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Partial</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Data Dictionary คือ document ที่อธิบายทุก table และ field ใน database ว่า: ชื่อคืออะไร, data type อะไร, และสำคัญที่สุด <strong>ความหมายทาง business</strong> คืออะไร เช่น <code>gl_id</code> ย่อมาจากอะไร, <code>cost_ctr_id</code> แตกต่างจาก <code>cost_owner</code> อย่างไร</p></div>
-    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Database schema บอก technical structure แต่ไม่บอก business meaning developer ใหม่ต้องเดาว่า <code>erp_2025</code> table มี column อะไรที่ relate กับ budget vs actual ถ้ามี data dictionary เข้าใจทันที</p></div>
+    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Database schema บอก technical structure แต่ไม่บอก business meaning developer ใหม่ต้องเดาว่า <code>erp_transactions</code> table มี column อะไรที่ relate กับ budget vs actual ถ้ามี data dictionary เข้าใจทันที</p></div>
     <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p>มี migration SQL files ที่แสดง table structure แต่ไม่มี document ที่อธิบาย business meaning ของแต่ละ field migration files อยู่ที่ <code>backend/migrations/</code> แต่ไม่มี comment อธิบาย field</p></div>
     <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
       <li>สร้าง <code>backend/docs/data-dictionary.html</code> (หรือ markdown)</li>
-      <li>Document ทุก table: <code>erp_2025</code>, <code>cost_center_master</code>, <code>finance_coordinator</code> และ master tables อื่นๆ</li>
+      <li>Document ทุก table: <code>erp_transactions</code>, <code>cost_center_master</code>, <code>finance_coordinator</code> และ master tables อื่นๆ</li>
       <li>แต่ละ field ระบุ: ชื่อ, type, nullable, business meaning, ตัวอย่างค่า</li>
       <li>ระบุ relationships: FK ไปยัง table ไหน, join ยังไง</li>
     </ul>
     <pre># ตัวอย่าง Data Dictionary entry
-## erp_2025
+## erp_transactions
 | Field        | Type    | Description                              |
 |-------------|---------|------------------------------------------|
 | gl_id       | VARCHAR | GL Account ID จาก ERP (General Ledger)  |

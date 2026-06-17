@@ -152,7 +152,7 @@
       <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
-      <div class="block"><h4>คืออะไร</h4><p>SQL Injection คือ attack ที่ใส่ SQL code ใน user input เช่น <code>year=2025; DROP TABLE erp_2025--</code> ถ้า code ทำ string concat จะกลายเป็น SQL ที่ทำลายข้อมูล Parameterized query แก้ปัญหานี้ด้วยการส่ง user input เป็น parameter แยกจาก SQL statement</p></div>
+      <div class="block"><h4>คืออะไร</h4><p>SQL Injection คือ attack ที่ใส่ SQL code ใน user input เช่น <code>year=2025; DROP TABLE erp_transactions--</code> ถ้า code ทำ string concat จะกลายเป็น SQL ที่ทำลายข้อมูล Parameterized query แก้ปัญหานี้ด้วยการส่ง user input เป็น parameter แยกจาก SQL statement</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>SQL Injection เป็น OWASP Top 10 อันดับ 1 มาหลายปี ถ้าถูก exploit ผู้โจมตีสามารถอ่าน แก้ไข หรือลบข้อมูลทั้ง database ได้ สำหรับ financial data ความเสียหายร้ายแรงมาก</p></div>
       <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
         <p>ทุก SQL query ใช้ <code>%(name)s</code> parameterized syntax ผ่าน <code>psycopg3 AsyncClientCursor</code></p>

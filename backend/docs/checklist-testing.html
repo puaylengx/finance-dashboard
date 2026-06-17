@@ -74,12 +74,17 @@
     <div class="block"><h4>คืออะไร</h4><p>Unit test คือการทดสอบ function หรือ class แต่ละตัวแยกอิสระ โดย mock dependencies ออก เช่น mock DB connection หรือ Redis เพื่อทดสอบเฉพาะ business logic ของ function นั้น ตรงๆ โดยไม่ต้องมี infra จริง</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Unit test ทำให้ developer มั่นใจว่า logic ที่เขียนถูกต้อง และ detect regression ได้เร็วเมื่อ refactor หรือ add feature ใหม่ ใน financial system สำคัญมากเพราะ bug ในการคำนวณตัวเลขส่งผลกระทบโดยตรงต่อการตัดสินใจ</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
-      <p>มี <code>pytest</code> ใน requirements.txt, มีโครงสร้าง test directory และ unit tests สำหรับ service layer</p>
+      <p>7 unit test files, 124 test cases ครอบคลุม security, permissions, deps, cache, pagination, และ service layers</p>
       <pre>backend/tests/
   unit/
-    test_auth_service.py    # test login logic, token validation
-    test_finance_service.py # test cache key generation, query params
-  conftest.py               # fixtures: mock DB, mock Redis</pre>
+    test_security.py           # extract_claims, JWT, Fernet, params_hash (18)
+    test_permissions.py        # POSITION_ROLES, DIVISION_ROLES, ILIKE_ROOT_OVERRIDE (7)
+    test_deps.py               # JWT dependency, valid/expired/invalid token (18)
+    test_cache_service.py      # get_cached, set_cached, invalidate — Redis paths (16)
+    test_pagination.py         # PaginationParams, PaginatedResponse, _apply_top_n (22)
+    test_finance_service.py    # _build_params, _run_query, get_dashboard, get_io (32)
+    test_coordinator_service.py # _row_to_dict, add, toggle — commit + cache (11)
+  conftest.py                  # fixtures: mock DB, mock Redis, tokens</pre>
     </div>
   </div></div>
 
@@ -88,12 +93,12 @@
     <div class="block"><h4>คืออะไร</h4><p>Integration test ทดสอบหลาย component ทำงานร่วมกัน เช่น ส่ง HTTP request จริงไปยัง FastAPI endpoint ซึ่ง query test database จริง ตรวจสอบว่า layer ต่างๆ integrate กันได้ถูกต้อง ไม่ใช่แค่ unit แยกๆ</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Unit test mock ทุกอย่างออก แต่ integration test จับ bug ที่เกิดจาก interface ระหว่าง layer เช่น SQL query ที่ unit test mock ผ่านแต่ query จริงพัง เพราะ column name ผิด หรือ auth middleware ไม่ตรงกับ endpoint ที่คาดหวัง</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
-      <p>มี integration tests ที่ใช้ <code>httpx.AsyncClient</code> กับ FastAPI test client และ test database แยก</p>
+      <p>3 integration test files, 59 test cases — ทดสอบ HTTP endpoint จริงด้วย <code>httpx.AsyncClient</code> + <code>ASGITransport</code> โดย mock DB/Redis</p>
       <pre>backend/tests/
   integration/
-    test_auth_endpoints.py   # POST /auth/login, /auth/me
-    test_finance_endpoints.py # GET /finance, GET /budget
-    test_coordinator.py      # GET/POST/PATCH coordinator API</pre>
+    test_auth.py         # /auth/login, /auth/entra-login, draft-login, /me (12)
+    test_finance.py      # /finance, /budget, /io — auth, role, top_n, 500 (18)
+    test_coordinator.py  # list (paginated, filters), add, toggle — SQL pagination logic (29)</pre>
     </div>
   </div></div>
 

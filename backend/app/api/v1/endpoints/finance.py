@@ -38,7 +38,7 @@ async def get_finance(
         result = await finance_service.get_dashboard(
             role=user["role"], params=params, cache_prefix="finance"
         )
-        return _apply_top_n(result, _FINANCE_TABLE_KEYS, top_n)
+        return {"success": True, "data": _apply_top_n(result, _FINANCE_TABLE_KEYS, top_n)}
     except Exception as exc:
         logger.error("Finance endpoint error: %s", exc)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")
@@ -71,7 +71,7 @@ async def get_budget(
         result = await finance_service.get_dashboard(
             role=user["role"], params=params, cache_prefix="budget"
         )
-        return _apply_top_n(result, _FINANCE_TABLE_KEYS, top_n)
+        return {"success": True, "data": _apply_top_n(result, _FINANCE_TABLE_KEYS, top_n)}
     except Exception as exc:
         logger.error("Budget endpoint error: %s", exc)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")

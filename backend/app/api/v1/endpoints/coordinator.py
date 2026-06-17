@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.v1.deps import require_fa_with_position
 from app.core.logging import get_logger
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import APIResponse, PaginatedResponse
 from app.schemas.coordinator import CoordinatorCreate, CoordinatorResponse
 from app.services import coordinator_service
 
@@ -33,7 +33,7 @@ async def list_coordinators(
 
 @router.post(
     "",
-    response_model=CoordinatorResponse,
+    response_model=APIResponse[CoordinatorResponse],
     status_code=status.HTTP_201_CREATED,
     summary="Add or reactivate a coordinator (FA + position required)",
     responses={
@@ -43,10 +43,11 @@ async def list_coordinators(
 )
 async def add_coordinator(body: CoordinatorCreate, user: dict = Depends(require_fa_with_position)):
     try:
-        return await coordinator_service.add_coordinator(
+        result = await coordinator_service.add_coordinator(
             username=body.username,
             created_by=user["sub"],
         )
+        return {"success": True, "data": result}
     except Exception as exc:
         logger.error("Add coordinator failed: %s", exc)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Operation failed")
@@ -54,7 +55,7 @@ async def add_coordinator(body: CoordinatorCreate, user: dict = Depends(require_
 
 @router.patch(
     "/{coord_id}",
-    response_model=CoordinatorResponse,
+    response_model=APIResponse[CoordinatorResponse],
     summary="Toggle coordinator active/inactive — FA + position required",
     responses={
         404: {"description": "Coordinator not found"},
@@ -72,4 +73,4 @@ async def toggle_coordinator(coord_id: int, user: dict = Depends(require_fa_with
 
     if result is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Coordinator not found")
-    return result
+    return {"success": True, "data": result}

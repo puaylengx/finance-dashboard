@@ -34,7 +34,7 @@ async def get_io(
     )
     try:
         result = await finance_service.get_io(role=user["role"], params=params)
-        return _apply_top_n(result, _IO_TABLE_KEYS, top_n)
+        return {"success": True, "data": _apply_top_n(result, _IO_TABLE_KEYS, top_n)}
     except Exception as exc:
         logger.error("IO endpoint error: %s", exc)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Query failed")

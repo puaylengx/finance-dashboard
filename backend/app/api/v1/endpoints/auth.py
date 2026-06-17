@@ -14,6 +14,7 @@ from app.schemas.auth import (
     TokenResponse,
     UserInfo,
 )
+from app.schemas.common import APIResponse
 from app.services.auth_service import (
     EntraNotConfiguredError,
     draft_login,
@@ -28,7 +29,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 @router.post(
     "/login",
-    response_model=TokenResponse,
+    response_model=APIResponse[TokenResponse],
     summary="Login with username/password (local accounts)",
     responses={
         400: {"description": "Missing credentials"},
@@ -40,12 +41,12 @@ async def login(request: Request, form: OAuth2PasswordRequestForm = Depends()):
     result = await login_with_password(form.username, form.password)
     if not result:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    return result
+    return {"success": True, "data": result}
 
 
 @router.post(
     "/entra-login",
-    response_model=TokenResponse,
+    response_model=APIResponse[TokenResponse],
     summary="Exchange MS Entra ID access token for API JWT (Production)",
     description=(
         "แลก MS Entra ID access token เป็น JWT ของระบบ\n\n"
@@ -78,12 +79,12 @@ async def entra_login(request: Request, body: EntraLoginRequest):
             status.HTTP_403_FORBIDDEN,
             detail="ไม่มีสิทธิ์เข้าถึง (โปรดติดต่องานการเงิน หน่วยงบประมาณ)",
         )
-    return result
+    return {"success": True, "data": result}
 
 
 @router.post(
     "/draft-login",
-    response_model=TokenResponse,
+    response_model=APIResponse[TokenResponse],
     summary="[Draft] Simulate Entra ID login ด้วย job_title (Dev/Staging เท่านั้น)",
     description=(
         "**ใช้สำหรับ Dev/Staging เท่านั้น** — จำลอง MS Entra ID โดยรับ `job_title` โดยตรง\n\n"
@@ -113,12 +114,12 @@ async def dev_draft_login(request: Request, body: DraftLoginRequest):
             status.HTTP_403_FORBIDDEN,
             detail="ไม่มีสิทธิ์เข้าถึง (โปรดติดต่องานการเงิน หน่วยงบประมาณ)",
         )
-    return result
+    return {"success": True, "data": result}
 
 
 @router.get(
     "/me",
-    response_model=UserInfo,
+    response_model=APIResponse[UserInfo],
     summary="Get current user info from JWT",
 )
 async def me(user: dict = Depends(get_current_user)):
@@ -127,10 +128,10 @@ async def me(user: dict = Depends(get_current_user)):
         datetime.fromtimestamp(exp_ts, tz=timezone.utc).isoformat()
         if exp_ts else None
     )
-    return UserInfo(
+    return {"success": True, "data": UserInfo(
         username=user.get("sub", ""),
         role=user.get("role", ""),
         position=user.get("position"),
         coordinator=user.get("coordinator", False),
         expires_at=expires_at,
-    )
+    )}

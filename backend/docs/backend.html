@@ -1053,7 +1053,7 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
   <section id="schema">
     <h2><span class="section-num">13</span>Database Schema</h2>
 
-    <h3>erp_2025 — ตารางหลักข้อมูล ERP</h3>
+    <h3>erp_transactions — ตารางหลักข้อมูล ERP</h3>
     <pre>fiscal_year, fiscal_month, trimester, day, month, year
 doc_no, doc_date, funds_ctr
 cost_ctr_id  → FK: master_cost_ctr.cost_center_id
@@ -1094,10 +1094,10 @@ created_at, updated_at, created_by, updated_by</pre>
 
     <table>
       <tr><th>File</th><th>สร้างอะไร</th></tr>
-      <tr><td><code>001_create_finance_tables.sql</code></td><td>ตาราง <code>erp_2025</code></td></tr>
+      <tr><td><code>001_create_finance_tables.sql</code></td><td>ตาราง <code>erp_transactions</code></td></tr>
       <tr><td><code>002_create_master_tables.sql</code></td><td>ตาราง master ทั้งหมด (9 ตาราง)</td></tr>
       <tr><td><code>003_create_coordinator.sql</code></td><td>ตาราง <code>finance_coordinator</code> + indexes</td></tr>
-      <tr><td><code>004_create_indexes.sql</code></td><td>14 performance indexes บน erp_2025 + master tables</td></tr>
+      <tr><td><code>004_create_indexes.sql</code></td><td>14 performance indexes บน erp_transactions + master tables</td></tr>
     </table>
 
     <pre><span class="cmt"># รัน migrations ทั้งหมด</span>

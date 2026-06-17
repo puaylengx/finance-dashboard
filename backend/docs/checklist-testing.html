@@ -130,7 +130,7 @@
     </ul>
     <pre>-- ตัวอย่างวิธี analyze
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT ... FROM erp_2025
+SELECT ... FROM erp_transactions
 WHERE fiscal_year = 2025 AND cost_ctr_id = 'CC001';
 -- ดู "Index Scan using idx_erp_fiscal_year" vs "Seq Scan"</pre>
     </div>

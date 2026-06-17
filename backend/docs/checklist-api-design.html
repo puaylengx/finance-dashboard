@@ -68,7 +68,7 @@
     <a href="checklist.html">← Summary</a>
     <a href="checklist-data-management.html">Data Management →</a>
   </div>
-  <h2>API Design <small>— 8 requirements &nbsp; Pass 7 / Partial 1 / Fail 0</small></h2>
+  <h2>API Design <small>— 8 requirements &nbsp; Pass 8 / Partial 0 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ออกแบบ API ให้ถูกต้อง สม่ำเสมอ และปลอดภัย ตามมาตรฐาน REST</p>
 
   <!-- 1. API Versioning -->
@@ -180,26 +180,29 @@ GET /api/v1/finance?year=2025&amp;top_n=20
   <div class="item" id="response-envelope">
     <div class="item-head">
       <div><div class="item-title">7. Response Envelope</div><div class="item-sub">Standardize response format: { data, meta, error } เพื่อให้ client parse ได้สม่ำเสมอ</div></div>
-      <div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
-      <div class="block"><h4>คืออะไร</h4><p>Response envelope คือ wrapper format ที่สม่ำเสมอทุก endpoint เช่น <code>{"success": true, "data": {...}, "meta": {"page": 1}}</code> แทนที่จะส่ง raw object บางครั้งและ <code>{"error": "..."}</code> อีกครั้งหนึ่ง</p></div>
+      <div class="block"><h4>คืออะไร</h4><p>Response envelope คือ wrapper format ที่สม่ำเสมอทุก endpoint เช่น <code>{"success": true, "data": {...}}</code> แทนที่จะส่ง raw object บางครั้งและ <code>{"error": "..."}</code> อีกครั้งหนึ่ง ทำให้ frontend เขียน generic response handler ชุดเดียวได้</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Frontend สามารถเขียน generic response handler ชุดเดียว แทนที่จะต้องรู้ว่า endpoint ไหนส่ง format ไหน ลด bug จากการ handle response ผิด format ทำให้ code frontend clean ขึ้นมาก</p></div>
-      <div class="block"><h4>สถานะในโปรเจกต์</h4>
-        <p><code>schemas/common.py</code> มี <code>APIResponse{success, data, message}</code> และ <code>ErrorResponse{success, error, detail}</code> แต่ใช้จริงแค่บางส่วน:</p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><code>schemas/common.py</code> มี <code>APIResponse[T]{success, data}</code> และ <code>ErrorResponse{success, error, detail}</code> — ใช้ครบทุก endpoint แล้ว:</p>
         <ul>
-          <li>Error responses: ใช้ <code>{"success": false, "error": "..."}</code> สม่ำเสมอ ✓</li>
-          <li>Finance/IO/Budget: ส่ง raw dict จาก PostgreSQL โดยตรง — ไม่ wrap ด้วย envelope ✗</li>
-          <li>Coordinator, Auth: ใช้ Pydantic model โดยตรง — ไม่ wrap ✗</li>
+          <li><strong>Finance / Budget / IO</strong>: <code>{"success": true, "data": {kpis, tables...}}</code> — endpoint layer wrap หลัง cache</li>
+          <li><strong>Auth (login, entra-login, draft-login)</strong>: <code>response_model=APIResponse[TokenResponse]</code> → <code>{"success": true, "data": {token, role, ...}}</code></li>
+          <li><strong>Auth /me</strong>: <code>response_model=APIResponse[UserInfo]</code> → <code>{"success": true, "data": {username, role, ...}}</code></li>
+          <li><strong>Coordinator POST/PATCH</strong>: <code>response_model=APIResponse[CoordinatorResponse]</code> → <code>{"success": true, "data": {...}}</code></li>
+          <li><strong>Coordinator GET (list)</strong>: <code>PaginatedResponse</code> มี <code>success + data + pagination meta</code> ✓</li>
+          <li><strong>Error responses</strong>: <code>{"success": false, "error": "..."}</code> ✓</li>
         </ul>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <ul>
-          <li>ตัดสินใจก่อนว่าจะ wrap หรือไม่ — ถ้า frontend ออกแบบรองรับแล้ว อาจเปลี่ยน response breaking</li>
-          <li>ถ้า wrap: ครอบ finance/IO/coordinator response ด้วย <code>{"success": true, "data": {...}}</code></li>
-          <li>อัปเดต <code>response_model</code> ทุก endpoint เป็น <code>APIResponse[T]</code></li>
-          <li>อัปเดต OpenAPI docs และ frontend ให้ match format ใหม่</li>
-        </ul>
+        <pre>// ทุก success endpoint
+{ "success": true, "data": &lt;payload&gt; }
+
+// Coordinator list (pagination meta ที่ top level)
+{ "success": true, "data": [...], "page": 1, "page_size": 20, "total": 45, "total_pages": 3 }
+
+// ทุก error
+{ "success": false, "error": "message" }</pre>
       </div>
     </div>
   </div>

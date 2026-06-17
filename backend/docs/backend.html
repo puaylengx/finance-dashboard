@@ -675,13 +675,16 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
 }</pre>
       <p><strong>Response (success):</strong></p>
       <pre>{
-  <span class="key">"token"</span>:       <span class="str">"eyJhbGciOiJIUzI1NiJ9..."</span>,
-  <span class="key">"token_type"</span>:  <span class="str">"bearer"</span>,
-  <span class="key">"expires_in"</span>:  <span class="num">3600</span>,
-  <span class="key">"role"</span>:        <span class="str">"fa"</span>,
-  <span class="key">"position"</span>:    <span class="str">"chief"</span>,
-  <span class="key">"coordinator"</span>: <span class="kw">false</span>,
-  <span class="key">"name"</span>:        <span class="str">"Finance Chief"</span>
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"token"</span>:       <span class="str">"eyJhbGciOiJIUzI1NiJ9..."</span>,
+    <span class="key">"token_type"</span>:  <span class="str">"bearer"</span>,
+    <span class="key">"expires_in"</span>:  <span class="num">3600</span>,
+    <span class="key">"role"</span>:        <span class="str">"fa"</span>,
+    <span class="key">"position"</span>:    <span class="str">"chief"</span>,
+    <span class="key">"coordinator"</span>: <span class="kw">false</span>,
+    <span class="key">"name"</span>:        <span class="str">"Finance Chief"</span>
+  }
 }</pre>
     </div>
 
@@ -692,6 +695,17 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
       </div>
       <p>ดูข้อมูล user จาก JWT ที่ถืออยู่</p>
       <pre>Authorization: Bearer &lt;token&gt;</pre>
+      <p><strong>Response:</strong></p>
+      <pre>{
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"username"</span>:   <span class="str">"finance.chief@example.com"</span>,
+    <span class="key">"role"</span>:       <span class="str">"fa"</span>,
+    <span class="key">"position"</span>:   <span class="str">"chief"</span>,
+    <span class="key">"coordinator"</span>: <span class="kw">false</span>,
+    <span class="key">"expires_at"</span>: <span class="str">"2026-06-17T15:30:00+00:00"</span>
+  }
+}</pre>
     </div>
 
     <h3>วิธีทดสอบ Authentication</h3>
@@ -702,7 +716,7 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
           <pre>curl -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
   -d '{"job_title":"dept,fa,chief","name":"Test Chief"}'</pre>
-          <p>ต้องได้ <code>200</code> + token ที่มี <code>"position":"chief"</code></p>
+          <p>ต้องได้ <code>200</code> + JSON ที่มี <code>success: true</code> และ <code>data.position: "chief"</code></p>
         </div>
       </div>
       <div class="test-step">
@@ -775,22 +789,25 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
 
     <h3>Response Structure</h3>
     <pre>{
-  <span class="key">"kpis"</span>: {
-    <span class="key">"total_amount"</span>:       <span class="num">45230000.00</span>,
-    <span class="key">"total_budget"</span>:       <span class="num">900000000.00</span>,
-    <span class="key">"doc_count"</span>:          <span class="num">1240</span>,
-    <span class="key">"avg_amount_per_doc"</span>: <span class="num">36475.81</span>
-  },
-  <span class="key">"trend_month"</span>:                    <span class="cmt">// แนวโน้มรายเดือน</span>
-  <span class="key">"table_by_gl"</span>,                    <span class="cmt">// GL summary — dept เท่านั้น</span>
-  <span class="key">"table_by_cost_center"</span>,           <span class="cmt">// Cost center summary — dept เท่านั้น</span>
-  <span class="key">"pivot_table_by_gl_detail"</span>,       <span class="cmt">// GL drilldown — dept เท่านั้น</span>
-  <span class="key">"table_by_gl_division"</span>,           <span class="cmt">// GL summary — division เท่านั้น</span>
-  <span class="key">"table_by_cost_center_division"</span>,  <span class="cmt">// Cost center — division</span>
-  <span class="key">"pivot_table_by_gl_detail_division"</span>, <span class="cmt">// GL drilldown — division</span>
-  <span class="key">"table_by_gl_all"</span>,               <span class="cmt">// รวมทั้งหมด</span>
-  <span class="key">"table_by_cost_center_all"</span>,       <span class="cmt">// รวมทั้งหมด</span>
-  <span class="key">"pivot_table_by_gl_detail_all"</span>    <span class="cmt">// รวมทั้งหมด</span>
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"kpis"</span>: {
+      <span class="key">"total_amount"</span>:       <span class="num">45230000.00</span>,
+      <span class="key">"total_budget"</span>:       <span class="num">900000000.00</span>,
+      <span class="key">"doc_count"</span>:          <span class="num">1240</span>,
+      <span class="key">"avg_amount_per_doc"</span>: <span class="num">36475.81</span>
+    },
+    <span class="key">"trend_month"</span>:                    <span class="cmt">// แนวโน้มรายเดือน</span>
+    <span class="key">"table_by_gl"</span>,                    <span class="cmt">// GL summary — dept เท่านั้น</span>
+    <span class="key">"table_by_cost_center"</span>,           <span class="cmt">// Cost center summary — dept เท่านั้น</span>
+    <span class="key">"pivot_table_by_gl_detail"</span>,       <span class="cmt">// GL drilldown — dept เท่านั้น</span>
+    <span class="key">"table_by_gl_division"</span>,           <span class="cmt">// GL summary — division เท่านั้น</span>
+    <span class="key">"table_by_cost_center_division"</span>,  <span class="cmt">// Cost center — division</span>
+    <span class="key">"pivot_table_by_gl_detail_division"</span>, <span class="cmt">// GL drilldown — division</span>
+    <span class="key">"table_by_gl_all"</span>,               <span class="cmt">// รวมทั้งหมด</span>
+    <span class="key">"table_by_cost_center_all"</span>,       <span class="cmt">// รวมทั้งหมด</span>
+    <span class="key">"pivot_table_by_gl_detail_all"</span>    <span class="cmt">// รวมทั้งหมด</span>
+  }
 }</pre>
 
     <div class="callout callout-warn">
@@ -806,7 +823,7 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
           <strong>ขอ token ก่อน</strong>
           <pre>TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")</pre>
+  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")</pre>
         </div>
       </div>
       <div class="test-step">
@@ -814,7 +831,7 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
           <strong>เรียก finance dashboard (FA เท่านั้น)</strong>
           <pre>curl "http://localhost:8000/api/v1/finance?year=2025" \
   -H "Authorization: Bearer $TOKEN"</pre>
-          <p>ต้องได้ <code>200</code> พร้อม JSON ที่มี kpis, trend_month, table_by_gl</p>
+          <p>ต้องได้ <code>200</code> พร้อม <code>success: true</code> และ <code>data.kpis</code>, <code>data.trend_month</code>, <code>data.table_by_gl</code></p>
         </div>
       </div>
       <div class="test-step">
@@ -822,7 +839,7 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
           <strong>ทดสอบ access control — Division role กับ /finance</strong>
           <pre>DIV_TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,bba,head","name":"BBA Head"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+  -d '{"job_title":"dept,bba,head","name":"BBA Head"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
 
 curl "http://localhost:8000/api/v1/finance?year=2025" \
   -H "Authorization: Bearer $DIV_TOKEN"
@@ -875,18 +892,21 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
 
     <h3>Response Structure</h3>
     <pre>{
-  <span class="key">"kpis"</span>: {
-    <span class="key">"total_amount"</span>:            <span class="num">12400000.00</span>,
-    <span class="key">"total_amount_io_goods"</span>:   <span class="num">7200000.00</span>,
-    <span class="key">"count_io_goods"</span>:          <span class="num">14</span>,
-    <span class="key">"total_amount_io_project"</span>: <span class="num">5200000.00</span>,
-    <span class="key">"count_io_project"</span>:        <span class="num">6</span>
-  },
-  <span class="key">"spending_by_dept"</span>:            <span class="cmt">// การใช้จ่ายแยก dept</span>
-  <span class="key">"spending_by_division"</span>:        <span class="cmt">// การใช้จ่ายแยก division</span>
-  <span class="key">"pivot_table_by_io_goods"</span>:     <span class="cmt">// IO Goods drilldown</span>
-  <span class="key">"pivot_table_by_io_project"</span>:   <span class="cmt">// IO Project drilldown</span>
-  <span class="key">"pivot_table_by_io_work"</span>       <span class="cmt">// IO Work drilldown</span>
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"kpis"</span>: {
+      <span class="key">"total_amount"</span>:            <span class="num">12400000.00</span>,
+      <span class="key">"total_amount_io_goods"</span>:   <span class="num">7200000.00</span>,
+      <span class="key">"count_io_goods"</span>:          <span class="num">14</span>,
+      <span class="key">"total_amount_io_project"</span>: <span class="num">5200000.00</span>,
+      <span class="key">"count_io_project"</span>:        <span class="num">6</span>
+    },
+    <span class="key">"spending_by_dept"</span>:            <span class="cmt">// การใช้จ่ายแยก dept</span>
+    <span class="key">"spending_by_division"</span>:        <span class="cmt">// การใช้จ่ายแยก division</span>
+    <span class="key">"pivot_table_by_io_goods"</span>:     <span class="cmt">// IO Goods drilldown</span>
+    <span class="key">"pivot_table_by_io_project"</span>:   <span class="cmt">// IO Project drilldown</span>
+    <span class="key">"pivot_table_by_io_work"</span>       <span class="cmt">// IO Work drilldown</span>
+  }
 }</pre>
 
     <h3>วิธีทดสอบ</h3>
@@ -963,6 +983,20 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
   <span class="key">"total_pages"</span>: <span class="num">3</span>
 }</pre>
 
+    <h3>POST / PATCH Response</h3>
+    <pre>{
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>:         <span class="num">1</span>,
+    <span class="key">"username"</span>:   <span class="str">"john.doe@example.com"</span>,
+    <span class="key">"active"</span>:     <span class="kw">true</span>,
+    <span class="key">"created_at"</span>: <span class="str">"2025-01-15T08:30:00+07:00"</span>,
+    <span class="key">"updated_at"</span>: <span class="kw">null</span>,
+    <span class="key">"created_by"</span>: <span class="str">"admin"</span>,
+    <span class="key">"updated_by"</span>: <span class="kw">null</span>
+  }
+}</pre>
+
     <h3>วิธีทดสอบ</h3>
     <div class="test-steps">
       <div class="test-step">
@@ -970,7 +1004,7 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
           <strong>ขอ token ที่เป็น FA + position</strong>
           <pre>FA_TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")</pre>
+  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")</pre>
         </div>
       </div>
       <div class="test-step">
@@ -980,7 +1014,7 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
   -H "Authorization: Bearer $FA_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"username":"john.doe@example.com"}'
-<span class="cmt"># → 201 Created</span></pre>
+<span class="cmt"># → 201 { "success": true, "data": { "id": 1, "username": "john.doe@example.com", "active": true, ... } }</span></pre>
         </div>
       </div>
       <div class="test-step">
@@ -999,7 +1033,7 @@ curl "http://localhost:8000/api/v1/admin/coordinators?q=john&amp;active=true" \
           <strong>Toggle deactivate (สมมติ id=1)</strong>
           <pre>curl -X PATCH http://localhost:8000/api/v1/admin/coordinators/1 \
   -H "Authorization: Bearer $FA_TOKEN"
-<span class="cmt"># → active จะเปลี่ยนเป็น false</span></pre>
+<span class="cmt"># → 200 { "success": true, "data": { "id": 1, "active": false, ... } }</span></pre>
         </div>
       </div>
       <div class="test-step">
@@ -1009,7 +1043,7 @@ curl "http://localhost:8000/api/v1/admin/coordinators?q=john&amp;active=true" \
 curl -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
   -d '{"job_title":"dept,bba","name":"john.doe@example.com"}'
-<span class="cmt"># → 200 พร้อม "coordinator": true</span></pre>
+<span class="cmt"># → 200 { "success": true, "data": { ..., "coordinator": true } }</span></pre>
         </div>
       </div>
     </div>
@@ -1219,6 +1253,11 @@ open htmlcov/index.html</pre>
         <td>RESTful + JSON</td>
         <td><span style="color:var(--green)">✓</span></td>
         <td>FastAPI + Pydantic response models ทุก endpoint</td>
+      </tr>
+      <tr>
+        <td>Response Envelope</td>
+        <td><span style="color:var(--green)">✓</span></td>
+        <td>ทุก success response: <code>{"success": true, "data": {...}}</code> — error: <code>{"success": false, "error": "..."}</code></td>
       </tr>
       <tr>
         <td>Error Handling</td>

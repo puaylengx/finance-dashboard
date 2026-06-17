@@ -68,7 +68,7 @@
     <a href="checklist.html">← Summary</a>
     <a href="checklist-data-management.html">Data Management →</a>
   </div>
-  <h2>API Design <small>— 8 requirements &nbsp; Pass 6 / Partial 1 / Fail 1</small></h2>
+  <h2>API Design <small>— 8 requirements &nbsp; Pass 7 / Partial 1 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ออกแบบ API ให้ถูกต้อง สม่ำเสมอ และปลอดภัย ตามมาตรฐาน REST</p>
 
   <!-- 1. API Versioning -->
@@ -140,22 +140,22 @@
   <div class="item" id="pagination">
     <div class="item-head">
       <div><div class="item-title">5. Pagination &amp; Filtering</div><div class="item-sub">ทุก list endpoint ต้องรองรับ cursor-based pagination, sorting, และ filtering</div></div>
-      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p><strong>Pagination</strong> คือการแบ่งผลลัพธ์เป็นหน้าๆ — cursor-based ใช้ pointer ไปยัง record สุดท้ายแทนหน้าเลข (เสถียรกว่าเมื่อข้อมูลเพิ่ม) <strong>Filtering</strong> คือการกรองข้อมูลด้วย query parameter เช่น year, month, gl_group</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า list endpoint ส่งข้อมูลทั้งหมดในครั้งเดียว เมื่อข้อมูลมีแสนรายการ response จะใช้ memory มากและช้ามาก cursor-based pagination ทำให้ response size คงที่ไม่ว่าข้อมูลจะโตแค่ไหน</p></div>
-      <div class="block"><h4>สถานะในโปรเจกต์</h4>
-        <p><strong>Filtering</strong>: มีผ่าน query params — <code>year</code>, <code>month_from</code>, <code>month_to</code>, <code>gl_group</code>, <code>cost_center</code>, <code>q</code> ✓</p>
-        <p><strong>Pagination</strong>: ไม่มี — Finance/IO/Budget เป็น aggregate query (SQL GROUP BY + JSONB_AGG) ที่ส่งผลลัพธ์ทั้งหมดในครั้งเดียว Coordinator list ก็ไม่มี pagination</p>
-        <p>สำหรับ Finance/IO — เป็น dashboard aggregate (ไม่ใช่ row list) ดังนั้น pagination อาจไม่จำเป็น แต่ Coordinator list ควรมี</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <ul>
-          <li>เพิ่ม pagination ให้ <code>GET /admin/coordinators</code>: <code>?limit=20&amp;cursor=last_id</code></li>
-          <li>พิจารณาว่า Finance/IO pivot tables จะโตมากพอที่ต้องการ pagination ไหม — ถ้าใช่เพิ่ม <code>?page_size</code></li>
-          <li>เพิ่ม sorting parameter เช่น <code>?sort=total_amount&amp;order=desc</code> สำหรับ table responses</li>
-        </ul>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><strong>Coordinator list pagination (SQL-level)</strong>: <code>GET /admin/coordinators</code> รองรับ <code>page</code>, <code>page_size</code> (1–100), <code>q</code> (ILIKE search), <code>active</code> (bool filter) — ผ่าน <code>COUNT(*)</code> + <code>LIMIT/OFFSET</code> ใน PostgreSQL ตอบกลับเป็น <code>PaginatedResponse[CoordinatorResponse]</code> พร้อม <code>total</code>, <code>total_pages</code></p>
+        <p><strong>Finance/IO/Budget top_n (Python-level slicing)</strong>: <code>GET /finance</code>, <code>GET /budget</code>, <code>GET /io</code> รองรับ <code>top_n</code> (1–500) เพื่อจำกัดจำนวน rows ในทุก table array — ใช้ post-cache slicing ที่ endpoint layer ดังนั้น cache entry เดิมยังใช้ได้ทุก <code>top_n</code></p>
+        <p><strong>Filtering</strong>: <code>year</code>, <code>month_from</code>, <code>month_to</code>, <code>gl_group</code>, <code>cost_center</code>, <code>q</code> ✓</p>
+        <pre>// Coordinator list
+GET /api/v1/admin/coordinators?q=john&amp;active=true&amp;page=2&amp;page_size=10
+→ { success, data: [...], page: 2, page_size: 10, total: 45, total_pages: 5 }
+
+// Finance table slicing
+GET /api/v1/finance?year=2025&amp;top_n=20
+→ table_by_gl[:20], table_by_cost_center[:20], ...ทุก table key</pre>
       </div>
     </div>
   </div>

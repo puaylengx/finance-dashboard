@@ -8,6 +8,7 @@ from slowapi.util import get_remote_address
 from app.api.v1.deps import get_current_user
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.core.redis_client import get_redis
 from app.schemas.auth import (
     DraftLoginRequest,
     EntraLoginRequest,
@@ -115,6 +116,27 @@ async def dev_draft_login(request: Request, body: DraftLoginRequest):
             detail="ไม่มีสิทธิ์เข้าถึง (โปรดติดต่องานการเงิน หน่วยงบประมาณ)",
         )
     return {"success": True, "data": result}
+
+
+@router.post(
+    "/logout",
+    response_model=APIResponse[None],
+    summary="Revoke current JWT token",
+    description=(
+        "Blacklist the current token's `jti` in Redis จนกว่า token จะ expire\n\n"
+        "หลัง logout token เดิมจะถูก reject ทันที แม้ยังไม่ถึงเวลา expire"
+    ),
+)
+async def logout(user: dict = Depends(get_current_user)):
+    jti = user.get("jti")
+    exp = user.get("exp")
+    if jti and exp:
+        redis = get_redis()
+        if redis:
+            remaining_ttl = int(exp - datetime.now(timezone.utc).timestamp()) + 1
+            if remaining_ttl > 0:
+                await redis.set(f"blacklist:{jti}", 1, ex=remaining_ttl)
+    return {"success": True, "data": None}
 
 
 @router.get(

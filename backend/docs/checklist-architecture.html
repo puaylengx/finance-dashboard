@@ -28,10 +28,12 @@
     .block p,.block li{font-size:13.5px;}
     .block ul{padding-left:18px;}
     .block li{margin-bottom:5px;}
-    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
-    .block-todo h4{color:var(--yellow);}
     .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
     .block-pass h4{color:var(--green);}
+    .block-partial{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-partial h4{color:var(--yellow);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
     .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
     .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
@@ -96,14 +98,65 @@ grep -rn "from app.core" backend/app/services/
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Microservices-Ready หมายถึงออกแบบ monolith ในลักษณะที่สามารถแยกเป็น microservices ได้ในอนาคตโดยไม่ต้อง rewrite ทั้งหมด เช่น มี clear service boundaries, ไม่มี shared mutable state ระหว่าง business domain</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เริ่มต้นด้วย modular monolith แล้วค่อยๆ แยกออกเมื่อจำเป็นเป็น pattern ที่ดีกว่าเริ่มด้วย microservices ทันที (ซับซ้อนเกิน) boundary ที่ชัดเจนทำให้ทีมต่างกันทำงาน parallel ได้</p></div>
-    <div class="block"><h4>สถานะในโปรเจกต์</h4><p>Layer separation ดี ✓ · service files แยกตาม domain (auth, finance, coordinator, cache) ✓ แต่: ยังใช้ shared DB pool · ไม่มี explicit API contract ระหว่าง "services" · auth + finance ใช้ Redis เดียวกัน</p></div>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
+      <p><strong>ทำแล้ว ✓</strong> Layer separation: <code>api/</code> → <code>services/</code> → <code>core/</code> ชัดเจน · service files แยกตาม domain (auth, finance, coordinator)</p>
+      <p><strong>ทำแล้ว ✓</strong> Redis key namespace: <code>seamless:v1:{domain}:{resource}:{id}</code> ทุก key ผ่าน builder functions ใน <code>core/cache.py</code> — auth coordinator, auth blacklist, finance cache แยก namespace ชัดเจน</p>
+      <p><strong>ทำแล้ว ✓</strong> DB domain aliases: <code>get_auth_db</code>, <code>get_finance_db</code>, <code>get_admin_db</code> ใน <code>core/database.py</code> — แต่ละ domain ชี้ pool แยกกันได้ในอนาคตโดยแก้แค่จุดเดียว</p>
+      <p><strong>ยังไม่ได้ทำ</strong>: DB aliases ยังชี้ shared pool เดียวกัน · ไม่มี explicit interface/contract ระหว่าง services · ไม่มี service mesh หรือ circuit breaker</p>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <p><strong>1. ตรวจ Redis key namespace — ต้องใช้ format มาตรฐานทุก key</strong></p>
+      <pre>cd backend
+# ตรวจ key builder functions ใน core/cache.py
+.venv/bin/python3 -c "
+from app.core.cache import auth_coordinator_key, auth_blacklist_key, finance_cache_key
+
+print(auth_coordinator_key('user@example.com'))
+# คาดหวัง: seamless:v1:auth:coordinator:user@example.com
+
+print(auth_blacklist_key('abc-uuid-123'))
+# คาดหวัง: seamless:v1:auth:blacklist:abc-uuid-123
+
+print(finance_cache_key('dashboard', 'fa', 'abc123'))
+# คาดหวัง: seamless:v1:finance:dashboard:fa:abc123
+"</pre>
+      <p><strong>2. ตรวจว่าไม่มี hardcoded Redis key ใน codebase</strong></p>
+      <pre># ต้องไม่พบ key แบบเก่าที่ไม่ผ่าน builder function
+grep -rn '"seamless:coordinator:' backend/app/
+grep -rn '"blacklist:' backend/app/
+grep -rn 'f"seamless:v1:' backend/app/
+# คาดหวัง: ไม่พบผลลัพธ์ใดเลย — ทุก key ต้องผ่าน builder function เท่านั้น</pre>
+      <p><strong>3. ตรวจ DB domain alias — แต่ละ service ต้องใช้ alias ของตัวเอง</strong></p>
+      <pre># auth service ต้องใช้ get_auth_db
+grep -n "get_auth_db\|get_finance_db\|get_admin_db" backend/app/services/auth_service.py
+# คาดหวัง: from app.core.database import get_auth_db
+
+grep -n "get_auth_db\|get_finance_db\|get_admin_db" backend/app/services/finance_service.py
+# คาดหวัง: from app.core.database import get_finance_db
+
+grep -n "get_auth_db\|get_finance_db\|get_admin_db" backend/app/services/coordinator_service.py
+# คาดหวัง: from app.core.database import get_admin_db</pre>
+      <p><strong>4. ตรวจ layer separation — services ต้องไม่ import ข้าม domain</strong></p>
+      <pre># endpoint layer ต้อง import จาก services เท่านั้น (ไม่ import core โดยตรง)
+grep -rn "from app.core.database" backend/app/api/v1/endpoints/
+# คาดหวัง: ไม่พบ — endpoints ไม่ควร bypass services ไป database โดยตรง
+
+# services ต้องไม่ import จาก endpoints
+grep -rn "from app.api" backend/app/services/
+# คาดหวัง: ไม่พบ</pre>
+      <p><strong>5. รัน unit tests — ต้องผ่านทั้งหมด</strong></p>
+      <pre>cd backend
+.venv/bin/python3 -m pytest tests/unit/ tests/integration/ -q --tb=short
+# คาดหวัง: ผ่านทุก test, ไม่มี import error หรือ mock ที่ผิด path</pre>
+      <p style="margin-top:6px"><strong>ผลที่คาดหวัง:</strong> ทุก Redis key ใช้ format <code>seamless:v1:{domain}:{resource}:{id}</code> · แต่ละ service ใช้ DB alias ของ domain ตัวเอง · ไม่มี cross-layer direct import · tests ผ่าน 177 ใน 177</p>
+    </div>
   </div></div>
 
   <div class="item" id="health-check"><div class="item-head"><div><div class="item-title">3. Health Check Endpoint</div><div class="item-sub">GET /health และ /ready สำหรับ container orchestrator</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><strong>/health (liveness)</strong>: ตรวจว่า process ยังทำงานอยู่ไหม ถ้าไม่ตอบ orchestrator จะ restart container <strong>/ready (readiness)</strong>: ตรวจว่า app พร้อมรับ traffic ไหม (DB + Redis connect ได้) ถ้าไม่พร้อม orchestrator จะไม่ส่ง traffic มา</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Kubernetes และ Docker Swarm ใช้ health check ตัดสินใจว่าจะ restart container ไหม และจะ route traffic ไปไหม ถ้าไม่มี /ready อาจส่ง traffic ไปยัง container ที่ DB ยังไม่ connect ทำให้ request พัง</p></div>
-    <div class="block"><h4>สถานะในโปรเจกต์</h4><p><code>GET /health</code> มีแล้ว ✓ — ตอบ <code>{"status":"ok","version":"1.0.0"}</code> (<code>main.py:103</code>) แต่ไม่มี <code>GET /ready</code> ที่ตรวจ DB connection และ Redis connection จริง</p></div>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p><code>GET /health</code> มีแล้ว ✓ — ตอบ <code>{"status":"ok","version":"1.0.0"}</code> (<code>main.py:103</code>) แต่ไม่มี <code>GET /ready</code> ที่ตรวจ DB connection และ Redis connection จริง</p></div>
     <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
       <li>เพิ่ม <code>GET /ready</code>: ทดสอบ <code>SELECT 1</code> กับ DB และ <code>redis.ping()</code> — ถ้า fail ตอบ <code>503</code></li>
       <li>Kubernetes: ใช้ <code>/health</code> เป็น livenessProbe และ <code>/ready</code> เป็น readinessProbe</li>

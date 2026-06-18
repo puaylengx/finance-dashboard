@@ -70,7 +70,7 @@
     <a href="checklist-data-management.html">← Data Management</a>
     <a href="checklist-architecture.html">Architecture →</a>
   </div>
-  <h2>Security <small>— 11 requirements &nbsp; Pass 6 / Partial 2 / Fail 3</small></h2>
+  <h2>Security <small>— 11 requirements &nbsp; Pass 6 / Partial 3 / Fail 2</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความปลอดภัยของ API, authentication, authorization, และการป้องกัน attack vectors ต่างๆ</p>
 
   <!-- 1. JWT -->
@@ -210,21 +210,58 @@
   <div class="item" id="token-refresh">
     <div class="item-head">
       <div><div class="item-title">8. Token Refresh &amp; Revocation</div><div class="item-sub">รองรับ silent refresh, revoke token เมื่อ logout หรือเมื่อตรวจพบพฤติกรรมผิดปกติ</div></div>
-      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p><strong>Refresh token</strong> คือ long-lived token ที่ใช้ขอ access token ใหม่โดยที่ user ไม่ต้อง login ซ้ำ <strong>Token revocation</strong> คือความสามารถในการยกเลิก token ที่ยังไม่หมดอายุ เช่น หลัง logout หรือเมื่อ token ถูก compromise</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>JWT เป็น stateless — ถ้าถูกขโมย server ไม่มีทางรู้ว่าควร reject ได้จนกว่า expiry ในกรณี financial system ถ้า user แจ้งว่า token ถูกขโมย ควรยกเลิกได้ทันที ไม่ต้องรอ 1 ชั่วโมง</p></div>
-      <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ไม่มี <code>POST /auth/refresh</code> endpoint · ไม่มี refresh token · ไม่มี logout/revoke endpoint · token หมดอายุ = user ต้อง login ใหม่เท่านั้น</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Token Revocation ✓</h4>
         <ul>
-          <li>เพิ่ม <code>POST /auth/logout</code>: blacklist JWT jti (unique id) ใน Redis จนถึง expiry</li>
-          <li>เพิ่ม <code>POST /auth/refresh</code>: รับ long-lived refresh token (30 วัน) → issue access token ใหม่ (1 ชั่วโมง)</li>
-          <li>แก้ <code>deps.py</code> ให้ check Redis blacklist ก่อน allow request</li>
-          <li>ใน security headers เพิ่ม <code>Clear-Site-Data</code> เมื่อ logout</li>
+          <li>เพิ่ม <code>jti</code> (UUID) ใน JWT payload ทุก token ที่ออก — <code>core/security.py</code></li>
+          <li><code>POST /auth/logout</code>: เซฟ <code>blacklist:{jti}</code> ใน Redis พร้อม TTL = เวลาที่ token เหลืออยู่ — <code>endpoints/auth.py</code></li>
+          <li><code>get_current_user()</code> check Redis blacklist ทุก request ก่อน allow — <code>deps.py</code></li>
+          <li>Graceful degradation: ถ้า Redis down → logout ยังตอบ 200 แต่ blacklist ไม่มีผล (token expire ตามปกติ)</li>
         </ul>
+        <pre>JWT payload ใหม่:
+{"sub": "user", "role": "fa", "jti": "550e8400-e29b-41d4-a716-446655440000",
+ "iat": 1750000000, "exp": 1750003600}
+
+Redis key: blacklist:550e8400-e29b-41d4-a716-446655440000  TTL: 3598s</pre>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ยังต้องทำ</h4>
+        <ul>
+          <li>เพิ่ม <code>POST /auth/refresh</code>: รับ long-lived refresh token (30 วัน) → issue access token ใหม่ (1 ชั่วโมง) — ทำเมื่อ UX ต้องการ silent refresh</li>
+          <li>เพิ่ม <code>Clear-Site-Data: "cookies","storage"</code> header เมื่อ logout เพื่อล้าง frontend storage</li>
+        </ul>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p><strong>วิธีที่ 1 — Swagger UI</strong> (<code>http://localhost:8000/docs</code>)</p>
+        <ul>
+          <li>เรียก <code>POST /auth/draft-login</code> → copy token</li>
+          <li>กด Authorize → วาง token</li>
+          <li>เรียก <code>GET /auth/me</code> → ต้องได้ข้อมูล user (ยืนยัน token ใช้ได้)</li>
+          <li>เรียก <code>POST /auth/logout</code> → ต้องได้ <code>{"success": true}</code></li>
+          <li>เรียก <code>GET /auth/me</code> อีกครั้ง → ต้องได้ <strong>401 "Token has been revoked"</strong></li>
+        </ul>
+        <p style="margin-top:8px"><strong>วิธีที่ 2 — curl</strong></p>
+        <pre># 1. Login รับ token
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title": "fa,head", "name": "test"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
+
+# 2. ยืนยัน token มี jti
+echo $TOKEN | cut -d'.' -f2 | base64 -d 2>/dev/null | python3 -m json.tool
+
+# 3. Logout
+curl -s -X POST http://localhost:8000/api/v1/auth/logout \
+  -H "Authorization: Bearer $TOKEN"
+
+# 4. ลองใช้ token เดิม → ต้องได้ 401
+curl -s http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN"
+# คาดหวัง: {"detail": "Token has been revoked"}</pre>
+        <p style="margin-top:8px;color:var(--yellow);font-size:12px">⚠ ต้องรัน Redis ก่อนทดสอบ: <code>brew services start redis</code></p>
       </div>
     </div>
   </div>
@@ -299,7 +336,7 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains  # production onl
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-architecture.html" style="color:var(--accent)">Architecture →</a>
+    ตรวจสอบ 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-architecture.html" style="color:var(--accent)">Architecture →</a>
   </div>
 </main>
 </body>

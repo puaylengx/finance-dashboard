@@ -193,12 +193,11 @@
       <div class="block"><h4>สถานะในโปรเจกต์</h4>
         <p>ใช้ <code>.env</code> file ที่อยู่ใน <code>.gitignore</code> ✓ — ไม่ commit secret เข้า repo</p>
         <p><code>.env.example</code> มี placeholder แทน value จริง ✓</p>
-        <p>แต่: default <code>JWT_SECRET_KEY=change-me-in-production</code> ใน <code>config.py:52</code> — ถ้าลืมตั้งใน production จะเป็น vulnerability ร้ายแรง</p>
+        <p>Startup validation ✓ — <code>model_validator</code> ใน <code>config.py:74</code> crash ทันทีถ้า <code>DEBUG=False</code> และ <code>JWT_SECRET_KEY</code> ยังเป็น default value ป้องกัน silent vulnerability ใน production</p>
         <p>ยังไม่ใช้ Vault หรือ cloud secret manager — เป็น plain text ใน file system</p>
       </div>
       <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
         <ul>
-          <li>เพิ่ม startup validation: ถ้า <code>JWT_SECRET_KEY == "change-me-in-production"</code> และ <code>DEBUG=false</code> → crash ทันที</li>
           <li>Production: ย้ายไปใช้ Azure Key Vault (เข้ากันกับ Entra ID) หรือ AWS Secrets Manager</li>
           <li>Rotate JWT secret ทุก 90 วัน กำหนด schedule และ process</li>
           <li>ตรวจสอบว่า <code>.env</code> ไม่ถูก backup ไปยัง cloud storage โดยไม่ตั้งใจ</li>

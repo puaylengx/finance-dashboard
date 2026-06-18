@@ -70,7 +70,7 @@
     <a href="checklist-data-management.html">← Data Management</a>
     <a href="checklist-architecture.html">Architecture →</a>
   </div>
-  <h2>Security <small>— 11 requirements &nbsp; Pass 6 / Partial 3 / Fail 2</small></h2>
+  <h2>Security <small>— 11 requirements &nbsp; Pass 6 / Partial 4 / Fail 1</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความปลอดภัยของ API, authentication, authorization, และการป้องกัน attack vectors ต่างๆ</p>
 
   <!-- 1. JWT -->
@@ -270,22 +270,59 @@ curl -s http://localhost:8000/api/v1/auth/me \
   <div class="item" id="audit-log">
     <div class="item-head">
       <div><div class="item-title">9. Audit Log (Immutable)</div><div class="item-sub">บันทึกทุก action บนข้อมูลการเงิน: ใคร ทำอะไร เมื่อไร IP อะไร แก้ไขย้อนหลังไม่ได้</div></div>
-      <div class="item-badges"><span class="p1">P1</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="partial">Partial</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Audit log คือ immutable record ของทุก action ที่เกิดในระบบ ระบุ: user ที่ทำ, action ที่ทำ, timestamp, IP address, resource ที่ถูกกระทำ และ result "Immutable" หมายถึงแก้ไขหรือลบย้อนหลังไม่ได้ (append-only)</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>สำหรับ financial system audit log เป็น requirement ด้าน compliance (การตรวจสอบบัญชี) และ forensics (สืบสวนเมื่อมีการ fraud หรือ data breach) ถ้าไม่มีจะไม่รู้ว่าใคร access ข้อมูลอะไร เมื่อไร ทำให้ตรวจสอบย้อนหลังไม่ได้</p></div>
-      <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>มีเพียง <code>logs/app.log</code> (rotating file) ที่ log login success/fail เท่านั้น ไม่มี: ใครดูข้อมูลไหน เมื่อไร · ไม่มี immutable storage · log ถูก rotate ทุก 10MB ทำให้ข้อมูลเก่าหายได้</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ (สำคัญมาก)</h4>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Logging ✓</h4>
         <ul>
-          <li>สร้าง <code>audit_log</code> table ใน DB: <code>id, user_id, action, resource, ip_address, timestamp, result</code></li>
-          <li>เพิ่ม audit logging middleware ที่บันทึกทุก authenticated request ไปยัง table นี้</li>
-          <li>ให้ table เป็น append-only: ไม่มี UPDATE/DELETE — ใช้ DB-level permission</li>
-          <li>Log ข้อมูลขั้นต่ำ: <code>GET /finance</code> → บันทึก user, params ที่ใช้ filter, timestamp</li>
-          <li>Retain audit log อย่างน้อย 7 ปีตาม best practice financial compliance</li>
+          <li><code>migrations/006_create_audit_log.sql</code>: สร้าง table พร้อม index บน <code>user_id</code> และ <code>timestamp DESC</code></li>
+          <li><code>middleware/audit.py</code>: ดักทุก authenticated request (มี Bearer token) → insert เข้า DB แบบ background task ไม่บล็อก response</li>
+          <li>บันทึก: <code>user_id, action (METHOD /path), resource (query params), ip_address, status_code, timestamp</code></li>
+          <li>Skip paths อัตโนมัติ: <code>/health</code>, <code>/api/docs</code>, <code>/api/redoc</code>, <code>/api/openapi.json</code></li>
+          <li>ถ้า DB insert fail → log warning เท่านั้น ไม่กระทบ request</li>
         </ul>
+        <pre>-- ตัวอย่าง record ใน audit_log
+user_id    : somchai@example.com
+action     : GET /api/v1/finance/summary
+resource   : year=2025&amp;dept=fa
+ip_address : 192.168.1.10
+status     : 200
+timestamp  : 2026-06-18 09:30:00+00</pre>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ยังต้องทำ</h4>
+        <ul>
+          <li>Apply REVOKE ให้ app DB user ไม่สามารถ UPDATE/DELETE ได้จริง (immutable): <code>REVOKE UPDATE, DELETE ON audit_log FROM &lt;app_user&gt;;</code></li>
+          <li>กำหนด data retention policy 7 ปี — ปัจจุบันไม่มีการลบ แต่ยังไม่มี enforcement</li>
+          <li>เพิ่ม admin endpoint <code>GET /admin/audit-log</code> สำหรับ FA ค้นหา audit trail</li>
+        </ul>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p><strong>ขั้นตอนที่ 1 — รัน migration</strong></p>
+        <pre>cd backend
+python migrations/migrate.py</pre>
+        <p style="margin-top:8px"><strong>ขั้นตอนที่ 2 — Login และเรียก API</strong></p>
+        <pre>TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title": "fa,head", "name": "test"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
+
+# เรียก endpoint ที่ควรถูก audit
+curl -s http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        <p style="margin-top:8px"><strong>ขั้นตอนที่ 3 — ตรวจสอบ audit_log ใน DB</strong></p>
+        <pre>-- ดู records ล่าสุด
+SELECT id, user_id, action, resource, status_code, timestamp
+FROM audit_log
+ORDER BY timestamp DESC
+LIMIT 10;
+
+-- ค้นหาตาม user
+SELECT * FROM audit_log
+WHERE user_id = 'test'
+ORDER BY timestamp DESC;</pre>
+        <p style="margin-top:8px"><strong>ผลที่คาดหวัง:</strong> มี record ใน <code>audit_log</code> ทุกครั้งที่เรียก authenticated endpoint</p>
       </div>
     </div>
   </div>
@@ -300,15 +337,52 @@ curl -s http://localhost:8000/api/v1/auth/me \
       <div class="block"><h4>คืออะไร</h4><p>PDPA (พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562) คือกฎหมายไทยที่กำหนดว่าต้องเก็บข้อมูลส่วนบุคคลเท่าที่จำเป็น (data minimization), ได้รับ consent, มีกระบวนการให้ผู้ใช้ขอลบข้อมูลได้ (right to erasure)</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>องค์กรที่ฝ่าฝืน PDPA มีโทษปรับสูงสุด 5 ล้านบาทต่อกรรม ข้อมูลที่ระบบมีที่เป็น personal data ได้แก่ username (อาจเป็น email), display name, job_title จาก Entra</p></div>
       <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ไม่มี data minimization policy · ไม่มี consent mechanism · ไม่มี right to erasure · ไม่มี data retention policy · ไม่มี privacy notice</p>
+        <p>ยังไม่มี right to erasure · ไม่มี data retention policy · ไม่มี privacy notice</p>
       </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+
+      <div class="block"><h4>Personal Data ที่มีอยู่ในระบบ</h4>
+        <p>ระบุ data ที่เก็บอยู่จริง เพื่อวางแผนการจัดการ:</p>
         <ul>
-          <li>ระบุว่าข้อมูลไหนใน system เป็น personal data และ data subject คือใคร</li>
-          <li>เพิ่ม <code>DELETE /admin/users/{username}</code>: anonymize/delete ข้อมูล personal data ตามคำขอ</li>
-          <li>กำหนด data retention: coordinator records เก็บนานแค่ไหน หลังจากนั้น anonymize</li>
-          <li>จัดทำ Privacy Notice และ Data Processing Agreement</li>
-          <li>ตรวจสอบกับ legal team ว่า data ใดบ้างที่เข้าข่าย PDPA</li>
+          <li><code>finance_coordinator</code> table: <code>username</code> (อาจเป็น email), <code>created_by</code>, <code>updated_by</code> (username ของ FA ที่จัดการ) — <strong>Personal Data ชัดเจน</strong></li>
+          <li><code>audit_log</code> table: <code>user_id</code> (username/email), <code>ip_address</code> — <strong>Personal Data แต่เก็บไว้เพื่อ compliance</strong></li>
+          <li>JWT payload: <code>sub</code> (username), <code>role</code>, <code>position</code> — เก็บใน memory ชั่วคราว ไม่ได้บันทึก</li>
+          <li>MS Entra: <code>job_title</code>, <code>displayName</code> — ผ่านระบบแต่ไม่ได้เก็บลง DB</li>
+        </ul>
+        <p style="margin-top:6px">Legal basis ที่ใช้ได้สำหรับระบบ internal: <strong>Legitimate Interest</strong> (ระบบการเงินองค์กร) ไม่จำเป็นต้องขอ consent แยก แต่ต้องมี Privacy Notice และ right to erasure</p>
+      </div>
+
+      <div class="block block-todo"><h4>งาน Code — Right to Erasure</h4>
+        <p><strong>เหตุผลที่ต้องใช้ Anonymize แทน Delete:</strong> ถ้าลบ row ออกจาก <code>finance_coordinator</code> แต่ <code>audit_log.user_id</code> ยังอ้างถึง username เดิมอยู่ — personal data ยังคงอยู่ใน log ต้อง anonymize in-place แทน</p>
+        <p style="margin-top:8px"><strong>1. เพิ่ม endpoint <code>DELETE /admin/coordinators/{id}/anonymize</code></strong></p>
+        <pre>-- coordinator_service.py: anonymize_coordinator(coord_id, anonymized_by)
+UPDATE finance_coordinator
+   SET username   = 'anon_' || id,
+       active     = FALSE,
+       updated_at = NOW(),
+       updated_by = %(anonymized_by)s
+ WHERE id = %(id)s
+   AND username NOT LIKE 'anon_%'   -- ป้องกัน anonymize ซ้ำ
+RETURNING id, username, active, ...</pre>
+        <p>ไฟล์ที่ต้องแก้: <code>services/coordinator_service.py</code> และ <code>endpoints/coordinator.py</code></p>
+
+        <p style="margin-top:12px"><strong>2. เพิ่ม Retention Script <code>migrations/retention_cleanup.py</code></strong></p>
+        <pre>-- auto-anonymize coordinator ที่ inactive นานเกิน N ปี
+-- รัน manually หรือ cron job ตาม policy ที่ legal กำหนด
+UPDATE finance_coordinator
+   SET username = 'anon_' || id
+ WHERE active = FALSE
+   AND updated_at &lt; NOW() - INTERVAL '3 years'
+   AND username NOT LIKE 'anon_%';</pre>
+
+        <p style="margin-top:8px"><strong>audit_log — ไม่ต้อง anonymize</strong> เพราะเก็บไว้เพื่อ forensics/compliance (7 ปี) ซึ่งเป็น legitimate interest ที่ override right to erasure ได้ตาม PDPA มาตรา 17(3) — แต่ต้องระบุในนโยบายองค์กร</p>
+      </div>
+
+      <div class="block block-todo"><h4>งาน Non-Code — ต้องทำกับ Legal/องค์กร</h4>
+        <ul>
+          <li><strong>Privacy Notice</strong>: เอกสารแจ้ง data subject ว่าเก็บข้อมูลอะไร วัตถุประสงค์อะไร เก็บนานแค่ไหน — legal team เขียน</li>
+          <li><strong>Data Retention Policy</strong>: กำหนดว่า coordinator records เก็บนานกี่ปีหลัง inactive — ต้องได้รับการอนุมัติจากองค์กร</li>
+          <li><strong>Data Processing Agreement</strong>: ถ้าใช้ Azure/cloud vendor ที่ process personal data — legal team จัดทำ</li>
+          <li><strong>ปรึกษา legal team</strong>: ยืนยัน legal basis และขอบเขต personal data ที่เข้าข่าย PDPA ในบริบทระบบ internal</li>
         </ul>
       </div>
     </div>
@@ -336,7 +410,7 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains  # production onl
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-architecture.html" style="color:var(--accent)">Architecture →</a>
+    อัปเดต 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-architecture.html" style="color:var(--accent)">Architecture →</a>
   </div>
 </main>
 </body>

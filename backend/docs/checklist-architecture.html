@@ -76,6 +76,20 @@
     <div class="block"><h4>คืออะไร</h4><p>Clean Architecture คือการแบ่ง code เป็น layers ที่มีความรับผิดชอบชัดเจน: <strong>Router/Endpoint</strong> รับ HTTP request และ validate input · <strong>Service</strong> จัดการ business logic · <strong>Core</strong> จัดการ infra (DB, Redis, security) แต่ละ layer ไม่ depend ข้ามชั้น</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อต้องการเปลี่ยน database ก็แก้แค่ core layer โดยไม่กระทบ business logic test service layer ได้โดย mock infra layer ใหม่ developer เข้าใจ codebase ได้เร็วเพราะรู้ว่า logic อยู่ที่ไหน</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>api/v1/endpoints/</code> → <code>services/</code> → <code>core/</code> แยกชัดเจน endpoint เรียก service function เท่านั้น ไม่มี SQL ใน endpoint · service เรียก <code>get_db()</code> จาก core · ไม่มี circular dependency</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># ตรวจว่าไม่มี SQL ใน endpoint layer
+grep -rn "SELECT\|INSERT\|UPDATE\|DELETE" backend/app/api/
+# คาดหวัง: ไม่พบเลย
+
+# ตรวจว่าไม่มี get_db() ใน endpoint layer โดยตรง
+grep -rn "get_db\|get_redis" backend/app/api/v1/endpoints/
+# คาดหวัง: ไม่พบ (infra access อยู่ใน services/ และ core/ เท่านั้น)
+
+# ตรวจ layer separation ด้วย import graph
+grep -rn "from app.services" backend/app/api/v1/endpoints/
+grep -rn "from app.core" backend/app/services/
+# ทั้งสองควรพบ — แสดงว่า depend ถูกทิศทาง</pre>
+    </div>
   </div></div>
 
   <div class="item" id="microservices"><div class="item-head"><div><div class="item-title">2. Microservices-Ready</div><div class="item-sub">ออกแบบให้แยก service ได้ในอนาคต</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Partial</span></div></div>
@@ -109,6 +123,28 @@ async def lifespan(app):
     await close_db(); await close_redis()  # shutdown</pre>
       <p>uvicorn รับ SIGTERM และรอ in-flight request เสร็จก่อน call lifespan cleanup</p>
     </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># รัน server แล้วส่ง SIGTERM — ดู log ว่า shutdown ครบ
+uvicorn app.main:app &amp;
+SERVER_PID=$!
+
+# รอ startup
+sleep 2
+
+# ส่ง request ที่ใช้เวลานาน (background)
+curl -s "http://localhost:8000/api/v1/finance?year=2025" \
+  -H "Authorization: Bearer $TOKEN" &amp;
+
+# ส่ง SIGTERM ทันที
+kill -TERM $SERVER_PID
+
+# ดู log — ต้องเห็น sequence นี้:
+# 1. "Received shutdown signal"
+# 2. (รอ in-flight request เสร็จ)
+# 3. "Shutdown complete"
+tail -10 logs/app.log</pre>
+      <p style="margin-top:6px"><strong>ผลที่คาดหวัง:</strong> request ที่กำลัง process เสร็จก่อน server ปิด ไม่มี "connection closed" error</p>
+    </div>
   </div></div>
 
   <div class="item" id="bg-queue"><div class="item-head"><div><div class="item-title">5. Background Job Queue</div><div class="item-sub">ใช้ Celery + Redis สำหรับ heavy task ที่ใช้เวลานาน</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
@@ -131,7 +167,7 @@ async def lifespan(app):
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-logging.html" style="color:var(--accent)">Logging →</a>
+    อัปเดต 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-logging.html" style="color:var(--accent)">Logging →</a>
   </div>
 </main>
 </body>

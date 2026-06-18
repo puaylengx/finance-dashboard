@@ -78,6 +78,20 @@
     <div class="block"><h4>คืออะไร</h4><p>รองรับการเชื่อมต่อ PostgreSQL ได้ 2 วิธี: <strong>Direct</strong> เชื่อมตรงผ่าน network, <strong>SSH Tunnel</strong> เชื่อมผ่าน SSH jump server ก่อนแล้วค่อย forward ไปยัง DB ซึ่งอยู่ใน private network ที่ไม่ expose internet โดยตรง</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Production DB มักอยู่ใน private network ที่เข้าถึงได้ผ่าน SSH เท่านั้น เพื่อความปลอดภัย การที่ app รองรับทั้งสองแบบทำให้ dev ใช้ direct ได้ง่าย ส่วน prod ใช้ SSH ได้ตาม network policy</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>DB_MODE=ssh|direct</code> ใน <code>.env</code> · SSH ผ่าน <code>sshtunnel</code> + <code>paramiko</code> รองรับ key-based และ password auth · <code>database.py:19-67</code></p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># Direct mode — ตรวจการเชื่อมต่อ
+DB_MODE=direct uvicorn app.main:app --reload
+# ดู startup log: "DB pool ready"
+
+# SSH mode — ตรวจ tunnel
+DB_MODE=ssh uvicorn app.main:app --reload
+# ดู startup log: "SSH tunnel established" ก่อน "DB pool ready"
+
+# ทดสอบ health หลัง connect
+curl -s http://localhost:8000/health
+# คาดหวัง: {"status": "ok", ...}</pre>
+      <p style="margin-top:6px">ถ้า DB connect ไม่ได้ app จะ crash ที่ startup พร้อม error message — <strong>ไม่ให้ start แบบ silent failure</strong></p>
+    </div>
   </div></div>
 
   <div class="item" id="db-indexing"><div class="item-head"><div><div class="item-title">2. Database Indexing</div><div class="item-sub">ทำ index บน column ที่ใช้ filter/join บ่อย</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -85,6 +99,20 @@
     <div class="block"><h4>คืออะไร</h4><p>Database index คือโครงสร้างข้อมูลเพิ่มเติมที่ทำให้ DB ค้นหาแถวที่ต้องการได้เร็วขึ้นมาก แทนที่จะ scan ทุกแถว (sequential scan) ใช้ B-tree index ค้นได้ใน O(log n) ซึ่งแตกต่างมากเมื่อมีหลายล้านแถว</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance query ของ system นี้ทำ JOIN หลาย table และ WHERE ด้วย <code>fiscal_year</code>, <code>cost_owner</code>, <code>gl_id</code> ทุก query ถ้าไม่มี index แต่ละ query อาจใช้เวลาหลายวินาทีแทนที่จะเป็น milliseconds</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>migrations/004_create_indexes.sql</code> มี 14 indexes ครอบคลุม: <code>fiscal_year</code>, <code>fiscal_year+fiscal_month</code>, <code>year+month</code>, <code>gl_id</code>, <code>cost_ctr_id</code>, <code>cost_owner</code>, IO fields (partial indexes สำหรับ nullable columns), master table PKs</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre>-- ตรวจสอบ indexes ที่มีอยู่ใน DB
+SELECT indexname, tablename, indexdef
+FROM pg_indexes
+WHERE tablename IN ('erp_transactions', 'finance_coordinator', 'audit_log')
+ORDER BY tablename, indexname;
+
+-- ตรวจว่า query ใช้ index จริง (ต้องเห็น "Index Scan" ไม่ใช่ "Seq Scan")
+EXPLAIN (ANALYZE, FORMAT TEXT)
+SELECT * FROM erp_transactions
+WHERE fiscal_year = 2025
+LIMIT 10;
+-- คาดหวัง: "Index Scan using idx_erp_fiscal_year"</pre>
+    </div>
   </div></div>
 
   <div class="item" id="data-integrity"><div class="item-head"><div><div class="item-title">3. Data Integrity</div><div class="item-sub">ใช้ DB constraint (NOT NULL, FK, CHECK) และจัดการ transaction ด้วย ACID</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -92,6 +120,19 @@
     <div class="block"><h4>คืออะไร</h4><p>Data integrity คือการรับประกันว่าข้อมูลใน DB ถูกต้องและสอดคล้องกันเสมอ ทำได้ด้วย constraint (NOT NULL, UNIQUE, FK, CHECK) และ ACID transaction (Atomicity, Consistency, Isolation, Durability)</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี constraint อาจมี coordinator record ที่ username เป็น NULL, หรือ ERP record ที่ amount เป็น NULL ซึ่งทำให้ aggregate calculation ผิด ข้อมูลการเงินผิดพลาดสร้างความเสียหายทางธุรกิจ</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>Coordinator table: <code>NOT NULL</code> ทุก required field, <code>UNIQUE(username)</code>, <code>DEFAULT TRUE</code> · ERP table: implicit NOT NULL ผ่าน data import · psycopg3 transaction: auto rollback เมื่อ exception ใน <code>async with get_db()</code></p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre>-- ทดสอบ UNIQUE constraint — insert ซ้ำต้องได้ error
+INSERT INTO finance_coordinator (username, active, created_by)
+VALUES ('existing@example.com', TRUE, 'admin');
+-- ครั้งที่ 2 ต้องได้: ERROR: duplicate key value violates unique constraint
+
+-- ทดสอบ NOT NULL — ส่ง username เป็น null ผ่าน API
+curl -s -X POST http://localhost:8000/api/v1/admin/coordinators \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username": null}'
+# คาดหวัง: 422 Unprocessable Entity (Pydantic rejects null before DB)</pre>
+    </div>
   </div></div>
 
   <div class="item" id="redis-cache"><div class="item-head"><div><div class="item-title">4. Redis Caching</div><div class="item-sub">Cache ข้อมูลที่เรียกบ่อย พร้อมกำหนด TTL ที่เหมาะสม</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -99,6 +140,30 @@
     <div class="block"><h4>คืออะไร</h4><p>Redis คือ in-memory data store ที่ใช้เป็น cache layer ระหว่าง application และ database ข้อมูลที่ query บ่อยและเปลี่ยนแปลงไม่บ่อยจะถูกเก็บใน Redis ซึ่งเร็วกว่า DB หลายร้อยเท่า TTL (Time To Live) กำหนดว่า cache หมดอายุเมื่อไร</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance SQL ของ system นี้ซับซ้อนมาก (CTE + หลาย JSONB_AGG) ถ้าทุก request query DB จะช้าและ DB รับ load สูง Redis cache ทำให้ request ที่ 2 เป็นต้นไปตอบได้ใน milliseconds และ DB ทำงานน้อยลงมาก</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>Finance/Budget/IO: TTL 300s (5 min) · Coordinator lookup: TTL 600s (10 min) · cache key: <code>seamless:v1:{prefix}:{role}:{params_hash}</code> · graceful fallback เมื่อ Redis ไม่พร้อม — app ทำงานต่อได้โดยไม่มี cache</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># ทดสอบ cache hit — เรียก 2 ครั้ง ดู response time
+time curl -s "http://localhost:8000/api/v1/finance?year=2025" \
+  -H "Authorization: Bearer $TOKEN" > /dev/null
+# ครั้งแรก: ~200-500ms (DB query)
+
+time curl -s "http://localhost:8000/api/v1/finance?year=2025" \
+  -H "Authorization: Bearer $TOKEN" > /dev/null
+# ครั้งที่ 2: &lt;20ms (cache hit)
+
+# ตรวจ cache key ใน Redis
+redis-cli KEYS "seamless:v1:finance:*"
+redis-cli TTL "seamless:v1:finance:fa:&lt;hash&gt;"
+# คาดหวัง: TTL ไม่เกิน 300 วินาที
+
+# ทดสอบ graceful fallback — หยุด Redis แล้วเรียก API
+brew services stop redis
+curl -s "http://localhost:8000/api/v1/finance?year=2025" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys,json; r=json.load(sys.stdin); print('success:', r.get('success'))
+"
+# คาดหวัง: ยังได้ data (fallback ไป DB โดยตรง)
+brew services start redis</pre>
+    </div>
   </div></div>
 
   <div class="item" id="connection-pooling"><div class="item-head"><div><div class="item-title">5. Connection Pooling</div><div class="item-sub">ใช้ connection pool ป้องกัน DB connection exhaustion</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -106,6 +171,19 @@
     <div class="block"><h4>คืออะไร</h4><p>Connection pool คือ pool ของ DB connection ที่สร้างไว้ล่วงหน้า แทนที่จะสร้าง connection ใหม่ทุก request (ซึ่งช้า) app หยิบ connection จาก pool มาใช้แล้วคืนกลับ ป้องกัน DB รับ connection เกิน limit</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>PostgreSQL รองรับ connection จำนวนจำกัด (default 100) ถ้า app สร้าง connection ใหม่ทุก request ภายใต้ traffic สูงจะ exhaust limit ทำให้ DB reject connection ใหม่ทั้งหมด</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>psycopg3 AsyncConnectionPool</code> min=2, max=20 · ปรับได้ผ่าน <code>DB_POOL_MIN_SIZE</code>, <code>DB_POOL_MAX_SIZE</code> · <code>database.py:55-62</code> · async — ไม่ block event loop ขณะรอ connection</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># ส่ง concurrent request 10 ตัวพร้อมกัน — pool ต้องจัดการได้
+for i in {1..10}; do
+  curl -s "http://localhost:8000/api/v1/finance?year=2025" \
+    -H "Authorization: Bearer $TOKEN" -o /dev/null &
+done
+wait
+echo "All 10 requests done"
+
+# ตรวจ log ว่าไม่มี "pool exhausted" error
+tail -20 logs/app.log | grep -i "pool\|connection"</pre>
+      <p style="margin-top:6px">ถ้ามี error <code>PoolTimeout</code> ใน log แสดงว่า <code>DB_POOL_MAX_SIZE</code> ต้องเพิ่ม</p>
+    </div>
   </div></div>
 
   <div class="item" id="read-replica"><div class="item-head"><div><div class="item-title">6. Read Replica</div><div class="item-sub">แยก read traffic ไปยัง PostgreSQL read replica เพื่อลดภาระ primary DB</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
@@ -126,6 +204,24 @@
     <div class="block"><h4>คืออะไร</h4><p>Database migration คือกระบวนการเปลี่ยน DB schema อย่างมีระเบียบผ่าน versioned files เช่น <code>001_create_tables.sql</code> ที่รัน up (apply) ตามลำดับ และมี down (rollback) เพื่อย้อนกลับได้เมื่อ deploy มีปัญหา</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าแก้ DB โดยตรงโดยไม่มี migration file ทีม dev จะไม่รู้ว่า production DB มี schema อะไรบ้าง เมื่อ deploy ใหม่ DB จะไม่ match code ทำให้ error · หาก deploy ใหม่มีปัญหา การ rollback schema ต้องทำแบบ manual และ error-prone</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี custom <code>migrations/migrate.py</code> + 4 SQL files (001–004) ✓ — apply ตาม filename order · idempotent ผ่าน <code>schema_migrations</code> table · transaction per file (auto-rollback on error) · รองรับ SSH tunnel mode</p><p>Down migration ✓ — <code>python migrate.py --rollback</code> parse <code>-- DOWN:</code> block จากทุก SQL file และ execute ในลำดับย้อนกลับ (004→001) พร้อมลบ record ออกจาก <code>schema_migrations</code> อัตโนมัติ</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre>cd backend
+
+# รัน migration (idempotent — รันซ้ำได้โดยไม่มีผลข้างเคียง)
+python migrations/migrate.py
+# คาดหวัง: "Applied: 001_create_tables.sql" ... "All migrations up to date"
+
+# รันซ้ำ — ต้องข้ามทุกไฟล์ที่ apply แล้ว
+python migrations/migrate.py
+# คาดหวัง: "All migrations up to date" (ไม่มี re-apply)
+
+# ตรวจ schema_migrations table
+psql $DATABASE_URL -c "SELECT * FROM schema_migrations ORDER BY applied_at;"
+
+# ทดสอบ rollback (ระวัง: ลบ table ทั้งหมด — ทดสอบบน test DB เท่านั้น)
+python migrations/migrate.py --rollback
+# คาดหวัง: rollback 004→001 ในลำดับย้อนกลับ</pre>
+    </div>
   </div></div>
 
   <div class="item" id="soft-delete"><div class="item-head"><div><div class="item-title">8. Soft Delete</div><div class="item-sub">ใช้ active flag แทน hard delete เพื่อรักษา data และ audit trail</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
@@ -133,6 +229,34 @@
     <div class="block"><h4>คืออะไร</h4><p>Soft delete คือการ "ลบ" ข้อมูลโดยการ set flag (<code>active=false</code> หรือ <code>is_deleted=true</code>) แทนการลบ row จริง ข้อมูลยังอยู่ใน DB สามารถ restore ได้ ตรงข้ามกับ hard delete ที่ <code>DELETE FROM table</code> โดยตรง</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>สำหรับ financial data การลบข้อมูลถาวรเป็น risk ถ้า hard delete ผิดพลาดจะกู้คืนไม่ได้ soft delete ยังรักษา audit trail ว่าเคยมีรายการนี้อยู่ และสามารถ restore ได้เมื่อ admin ต้องการ</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p><code>finance_coordinator</code>: ใช้ <code>active BOOLEAN DEFAULT TRUE</code> — ไม่มี <code>DELETE</code> ใดๆ ในระบบ ทุก "ลบ" คือ toggle <code>active = NOT active</code> · <code>PATCH /coordinators/{id}</code> · <code>coordinator_service.py:106</code></p><p>การ enforce ครอบคลุม 3 ระดับ: Auth (<code>WHERE active = TRUE</code> ใน login check · <code>auth_service.py:53</code>) · API list (<code>?active=true/false</code> filter · <code>coordinator_service.py:37</code>) · Activate endpoint (<code>SET active = TRUE</code> สำหรับ restore · <code>coordinator_service.py:85</code>)</p><p>ERP / master tables (<code>erp_transactions</code>, <code>master_*</code>): read-only import จาก ERP system — ไม่มี user-initiated delete ดังนั้นไม่ apply</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># 1. ดู list coordinator ทั้งหมด (active=true)
+curl -s "http://localhost:8000/api/v1/admin/coordinators?active=true" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys,json; r=json.load(sys.stdin)
+print('active coordinators:', r.get('total'))
+"
+
+# 2. Deactivate (soft delete) coordinator
+COORD_ID=1
+curl -s -X PATCH "http://localhost:8000/api/v1/admin/coordinators/$COORD_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"active": false}'
+
+# 3. ยืนยันว่ายังอยู่ใน DB (ไม่ถูก hard delete)
+curl -s "http://localhost:8000/api/v1/admin/coordinators?active=false" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys,json; r=json.load(sys.stdin)
+print('inactive coordinators:', r.get('total'))
+"
+
+# 4. Restore — activate กลับ
+curl -s -X PATCH "http://localhost:8000/api/v1/admin/coordinators/$COORD_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"active": true}'</pre>
+    </div>
   </div></div>
 
   <div class="item" id="db-backup"><div class="item-head"><div><div class="item-title">9. Database Backup</div><div class="item-sub">ทำ full backup รายวัน + incremental รายชั่วโมง + PITR รองรับย้อนหลัง 30 วัน</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Defer</span></div></div>
@@ -167,7 +291,7 @@
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-security.html" style="color:var(--accent)">Security →</a>
+    อัปเดต 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-security.html" style="color:var(--accent)">Security →</a>
   </div>
 </main>
 </body>

@@ -82,6 +82,23 @@ async def get_dashboard(...):
     async with get_db() as conn:      # DB async pool
         await cur.execute(sql, params)</pre>
     </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># ตรวจ code — ทุก function ที่เรียก I/O ต้องเป็น async
+grep -rn "^def " backend/app/api/ backend/app/services/ backend/app/core/
+# คาดหวัง: ไม่พบ sync "def" ที่เรียก DB หรือ Redis
+
+# ทดสอบ concurrent requests — ต้องตอบได้พร้อมกัน
+time (
+  for i in {1..5}; do
+    curl -s "http://localhost:8000/api/v1/finance?year=2025" \
+      -H "Authorization: Bearer $TOKEN" -o /dev/null &amp;
+  done
+  wait
+)
+# คาดหวัง: 5 requests เสร็จในเวลาใกล้เคียงกับ 1 request เดียว
+# (เพราะ async ไม่ block ระหว่างรอ)</pre>
+      <p style="margin-top:6px">ตรวจสอบว่าไม่มี <code>time.sleep()</code> หรือ synchronous <code>requests.get()</code> ใน codebase ซึ่งจะ block event loop</p>
+    </div>
   </div></div>
 
   <div class="item" id="db-lock"><div class="item-head"><div><div class="item-title">2. Database Lock Strategy</div><div class="item-sub">กำหนด locking strategy: optimistic lock สำหรับ read-heavy, pessimistic สำหรับ financial write</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
@@ -110,7 +127,7 @@ async def get_dashboard(...):
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-testing.html" style="color:var(--accent)">Testing →</a>
+    อัปเดต 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-testing.html" style="color:var(--accent)">Testing →</a>
   </div>
 </main>
 </body>

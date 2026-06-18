@@ -86,6 +86,23 @@
     test_coordinator_service.py # _row_to_dict, add, toggle — commit + cache (11)
   conftest.py                  # fixtures: mock DB, mock Redis, tokens</pre>
     </div>
+    <div class="block"><h4>วิธีรัน</h4>
+      <pre>cd backend
+
+# รัน unit tests ทั้งหมด
+pytest tests/unit/ -v
+
+# รันพร้อม coverage report
+pytest tests/unit/ -v --cov=app --cov-report=term-missing
+# คาดหวัง: coverage &gt;= 80%
+
+# รัน test file เดียว
+pytest tests/unit/test_security.py -v
+
+# รัน test case เดียว
+pytest tests/unit/test_deps.py::test_valid_token -v</pre>
+      <p style="margin-top:6px"><strong>ผลที่คาดหวัง:</strong> <code>124 passed</code> ไม่มี FAILED หรือ ERROR</p>
+    </div>
   </div></div>
 
   <div class="item" id="integration-tests"><div class="item-head"><div><div class="item-title">2. Integration Tests</div><div class="item-sub">ทดสอบ API endpoint จริงกับ test database ด้วย pytest-asyncio และ httpx.AsyncClient</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -99,6 +116,23 @@
     test_auth.py         # /auth/login, /auth/entra-login, draft-login, /me (12)
     test_finance.py      # /finance, /budget, /io — auth, role, top_n, 500 (18)
     test_coordinator.py  # list (paginated, filters), add, toggle — SQL pagination logic (29)</pre>
+    </div>
+    <div class="block"><h4>วิธีรัน</h4>
+      <pre>cd backend
+
+# รัน integration tests ทั้งหมด
+pytest tests/integration/ -v
+
+# รัน test auth endpoint เฉพาะ
+pytest tests/integration/test_auth.py -v -s
+
+# รันทุก test พร้อมกัน (unit + integration)
+pytest tests/ -v --tb=short
+
+# รัน tests เฉพาะที่ชื่อมีคำว่า "login"
+pytest tests/ -k "login" -v</pre>
+      <p style="margin-top:6px"><strong>ผลที่คาดหวัง:</strong> <code>59 passed</code> ไม่มี FAILED · Integration tests ใช้ <code>httpx.AsyncClient</code> + <code>ASGITransport</code> ไม่ต้องรัน server จริง</p>
+      <p style="margin-top:4px;color:var(--muted);font-size:12px">หมายเหตุ: integration tests mock DB/Redis — ไม่ต้องมี PostgreSQL/Redis running</p>
     </div>
   </div></div>
 
@@ -137,7 +171,7 @@ WHERE fiscal_year = 2025 AND cost_ctr_id = 'CC001';
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-cicd.html" style="color:var(--accent)">Deployment & CI/CD →</a>
+    อัปเดต 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-cicd.html" style="color:var(--accent)">Deployment & CI/CD →</a>
   </div>
 </main>
 </body>

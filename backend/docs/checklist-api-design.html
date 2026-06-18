@@ -85,6 +85,16 @@
         <pre>app.include_router(v1_router, prefix="/api/v1")</pre>
         <p>ถ้าต้องการ v2 สร้าง <code>api/v2/router.py</code> และ include_router ใหม่ได้ทันที โดยไม่กระทบ v1</p>
       </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># ยืนยัน prefix /api/v1 ในทุก endpoint
+curl -s http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+
+# ทดสอบ path ที่ไม่มี version → ต้องได้ 404
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/auth/me
+# คาดหวัง: 404</pre>
+        <p style="margin-top:6px"><strong>ผลที่คาดหวัง:</strong> ทุก endpoint ตอบได้เฉพาะเมื่อผ่าน prefix <code>/api/v1/</code> เท่านั้น</p>
+      </div>
     </div>
   </div>
 
@@ -99,6 +109,26 @@
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>REST เป็น industry standard ที่ client ทุกประเภท (web, mobile, third-party) เข้าใจตรงกัน ความ stateless ของ REST ทำให้ scale ได้ง่าย เพราะ server ไม่ต้องจำ state ของ client</p></div>
       <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
         <p>HTTP method ถูกต้องทุก endpoint: <code>GET /finance</code>, <code>POST /coordinators</code>, <code>PATCH /coordinators/{id}</code> FastAPI + Pydantic serialize/deserialize JSON อัตโนมัติ ไม่มีการ string-format response</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># ทดสอบ GET — อ่านข้อมูล (ต้องได้ 200)
+curl -s -o /dev/null -w "%{http_code}" \
+  http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN"
+
+# ทดสอบ POST — สร้าง resource (ต้องได้ 201)
+curl -s -o /dev/null -w "%{http_code}" \
+  -X POST http://localhost:8000/api/v1/admin/coordinators \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test.rest@example.com"}'
+
+# ทดสอบ DELETE method ที่ไม่ใช่ allowed → ต้องได้ 405 Method Not Allowed
+curl -s -o /dev/null -w "%{http_code}" \
+  -X PUT http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN"
+# คาดหวัง: 405</pre>
+        <p style="margin-top:6px">ตรวจสอบว่า response เป็น JSON เสมอ: <code>Content-Type: application/json</code></p>
       </div>
     </div>
   </div>
@@ -116,6 +146,22 @@
         <p>ครอบคลุมทุก case: <code>200</code> success, <code>201</code> created, <code>400</code> bad request, <code>401</code> unauthorized, <code>403</code> forbidden, <code>404</code> not found, <code>409</code> conflict, <code>422</code> validation (auto Pydantic), <code>429</code> rate limit, <code>500</code> internal, <code>503</code> service unavailable</p>
         <p>Global exception handler ใน <code>main.py:91-97</code> catch unhandled error และตอบ <code>500</code> พร้อม <code>{"success": false, "error": "Internal server error"}</code></p>
       </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># 401 — ไม่มี token
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/v1/auth/me
+
+# 422 — ส่ง year ผิด format (Pydantic validation)
+curl -s "http://localhost:8000/api/v1/finance?year=abcd" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+# คาดหวัง: {"detail": [{"loc": ["query", "year"], ...}]}
+
+# 409 — เพิ่ม coordinator ซ้ำ
+curl -s -X POST http://localhost:8000/api/v1/admin/coordinators \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "existing@example.com"}'
+# เรียกซ้ำ 2 ครั้ง → ครั้งที่ 2 ต้องได้ 409 Conflict</pre>
+      </div>
     </div>
   </div>
 
@@ -132,6 +178,24 @@
         <p><code>/api/docs</code> — Swagger UI interactive &nbsp;·&nbsp; <code>/api/redoc</code> — ReDoc readable &nbsp;·&nbsp; <code>/api/openapi.json</code> — machine-readable spec</p>
         <p>นอกจากนี้ยังมี static <code>openapi.yaml</code> ใน backend root สำหรับ version control</p>
         <p>ทุก endpoint มี <code>summary</code>, <code>response_model</code>, <code>responses</code> dict ครบ ทำให้ doc มีข้อมูลสมบูรณ์</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ul>
+          <li>เปิด browser: <code>http://localhost:8000/api/docs</code> → ต้องเห็น Swagger UI พร้อม endpoint ทั้งหมด</li>
+          <li>เปิด browser: <code>http://localhost:8000/api/redoc</code> → ต้องเห็น ReDoc</li>
+          <li>ดาวน์โหลด spec: <code>curl -s http://localhost:8000/api/openapi.json | python3 -m json.tool | head -30</code></li>
+        </ul>
+        <pre># ตรวจว่าทุก endpoint มี summary และ response_model
+curl -s http://localhost:8000/api/openapi.json \
+  | python3 -c "
+import sys, json
+spec = json.load(sys.stdin)
+paths = spec['paths']
+for path, methods in paths.items():
+    for method, detail in methods.items():
+        if method in ('get','post','patch','delete'):
+            print(f'{method.upper()} {path}: {detail.get(\"summary\",\"NO SUMMARY\")}')
+"</pre>
       </div>
     </div>
   </div>
@@ -157,6 +221,28 @@ GET /api/v1/admin/coordinators?q=john&amp;active=true&amp;page=2&amp;page_size=1
 GET /api/v1/finance?year=2025&amp;top_n=20
 → table_by_gl[:20], table_by_cost_center[:20], ...ทุก table key</pre>
       </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># ทดสอบ pagination — coordinator list
+curl -s "http://localhost:8000/api/v1/admin/coordinators?page=1&amp;page_size=5&amp;active=true" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+# คาดหวัง: data มี &lt;= 5 items, field: page, page_size, total, total_pages
+
+# ทดสอบ search filter
+curl -s "http://localhost:8000/api/v1/admin/coordinators?q=test" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys,json; r=json.load(sys.stdin)
+print('total results for q=test:', r.get('total'))
+"
+
+# ทดสอบ top_n — finance data
+curl -s "http://localhost:8000/api/v1/finance?year=2025&amp;top_n=5" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys,json; r=json.load(sys.stdin)
+# ดูจำนวน rows ใน table_by_gl ต้อง &lt;= 5
+tbl = r['data'].get('table_by_gl', [])
+print('table_by_gl rows:', len(tbl), '(คาดหวัง &lt;= 5)')
+"</pre>
+      </div>
     </div>
   </div>
 
@@ -172,6 +258,23 @@ GET /api/v1/finance?year=2025&amp;top_n=20
       <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
         <p>Pydantic v2 ครอบคลุมทุก endpoint: <code>FinanceQueryParams</code> validate year (2000-2100), month (1-12), q (max 200 chars) · <code>CoordinatorCreate</code> validate username · <code>EntraLoginRequest</code>, <code>DraftLoginRequest</code> validate request body</p>
         <p>FastAPI auto-return <code>422 Unprocessable Entity</code> พร้อม field-level error detail เมื่อ validation fail</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># ทดสอบ year ต่ำกว่า range (2000-2100)
+curl -s "http://localhost:8000/api/v1/finance?year=1999" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+# คาดหวัง: 422 + detail บอก field "year"
+
+# ทดสอบ month ออกนอก range (1-12)
+curl -s "http://localhost:8000/api/v1/finance?year=2025&amp;month_from=13" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+# คาดหวัง: 422
+
+# ทดสอบ missing required field ใน request body
+curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{}' | python3 -m json.tool
+# คาดหวัง: 422 + detail บอก field ที่ขาด</pre>
       </div>
     </div>
   </div>
@@ -204,6 +307,31 @@ GET /api/v1/finance?year=2025&amp;top_n=20
 // ทุก error
 { "success": false, "error": "message" }</pre>
       </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># ตรวจ success envelope
+curl -s http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys,json; r=json.load(sys.stdin)
+assert r.get('success') == True, 'missing success:true'
+assert 'data' in r, 'missing data key'
+print('envelope OK:', list(r.keys()))
+"
+
+# ตรวจ error envelope
+curl -s http://localhost:8000/api/v1/auth/me | python3 -c "
+import sys,json; r=json.load(sys.stdin)
+# FastAPI HTTPException format
+print('error keys:', list(r.keys()))
+"
+
+# ตรวจ pagination envelope
+curl -s "http://localhost:8000/api/v1/admin/coordinators" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import sys,json; r=json.load(sys.stdin)
+for k in ('success','data','page','page_size','total','total_pages'):
+    print(f'{k}: {r.get(k, \"MISSING\")}')
+"</pre>
+      </div>
     </div>
   </div>
 
@@ -220,11 +348,27 @@ GET /api/v1/finance?year=2025&amp;top_n=20
         <p><code>main.py:69-76</code> ใช้ <code>settings.get_allowed_origins()</code> แทน <code>["*"]</code></p>
         <p>รองรับทั้ง comma-separated: <code>ALLOWED_ORIGINS=http://localhost:5173,https://app.example.com</code> และ JSON array format อนุญาตเฉพาะ <code>GET, POST, PATCH, DELETE, OPTIONS</code> เท่านั้น</p>
       </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># ทดสอบ CORS — origin ที่อนุญาต (ต้องได้ header ตอบกลับ)
+curl -s -I -X OPTIONS http://localhost:8000/api/v1/auth/me \
+  -H "Origin: http://localhost:5173" \
+  -H "Access-Control-Request-Method: GET" \
+  | grep -i "access-control"
+# คาดหวัง: Access-Control-Allow-Origin: http://localhost:5173
+
+# ทดสอบ CORS — origin ที่ไม่อนุญาต (ต้องไม่มี CORS header)
+curl -s -I -X OPTIONS http://localhost:8000/api/v1/auth/me \
+  -H "Origin: https://malicious-site.com" \
+  -H "Access-Control-Request-Method: GET" \
+  | grep -i "access-control"
+# คาดหวัง: ไม่มี Access-Control-Allow-Origin header ตอบกลับ</pre>
+        <p style="margin-top:6px">ตรวจสอบ <code>ALLOWED_ORIGINS</code> ใน <code>.env</code> ว่ามีแค่ origin ที่ถูกต้อง ไม่ใช่ <code>*</code></p>
+      </div>
     </div>
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-data-management.html" style="color:var(--accent)">Data Management →</a>
+    อัปเดต 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-data-management.html" style="color:var(--accent)">Data Management →</a>
   </div>
 </main>
 </body>

@@ -2,7 +2,7 @@ import json
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -70,6 +70,15 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_dir: str = "logs"
     sentry_dsn: str = ""
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        if not self.debug and self.jwt_secret_key == "change-me-in-production":
+            raise ValueError(
+                "JWT_SECRET_KEY must be changed from the default value "
+                "before running in production (DEBUG=False)"
+            )
+        return self
 
     @field_validator("sentry_dsn", "encryption_key", "azure_tenant_id", "azure_client_id", mode="before")
     @classmethod

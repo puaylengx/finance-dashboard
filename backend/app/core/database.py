@@ -85,3 +85,10 @@ async def get_db() -> AsyncIterator[psycopg.AsyncConnection]:
         raise RuntimeError("Database pool not initialized — call init_db() first")
     async with _pool.connection() as conn:
         yield conn
+
+
+# Domain-scoped aliases — currently point to the shared pool.
+# When a domain needs its own DB, replace only its alias here.
+get_auth_db = get_db
+get_finance_db = get_db
+get_admin_db = get_db

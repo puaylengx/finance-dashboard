@@ -63,7 +63,7 @@ class TestAddCoordinator:
         from app.services.coordinator_service import add_coordinator
         mock_conn, mock_cur = _make_mock_db(fetchone_return=_COORD_TUPLE)
 
-        with patch("app.services.coordinator_service.get_db") as mock_gdb, \
+        with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
              patch("app.services.coordinator_service.invalidate_coordinator_cache", AsyncMock()):
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -77,7 +77,7 @@ class TestAddCoordinator:
         from app.services.coordinator_service import add_coordinator
         mock_conn, _ = _make_mock_db(fetchone_return=_COORD_TUPLE)
 
-        with patch("app.services.coordinator_service.get_db") as mock_gdb, \
+        with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
              patch("app.services.coordinator_service.invalidate_coordinator_cache", AsyncMock()):
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -90,7 +90,7 @@ class TestAddCoordinator:
         mock_conn, _ = _make_mock_db(fetchone_return=_COORD_TUPLE)
         invalidate = AsyncMock()
 
-        with patch("app.services.coordinator_service.get_db") as mock_gdb, \
+        with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
              patch("app.services.coordinator_service.invalidate_coordinator_cache", invalidate):
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -106,7 +106,7 @@ class TestToggleCoordinator:
         toggled = (1, "alice", False, None, None, "admin", "admin2")
         mock_conn, _ = _make_mock_db(fetchone_return=toggled)
 
-        with patch("app.services.coordinator_service.get_db") as mock_gdb, \
+        with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
              patch("app.services.coordinator_service.invalidate_coordinator_cache", AsyncMock()):
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -119,7 +119,7 @@ class TestToggleCoordinator:
         from app.services.coordinator_service import toggle_coordinator
         mock_conn, _ = _make_mock_db(fetchone_return=None)
 
-        with patch("app.services.coordinator_service.get_db") as mock_gdb, \
+        with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
              patch("app.services.coordinator_service.invalidate_coordinator_cache", AsyncMock()):
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -131,7 +131,7 @@ class TestToggleCoordinator:
         from app.services.coordinator_service import toggle_coordinator
         mock_conn, _ = _make_mock_db(fetchone_return=_COORD_TUPLE)
 
-        with patch("app.services.coordinator_service.get_db") as mock_gdb, \
+        with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
              patch("app.services.coordinator_service.invalidate_coordinator_cache", AsyncMock()):
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -144,7 +144,7 @@ class TestToggleCoordinator:
         mock_conn, _ = _make_mock_db(fetchone_return=_COORD_TUPLE)
         invalidate = AsyncMock()
 
-        with patch("app.services.coordinator_service.get_db") as mock_gdb, \
+        with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
              patch("app.services.coordinator_service.invalidate_coordinator_cache", invalidate):
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)

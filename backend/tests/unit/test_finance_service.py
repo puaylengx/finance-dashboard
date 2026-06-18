@@ -138,7 +138,7 @@ class TestRunQuery:
     async def test_returns_dict_payload(self):
         payload = {"kpis": {"total": 100}}
         mock_conn, _ = self._make_mock_db(payload)
-        with patch("app.services.finance_service.get_db") as mock_gdb:
+        with patch("app.services.finance_service.get_finance_db") as mock_gdb:
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
             result = await _run_query("SELECT 1", {}, "test")
@@ -147,7 +147,7 @@ class TestRunQuery:
     async def test_parses_json_string_payload(self):
         payload = {"kpis": {"total": 50}}
         mock_conn, _ = self._make_mock_db(json.dumps(payload))
-        with patch("app.services.finance_service.get_db") as mock_gdb:
+        with patch("app.services.finance_service.get_finance_db") as mock_gdb:
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
             result = await _run_query("SELECT 1", {}, "test")
@@ -156,7 +156,7 @@ class TestRunQuery:
     async def test_returns_empty_dict_when_no_row(self):
         mock_conn, mock_cur = self._make_mock_db(None)
         mock_cur.fetchone = AsyncMock(return_value=None)
-        with patch("app.services.finance_service.get_db") as mock_gdb:
+        with patch("app.services.finance_service.get_finance_db") as mock_gdb:
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
             result = await _run_query("SELECT 1", {}, "test")

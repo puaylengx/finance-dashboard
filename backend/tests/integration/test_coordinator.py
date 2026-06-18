@@ -366,7 +366,7 @@ class TestCoordinatorServicePagination:
         col_names = ["id", "username", "active", "created_at", "updated_at", "created_by", "updated_by"]
         mock_conn, mock_cur = self._make_mock_db(total=45, rows=[], col_names=col_names)
 
-        with patch("app.services.coordinator_service.get_db") as mock_get_db:
+        with patch("app.services.coordinator_service.get_admin_db") as mock_get_db:
             mock_get_db.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_get_db.return_value.__aexit__ = AsyncMock(return_value=False)
             result = await list_coordinators(page=1, page_size=20)
@@ -384,7 +384,7 @@ class TestCoordinatorServicePagination:
         mock_cur.fetchone = AsyncMock(return_value=(50,))
         mock_cur.fetchall = AsyncMock(return_value=[])
 
-        with patch("app.services.coordinator_service.get_db") as mock_get_db:
+        with patch("app.services.coordinator_service.get_admin_db") as mock_get_db:
             mock_get_db.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_get_db.return_value.__aexit__ = AsyncMock(return_value=False)
             await list_coordinators(page=3, page_size=10)
@@ -404,7 +404,7 @@ class TestCoordinatorServicePagination:
         mock_cur.fetchone = AsyncMock(return_value=(0,))
         mock_cur.fetchall = AsyncMock(return_value=[])
 
-        with patch("app.services.coordinator_service.get_db") as mock_get_db:
+        with patch("app.services.coordinator_service.get_admin_db") as mock_get_db:
             mock_get_db.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_get_db.return_value.__aexit__ = AsyncMock(return_value=False)
             await list_coordinators(q="alice")
@@ -422,7 +422,7 @@ class TestCoordinatorServicePagination:
         mock_cur.fetchone = AsyncMock(return_value=(0,))
         mock_cur.fetchall = AsyncMock(return_value=[])
 
-        with patch("app.services.coordinator_service.get_db") as mock_get_db:
+        with patch("app.services.coordinator_service.get_admin_db") as mock_get_db:
             mock_get_db.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_get_db.return_value.__aexit__ = AsyncMock(return_value=False)
             await list_coordinators(active=False)
@@ -440,7 +440,7 @@ class TestCoordinatorServicePagination:
         mock_cur.fetchone = AsyncMock(return_value=(0,))
         mock_cur.fetchall = AsyncMock(return_value=[])
 
-        with patch("app.services.coordinator_service.get_db") as mock_get_db:
+        with patch("app.services.coordinator_service.get_admin_db") as mock_get_db:
             mock_get_db.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_get_db.return_value.__aexit__ = AsyncMock(return_value=False)
             await list_coordinators()

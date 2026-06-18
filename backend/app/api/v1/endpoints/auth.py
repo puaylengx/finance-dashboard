@@ -6,6 +6,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.api.v1.deps import get_current_user
+from app.core.cache import auth_blacklist_key
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.redis_client import get_redis
@@ -135,7 +136,7 @@ async def logout(user: dict = Depends(get_current_user)):
         if redis:
             remaining_ttl = int(exp - datetime.now(timezone.utc).timestamp()) + 1
             if remaining_ttl > 0:
-                await redis.set(f"blacklist:{jti}", 1, ex=remaining_ttl)
+                await redis.set(auth_blacklist_key(jti), 1, ex=remaining_ttl)
     return {"success": True, "data": None}
 
 

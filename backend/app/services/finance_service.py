@@ -1,9 +1,9 @@
+from app.core.cache import finance_cache_key, get_cached, set_cached
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import get_finance_db
 from app.core.logging import get_logger
 from app.core.security import ILIKE_ROOT_OVERRIDE, is_division, is_fa
 from app.schemas.finance import FinanceQueryParams, IOQueryParams
-from app.services.cache_service import get_cached, set_cached
 
 _FINANCE_TABLE_KEYS = (
     "table_by_gl", "table_by_cost_center",
@@ -376,7 +376,7 @@ def _build_io_params(p: IOQueryParams, role: str) -> dict:
 
 
 async def _run_query(sql: str, params: dict, label: str) -> dict:
-    async with get_db() as conn:
+    async with get_finance_db() as conn:
         async with conn.cursor() as cur:
             await cur.execute(sql, params)
             row = await cur.fetchone()
@@ -396,7 +396,7 @@ async def get_dashboard(
 ) -> dict:
     from app.core.security import params_hash
     db_params = _build_dashboard_params(params, role, params.cost_owner or None)
-    cache_key = f"seamless:v1:{cache_prefix}:{role}:{params_hash(db_params)}"
+    cache_key = finance_cache_key(cache_prefix, role, params_hash(db_params))
 
     cached = await get_cached(cache_key)
     if cached is not None:
@@ -415,7 +415,7 @@ async def get_dashboard(
 async def get_io(role: str, params: IOQueryParams) -> dict:
     from app.core.security import params_hash
     db_params = _build_io_params(params, role)
-    cache_key = f"seamless:v1:io:{role}:{params_hash(db_params)}"
+    cache_key = finance_cache_key("io", role, params_hash(db_params))
 
     cached = await get_cached(cache_key)
     if cached is not None:

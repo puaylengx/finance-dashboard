@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 
+from app.core.cache import auth_blacklist_key
 from app.core.redis_client import get_redis
 from app.core.security import FA_ROLES, decode_access_token
 
@@ -18,7 +19,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         jti = payload.get("jti")
         if jti:
             redis = get_redis()
-            if redis and await redis.exists(f"blacklist:{jti}"):
+            if redis and await redis.exists(auth_blacklist_key(jti)):
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked")
 
         return payload

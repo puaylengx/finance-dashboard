@@ -74,8 +74,8 @@
   <section>
     <div class="summary-grid">
       <div class="stat"><div class="val" style="color:var(--green)">27</div><div class="lbl">Pass ✓</div></div>
-      <div class="stat"><div class="val" style="color:var(--yellow)">11</div><div class="lbl">Partial ◑</div></div>
-      <div class="stat"><div class="val" style="color:var(--red)">22</div><div class="lbl">Fail ✗</div></div>
+      <div class="stat"><div class="val" style="color:var(--yellow)">12</div><div class="lbl">Partial ◑</div></div>
+      <div class="stat"><div class="val" style="color:var(--red)">21</div><div class="lbl">Fail ✗</div></div>
       <div class="stat"><div class="val" style="color:#fca5a5">18</div><div class="lbl">P1 Critical</div></div>
       <div class="stat"><div class="val" style="color:var(--yellow)">21</div><div class="lbl">P2 High</div></div>
     </div>
@@ -96,7 +96,7 @@
       <tr><th>หมวดหมู่</th><th>รายการ</th><th style="color:var(--green)">Pass</th><th style="color:var(--yellow)">Partial</th><th style="color:var(--red)">Fail</th><th>รายละเอียด</th></tr>
       <tr><td><a class="cat-link" href="checklist-api-design.html">API Design</a></td><td>8</td><td style="color:var(--green)">8</td><td style="color:var(--yellow)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">ครบทุกข้อ — Pagination ✓ · Response Envelope ✓ ({"success","data"} ทุก endpoint)</td></tr>
       <tr><td><a class="cat-link" href="checklist-data-management.html">Data Management</a></td><td>10</td><td style="color:var(--green)">7</td><td style="color:var(--yellow)">3</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Read Replica · Backup · Retention: Defer ทั้งหมด (ERP คือ source of truth)</td></tr>
-      <tr><td><a class="cat-link" href="checklist-security.html">Security</a></td><td>11</td><td style="color:var(--green)">6</td><td style="color:var(--yellow)">2</td><td style="color:var(--red)">3</td><td style="color:var(--muted);font-size:12px">Audit Log (P1!) · Token Revocation · PDPA ยังขาด</td></tr>
+      <tr><td><a class="cat-link" href="checklist-security.html">Security</a></td><td>11</td><td style="color:var(--green)">6</td><td style="color:var(--yellow)">3</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">Audit Log (P1!) · PDPA ยังขาด · Token Refresh (refresh token เท่านั้น)</td></tr>
       <tr><td><a class="cat-link" href="checklist-architecture.html">Architecture</a></td><td>6</td><td style="color:var(--green)">2</td><td style="color:var(--yellow)">2</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">/ready endpoint · Background Queue ยังไม่มี</td></tr>
       <tr><td><a class="cat-link" href="checklist-logging.html">Logging &amp; Monitoring</a></td><td>5</td><td style="color:var(--green)">0</td><td style="color:var(--yellow)">1</td><td style="color:var(--red)">4</td><td style="color:var(--muted);font-size:12px">Metrics / Tracing / Alerting / SLO ยังไม่มีทั้งหมด</td></tr>
       <tr><td><a class="cat-link" href="checklist-concurrency.html">Concurrency</a></td><td>3</td><td style="color:var(--green)">1</td><td style="color:var(--yellow)">0</td><td style="color:var(--red)">2</td><td style="color:var(--muted);font-size:12px">DB Lock Strategy · Idempotency ยังไม่มี</td></tr>
@@ -117,7 +117,7 @@
       <tr><td>3</td><td><a class="cat-link" href="checklist-security.html#https">HTTPS / TLS</a></td><td>Security</td><td><span class="partial">Partial</span> <span class="p1">P1</span></td><td style="color:var(--yellow);font-size:12px">TLS termination ยังต้องทำที่ infra level</td></tr>
       <tr><td>4</td><td><a class="cat-link" href="checklist-cicd.html#docker">Docker Containerization</a></td><td>CI/CD</td><td><span class="fail">Fail</span> <span class="p2">P2</span></td><td style="color:var(--yellow);font-size:12px">Deploy ไม่ได้โดยไม่มี Dockerfile</td></tr>
       <tr><td>5</td><td><a class="cat-link" href="checklist-cicd.html#cicd-pipeline">CI/CD Pipeline</a></td><td>CI/CD</td><td><span class="fail">Fail</span> <span class="p2">P2</span></td><td style="color:var(--yellow);font-size:12px">Test และ deploy ด้วยมือทำให้เกิด human error</td></tr>
-      <tr><td>6</td><td><a class="cat-link" href="checklist-security.html#token-refresh">Token Refresh &amp; Revocation</a></td><td>Security</td><td><span class="fail">Fail</span> <span class="p2">P2</span></td><td style="color:var(--yellow);font-size:12px">Token ที่ถูก compromise ยกเลิกไม่ได้</td></tr>
+      <tr><td>6</td><td><a class="cat-link" href="checklist-security.html#token-refresh">Token Refresh &amp; Revocation</a></td><td>Security</td><td><span class="partial">Partial</span> <span class="p2">P2</span></td><td style="color:var(--yellow);font-size:12px">Revocation ✓ (logout + Redis blacklist) · ยังไม่มี refresh token</td></tr>
     </table>
   </section>
 

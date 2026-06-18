@@ -1,9 +1,9 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.core.database import get_db
+from app.core.cache import invalidate_coordinator_cache
+from app.core.database import get_admin_db
 from app.core.logging import get_logger
-from app.services.cache_service import invalidate_coordinator_cache
 
 logger = get_logger(__name__)
 _TZ_THAI = ZoneInfo("Asia/Bangkok")
@@ -41,7 +41,7 @@ async def list_coordinators(
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     offset = (page - 1) * page_size
 
-    async with get_db() as conn:
+    async with get_admin_db() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 f"SELECT COUNT(*) FROM finance_coordinator {where}", sql_params
@@ -76,7 +76,7 @@ async def list_coordinators(
 
 async def add_coordinator(username: str, created_by: str) -> dict:
     now = _now_thai()
-    async with get_db() as conn:
+    async with get_admin_db() as conn:
         async with conn.cursor() as cur:
             await cur.execute("""
                 INSERT INTO finance_coordinator (username, created_by, created_at)
@@ -99,7 +99,7 @@ async def add_coordinator(username: str, created_by: str) -> dict:
 
 async def toggle_coordinator(coord_id: int, updated_by: str) -> dict | None:
     now = _now_thai()
-    async with get_db() as conn:
+    async with get_admin_db() as conn:
         async with conn.cursor() as cur:
             await cur.execute("""
                 UPDATE finance_coordinator

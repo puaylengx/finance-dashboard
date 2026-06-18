@@ -4,8 +4,9 @@ import bcrypt
 import httpx
 from jose import JWTError, jwt as jose_jwt
 
+from app.core.cache import auth_coordinator_key
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import get_auth_db
 from app.core.logging import get_logger
 from app.core.redis_client import get_redis
 from app.core.security import (
@@ -35,7 +36,7 @@ def _load_users() -> list[dict]:
 async def is_coordinator(username: str) -> bool:
     """Return True if username is active in finance_coordinator. Cached in Redis."""
     redis = get_redis()
-    cache_key = f"seamless:coordinator:{username}"
+    cache_key = auth_coordinator_key(username)
 
     if redis:
         try:
@@ -47,7 +48,7 @@ async def is_coordinator(username: str) -> bool:
 
     result = False
     try:
-        async with get_db() as conn:
+        async with get_auth_db() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "SELECT 1 FROM finance_coordinator WHERE username = %(username)s AND active = TRUE",

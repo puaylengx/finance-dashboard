@@ -1,5 +1,6 @@
 import hashlib
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from cryptography.fernet import Fernet
@@ -57,6 +58,7 @@ def create_access_token(
     payload: dict = {
         "sub": username,
         "role": role,
+        "jti": str(uuid.uuid4()),
         "iat": now,
         "exp": now + timedelta(seconds=settings.jwt_expires_seconds),
     }

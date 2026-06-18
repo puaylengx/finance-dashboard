@@ -28,12 +28,14 @@
     .block p,.block li{font-size:13.5px;color:var(--text);}
     .block ul{padding-left:18px;}
     .block li{margin-bottom:5px;}
-    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
-    .block-todo h4{color:var(--yellow);}
     .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
     .block-pass h4{color:var(--green);}
-    .block-danger{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.25);border-radius:6px;padding:14px 16px;}
-    .block-danger h4{color:var(--red);}
+    .block-partial{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-partial h4{color:var(--yellow);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
+    .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
     .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
     .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
@@ -191,7 +193,7 @@ curl -s -X PATCH http://localhost:8000/api/v1/admin/coordinators/&lt;id&gt; \
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>HTTPS เข้ารหัส traffic ระหว่าง browser และ server ด้วย TLS ป้องกัน man-in-the-middle attack ที่ดักอ่าน JWT token หรือ financial data ที่ส่งผ่านเครือข่าย TLS 1.2+ คือ version ที่ปลอดภัย (1.0 และ 1.1 ถูก deprecated แล้ว)</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าใช้ HTTP ธรรมดา JWT token จะถูก intercept ได้ง่ายในเครือข่ายสาธารณะ สำหรับ financial dashboard ที่มีข้อมูลงบประมาณ การเข้ารหัส in-transit เป็น baseline security requirement</p></div>
-      <div class="block"><h4>สถานะในโปรเจกต์</h4>
+      <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
         <p>App-level: <code>Strict-Transport-Security</code> header ตั้งค่าเมื่อ <code>DEBUG=false</code> (<code>main.py:87</code>) ✓ — บอก browser ว่าให้ใช้ HTTPS เท่านั้น</p>
         <p>Infra-level: HTTP→HTTPS redirect และ TLS certificate management ต้องทำที่ reverse proxy (Nginx, Caddy, Traefik) ซึ่งยังไม่มี config</p>
       </div>
@@ -287,7 +289,7 @@ done</pre>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Secret management คือกระบวนการเก็บ credential (password, API key, JWT secret) อย่างปลอดภัย เพื่อไม่ให้ secret หลุดผ่าน version control, log, หรือ environment ที่ไม่ควรเห็น tools ที่ใช้ได้แก่ HashiCorp Vault, AWS Secrets Manager, Azure Key Vault</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Secret ที่ commit เข้า git จะอยู่ใน history ตลอดไปแม้จะ delete ภายหลัง มี bots ที่ scan GitHub อัตโนมัติหา API key และนำไปใช้ภายในนาที default value ที่ลืมเปลี่ยนเป็น vulnerability ที่พบบ่อยมาก</p></div>
-      <div class="block"><h4>สถานะในโปรเจกต์</h4>
+      <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
         <p>ใช้ <code>.env</code> file ที่อยู่ใน <code>.gitignore</code> ✓ — ไม่ commit secret เข้า repo</p>
         <p><code>.env.example</code> มี placeholder แทน value จริง ✓</p>
         <p>Startup validation ✓ — <code>model_validator</code> ใน <code>config.py:74</code> crash ทันทีถ้า <code>DEBUG=False</code> และ <code>JWT_SECRET_KEY</code> ยังเป็น default value ป้องกัน silent vulnerability ใน production</p>
@@ -433,7 +435,7 @@ ORDER BY timestamp DESC;</pre>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>PDPA (พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562) คือกฎหมายไทยที่กำหนดว่าต้องเก็บข้อมูลส่วนบุคคลเท่าที่จำเป็น (data minimization), ได้รับ consent, มีกระบวนการให้ผู้ใช้ขอลบข้อมูลได้ (right to erasure)</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>องค์กรที่ฝ่าฝืน PDPA มีโทษปรับสูงสุด 5 ล้านบาทต่อกรรม ข้อมูลที่ระบบมีที่เป็น personal data ได้แก่ username (อาจเป็น email), display name, job_title จาก Entra</p></div>
-      <div class="block block-danger"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
         <p>ยังไม่มี right to erasure · ไม่มี data retention policy · ไม่มี privacy notice</p>
       </div>
 

@@ -32,6 +32,10 @@
     .block-todo h4{color:var(--yellow);}
     .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
     .block-pass h4{color:var(--green);}
+    .block-partial{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-partial h4{color:var(--yellow);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
+    .block-todo h4{color:var(--yellow);}
     .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
     .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
@@ -72,8 +76,8 @@
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Centralized logging คือการรวม log จากทุก server/container ไปเก็บที่ที่เดียว เพื่อให้ search, filter, และ analyze ได้ง่าย structured format (JSON) ทำให้ query ด้วย field เฉพาะได้ เช่น <code>level=ERROR AND user=alice</code></p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อมีหลาย server ไม่มีใครอยากเปิด SSH ไป grep log ทีละเครื่อง centralized logging ทำให้เห็นภาพรวมทันที สามารถ correlate event ข้าม service ได้ และตั้ง alert บน log pattern ได้</p></div>
-    <div class="block"><h4>สถานะในโปรเจกต์</h4>
-      <p>มีแล้ว (บางส่วน): Rotating file log <code>logs/app.log</code> ✓ · Colored console output ✓ · Sentry integration (optional, เมื่อตั้ง <code>SENTRY_DSN</code>) ✓</p>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
+      <p>มีแล้ว: Rotating file log <code>logs/app.log</code> ✓ · Colored console output ✓ · Sentry integration (optional, เมื่อตั้ง <code>SENTRY_DSN</code>) ✓</p>
       <p>ยังไม่มี: Structured JSON log format · ELK Stack / Datadog · log ยังเป็น human-readable text ที่ query ยาก</p>
     </div>
     <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>

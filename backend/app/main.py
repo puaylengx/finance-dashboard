@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.core.database import close_db, init_db
 from app.core.logging import get_logger
 from app.core.redis_client import close_redis, init_redis
+from app.middleware.audit import audit_log_middleware
 
 logger = get_logger(__name__)
 
@@ -74,6 +75,9 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
     expose_headers=["X-Request-ID"],
 )
+
+
+app.middleware("http")(audit_log_middleware)
 
 
 @app.middleware("http")

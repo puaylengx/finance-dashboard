@@ -99,9 +99,12 @@ DB_MODE=direct uvicorn app.main:app --reload
 DB_MODE=ssh uvicorn app.main:app --reload
 # ดู startup log: "SSH tunnel established" ก่อน "DB pool ready"
 
-# ทดสอบ health หลัง connect
+# ทดสอบ health และ readiness หลัง connect
 curl -s http://localhost:8000/health
-# คาดหวัง: {"status": "ok", ...}</pre>
+# คาดหวัง: {"status": "ok", "version": "..."}
+
+curl -s http://localhost:8000/ready
+# คาดหวัง: {"status": "ok"} — ยืนยันว่า DB connect ได้จริง</pre>
       <p style="margin-top:6px">ถ้า DB connect ไม่ได้ app จะ crash ที่ startup พร้อม error message — <strong>ไม่ให้ start แบบ silent failure</strong></p>
     </div>
   </div></div>

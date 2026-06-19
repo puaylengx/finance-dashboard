@@ -185,15 +185,32 @@ print('CoordinatorListResult fields:', list(get_type_hints(CoordinatorListResult
     </div>
   </div></div>
 
-  <div class="item" id="health-check"><div class="item-head"><div><div class="item-title">3. Health Check Endpoint</div><div class="item-sub">GET /health และ /ready สำหรับ container orchestrator</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
+  <div class="item" id="health-check"><div class="item-head"><div><div class="item-title">3. Health Check Endpoint</div><div class="item-sub">GET /health และ /ready สำหรับ container orchestrator</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><strong>/health (liveness)</strong>: ตรวจว่า process ยังทำงานอยู่ไหม ถ้าไม่ตอบ orchestrator จะ restart container <strong>/ready (readiness)</strong>: ตรวจว่า app พร้อมรับ traffic ไหม (DB + Redis connect ได้) ถ้าไม่พร้อม orchestrator จะไม่ส่ง traffic มา</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Kubernetes และ Docker Swarm ใช้ health check ตัดสินใจว่าจะ restart container ไหม และจะ route traffic ไปไหม ถ้าไม่มี /ready อาจส่ง traffic ไปยัง container ที่ DB ยังไม่ connect ทำให้ request พัง</p></div>
-    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p><code>GET /health</code> มีแล้ว ✓ — ตอบ <code>{"status":"ok","version":"1.0.0"}</code> (<code>main.py:103</code>) แต่ไม่มี <code>GET /ready</code> ที่ตรวจ DB connection และ Redis connection จริง</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>เพิ่ม <code>GET /ready</code>: ทดสอบ <code>SELECT 1</code> กับ DB และ <code>redis.ping()</code> — ถ้า fail ตอบ <code>503</code></li>
-      <li>Kubernetes: ใช้ <code>/health</code> เป็น livenessProbe และ <code>/ready</code> เป็น readinessProbe</li>
-    </ul></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <p><code>GET /health</code> — ตอบ <code>{"status":"ok","version":"..."}` ไม่ว่า DB/Redis จะพังหรือไม่ (liveness เท่านั้น) · <code>main.py:107</code></p>
+      <p><code>GET /ready</code> — รัน <code>SELECT 1</code> กับ DB และ <code>redis.ping()</code> จริง ถ้า service ใด fail ตอบ <code>503</code> พร้อม <code>{"status":"unavailable","failing":["db"]}</code> · <code>main.py:112</code></p>
+      <pre>livenessProbe:
+  httpGet: { path: /health, port: 8000 }
+readinessProbe:
+  httpGet: { path: /ready, port: 8000 }</pre>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># Unit / integration tests (ไม่ต้องการ DB/Redis จริง)
+cd backend
+.venv/bin/python -m pytest tests/integration/test_health.py -v
+# คาดหวัง: 6 passed
+
+# ทดสอบ manual — server ต้องรันอยู่
+curl -s http://localhost:8000/health
+# คาดหวัง: {"status":"ok","version":"1.0.0"}
+
+curl -s http://localhost:8000/ready
+# ถ้า DB + Redis OK → 200 {"status":"ok"}
+# ถ้า service ใด fail → 503 {"status":"unavailable","failing":["db"]} หรือ ["redis"]</pre>
+    </div>
   </div></div>
 
   <div class="item" id="graceful-shutdown"><div class="item-head"><div><div class="item-title">4. Graceful Shutdown</div><div class="item-sub">รองรับ SIGTERM: หยุดรับ request ใหม่ รอ request ปัจจุบันเสร็จ แล้วจึง shutdown</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>

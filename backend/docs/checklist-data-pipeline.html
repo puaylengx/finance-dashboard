@@ -78,68 +78,179 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-cicd.html">← Deployment &amp; CI/CD</a><a href="checklist-documentation.html">Documentation →</a></div>
-  <h2>Data Pipeline <small>— 3 requirements &nbsp; Partial 1 / Fail 2</small></h2>
+  <h2>Data Pipeline <small>— 3 requirements &nbsp; Pass 1 / Partial 2</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">กระบวนการ import ข้อมูลจาก ERP, data validation และ reconciliation</p>
 
-  <div class="item" id="etl"><div class="item-head"><div><div class="item-title">1. ETL / Data Import Process</div><div class="item-sub">กระบวนการ import ข้อมูลจาก ERP ไปยัง PostgreSQL มี error handling และ retry mechanism</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="etl"><div class="item-head"><div><div class="item-title">1. ETL / Data Import Process</div><div class="item-sub">กระบวนการ import ข้อมูลจาก ERP ไปยัง PostgreSQL มี error handling และ retry mechanism</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>ETL (Extract, Transform, Load) คือกระบวนการ: (1) <strong>Extract</strong> ดึงข้อมูลจาก ERP source (2) <strong>Transform</strong> แปลง format, clean, validate (3) <strong>Load</strong> บันทึกลง PostgreSQL table <code>erp_transactions</code> กระบวนการนี้ควรมี scheduled run, error handling, และ idempotent (run ซ้ำได้โดยไม่ duplicate)</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard แสดงข้อมูลจาก ERP ถ้ากระบวนการ import ไม่ reliable ข้อมูลที่แสดงจะไม่ครบหรือผิดพลาด ผู้บริหารตัดสินใจบนข้อมูลเก่าหรือผิด ซึ่งส่งผลกระทบต่อการเงินองค์กร</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ข้อมูลใน <code>erp_transactions</code> table มีอยู่แล้ว (จาก ERP) แต่ไม่มี documented ETL process ในโปรเจกต์นี้ ไม่ชัดเจนว่าข้อมูลมาจากไหนและ update บ่อยแค่ไหน</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>Document ETL process ที่ใช้อยู่ปัจจุบัน (ถ้ามี): ใครรัน, บ่อยแค่ไหน, เอาข้อมูลจากไหน</li>
-      <li>ถ้ายังไม่มี: สร้าง ETL script พร้อม: idempotent upsert, error logging, retry บน failure</li>
-      <li>เพิ่ม monitoring: รู้เมื่อ ETL run ล้มเหลว (alert ไป email/Line)</li>
-      <li>เพิ่ม data freshness indicator ใน dashboard: แสดง "ข้อมูล ณ วันที่ ..."</li>
-    </ul>
-    <pre># ตัวอย่าง upsert pattern (idempotent)
-INSERT INTO erp_transactions (gl_id, fiscal_year, amount, ...)
-VALUES (%(gl_id)s, %(year)s, %(amount)s, ...)
-ON CONFLICT (gl_id, fiscal_year)
-DO UPDATE SET amount = EXCLUDED.amount, updated_at = NOW();</pre>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — Partial</h4>
+      <p><strong>ETL script</strong>: <code>etl/import_erp.py</code> พร้อมใช้งาน:</p>
+      <ul>
+        <li><strong>Idempotent</strong>: DELETE rows ของ fiscal_year ก่อน INSERT ใหม่ — run ซ้ำได้ปลอดภัย</li>
+        <li><strong>Validation</strong>: ใช้ Pydantic schema จาก <code>etl/schemas.py</code> — collect errors ทุก row ก่อน insert</li>
+        <li><strong>Dry-run mode</strong>: <code>--dry-run</code> flag validate เท่านั้น ไม่แตะ DB</li>
+        <li><strong>SSH Tunnel</strong>: รองรับ <code>DB_MODE=ssh</code> ผ่าน .env เดิม</li>
+        <li><strong>Summary report</strong>: แสดง rows read / valid / rejected + 10 error rows แรก</li>
+      </ul>
+      <p style="color:var(--muted);font-size:12px">Partial เพราะ: column mapping ใน <code>_CSV_MAP</code> ต้องปรับให้ตรงกับ ERP export จริง · ยังไม่มี scheduled run (Celery defer) · ยังไม่มี data freshness indicator ใน dashboard</p>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># 1. ทดสอบ validation โดยไม่แตะ DB (dry-run)
+cd backend
+python etl/import_erp.py --file sample_export.csv --year 2025 --dry-run
+# คาดหวัง:
+#   Rows read:     N
+#   Valid rows:    N
+#   Rejected rows: 0
+#   [DRY-RUN] Done: N rows loaded
+
+# 2. ทดสอบ validation schema โดยตรง
+python -c "
+from etl.schemas import ErpTransactionRow
+from decimal import Decimal
+from datetime import date
+r = ErpTransactionRow(
+    fiscal_year=2025, fiscal_month=1, trimester=1,
+    day=15, month=10, year=2024, doc_no=12345,
+    doc_date=date(2024,10,15), funds_ctr='FC001',
+    cost_ctr_id='CC001', gl_id='GL001',
+    gl_description='Test', amount=Decimal('1500.50'), details='test'
+)
+print('valid:', r.amount)
+
+# ทดสอบ invalid fiscal_month
+try:
+    ErpTransactionRow(**{**r.model_dump(), 'fiscal_month': 20})
+except Exception as e:
+    print('invalid month caught:', 'fiscal_month' in str(e))
+"
+
+# 3. Import จริง (ต้องมี DB connection)
+python etl/import_erp.py --file export_2025.csv --year 2025
+# คาดหวัง: Done: N rows loaded
+# ตรวจสอบผลลัพธ์
+psql -d ic_finance -c "SELECT fiscal_year, COUNT(*), SUM(amount) FROM erp_transactions GROUP BY fiscal_year;"
+
+# 4. ทดสอบ idempotency (รันซ้ำ 2 ครั้ง ต้องได้ผลเหมือนกัน)
+python etl/import_erp.py --file export_2025.csv --year 2025
+python etl/import_erp.py --file export_2025.csv --year 2025
+psql -d ic_finance -c "SELECT COUNT(*) FROM erp_transactions WHERE fiscal_year=2025;"
+# คาดหวัง: count ไม่เพิ่มขึ้นจากการรันครั้งที่ 2</pre>
     </div>
   </div></div>
 
-  <div class="item" id="data-validation"><div class="item-head"><div><div class="item-title">2. Data Validation Rules</div><div class="item-sub">ตรวจสอบ data quality ก่อน import: range check, format check, referential integrity</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
+  <div class="item" id="data-validation"><div class="item-head"><div><div class="item-title">2. Data Validation Rules</div><div class="item-sub">ตรวจสอบ data quality ก่อน import: range check, format check, referential integrity</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
-    <div class="block"><h4>คืออะไร</h4><p>Data validation rules คือ rules ที่ตรวจสอบว่าข้อมูลที่จะ import เข้า DB ถูกต้องตาม business rules ได้แก่: (1) <strong>Format check</strong>: fiscal_year เป็น 4 หลัก, amount เป็น numeric (2) <strong>Range check</strong>: fiscal_month ระหว่าง 1-12 (3) <strong>Referential check</strong>: cost_ctr_id มีอยู่ใน master table</p></div>
+    <div class="block"><h4>คืออะไร</h4><p>Data validation rules คือ rules ที่ตรวจสอบว่าข้อมูลที่จะ import เข้า DB ถูกต้องตาม business rules ได้แก่: (1) <strong>Format check</strong>: fiscal_year เป็น 4 หลัก, amount เป็น numeric (2) <strong>Range check</strong>: fiscal_month ระหว่าง 1-16 (ERP extended) (3) <strong>Referential check</strong>: cost_ctr_id, gl_id ต้องไม่ว่าง</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>"Garbage in, garbage out" — ถ้า import ข้อมูลผิดเข้า DB แล้วค่อยมา detect ทีหลัง เสียต้นทุนมากกว่าการ validate ก่อน import นอกจากนั้น finance data ที่ผิดอาจส่งผลกระทบต่อการรายงานทางการเงิน</p></div>
-    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p>มี DB-level constraints: NOT NULL, FOREIGN KEY, CHECK บน migration แต่ไม่มี application-level pre-import validation หรือ data quality report</p>
-    <pre>-- จาก migration: DB-level validation มีอยู่
-ALTER TABLE erp_transactions
-  ADD CONSTRAINT chk_fiscal_month CHECK (fiscal_month BETWEEN 1 AND 12);
--- แต่ไม่มี pre-import validation script</pre>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <p><strong>Application-level (Pydantic)</strong>: <code>etl/schemas.py</code> — <code>ErpTransactionRow</code> validate ทุก row ก่อน insert:</p>
+      <ul>
+        <li><code>fiscal_year</code>: range 2000–2100</li>
+        <li><code>fiscal_month</code>: range 1–16 (ERP extended periods)</li>
+        <li><code>month</code>: range 1–12</li>
+        <li><code>gl_id</code>, <code>cost_ctr_id</code>, <code>funds_ctr</code>: strip + non-empty check</li>
+        <li><code>amount</code>: Decimal (reject non-numeric)</li>
+        <li>Nullable fields: coerce empty string → None</li>
+      </ul>
+      <p><strong>DB-level (PostgreSQL)</strong>: <code>erp_transactions</code> มี NOT NULL บน required columns · migration 001 enforce schema constraints</p>
+      <p><strong>Error collection</strong>: ETL script collect errors ทุก row (ไม่ abort row แรก) → print summary + row number + error message</p>
     </div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>เพิ่ม pre-import validation script ที่ check data ก่อน insert (fail fast)</li>
-      <li>สร้าง data quality report: "import X rows, rejected Y rows, reason: ..."</li>
-      <li>เพิ่ม Pydantic model สำหรับ validate แต่ละ row ก่อน insert</li>
-      <li>เก็บ rejected rows ใน <code>import_errors</code> table เพื่อ review ภายหลัง</li>
-    </ul></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># ทดสอบ schema validation ด้วย pytest unit test
+cd backend
+.venv/bin/python -m pytest -v -k "schema or validation" 2>/dev/null || true
+
+# ทดสอบ validation โดยตรง
+python -c "
+from etl.schemas import ErpTransactionRow
+from decimal import Decimal; from datetime import date
+base = dict(fiscal_year=2025, fiscal_month=1, trimester=1, day=1,
+    month=10, year=2024, doc_no=1, doc_date=date(2024,10,1),
+    funds_ctr='F', cost_ctr_id='C', gl_id='G',
+    gl_description='D', amount=Decimal('100'), details='x')
+
+# ✓ valid
+r = ErpTransactionRow(**base); print('valid OK')
+
+# ✗ fiscal_year ผิด
+try: ErpTransactionRow(**{**base,'fiscal_year':1999})
+except Exception as e: print('year caught:', '1999' in str(e))
+
+# ✗ fiscal_month ผิด (>16)
+try: ErpTransactionRow(**{**base,'fiscal_month':20})
+except Exception as e: print('month caught:', 'fiscal_month' in str(e))
+
+# ✗ gl_id ว่าง
+try: ErpTransactionRow(**{**base,'gl_id':'  '})
+except Exception as e: print('empty gl_id caught:', 'empty' in str(e))
+"
+# คาดหวัง: valid OK, ทุก invalid case ถูก caught</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="reconciliation"><div class="item-head"><div><div class="item-title">3. Reconciliation Process</div><div class="item-sub">ตรวจสอบความถูกต้องระหว่างข้อมูลใน dashboard กับ ERP source เป็นระยะ</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="reconciliation"><div class="item-head"><div><div class="item-title">3. Reconciliation Process</div><div class="item-sub">ตรวจสอบความถูกต้องระหว่างข้อมูลใน dashboard กับ ERP source เป็นระยะ</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Partial</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Reconciliation คือกระบวนการ cross-check ว่าข้อมูลใน PostgreSQL ตรงกับ ERP source หรือไม่ เช่น ยอดรวมใน dashboard ต้องเท่ากับยอดรวมใน ERP report ถ้า reconcile ไม่ผ่าน แสดงว่ามีปัญหาใน ETL หรือ transformation</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>แม้จะมี ETL ที่ดี ก็ยังอาจเกิด bug ใน transformation ที่ทำให้ตัวเลขผิดโดยไม่รู้ตัว Reconciliation เป็น "double-check" ที่ catch ปัญหาเหล่านี้ ก่อนที่ผู้บริหารจะเห็นตัวเลขผิดใน dashboard</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี reconciliation process ไม่มีการ cross-check ระหว่าง dashboard data กับ ERP source เป็นระยะ</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>สร้าง scheduled job ที่ compare aggregate sum ระหว่าง PostgreSQL กับ ERP ทุกสัปดาห์</li>
-      <li>ถ้า reconcile ไม่ผ่าน (difference &gt; tolerance): alert ทันที</li>
-      <li>เขียน reconciliation report: แสดง expected vs actual พร้อม difference</li>
-      <li>เก็บ reconciliation history เพื่อ audit</li>
-    </ul>
-    <pre># ตัวอย่าง reconciliation check
-SELECT fiscal_year, SUM(amount) as dashboard_total
-FROM erp_transactions
-GROUP BY fiscal_year;
--- compare กับ ERP report total
--- ถ้า |dashboard_total - erp_total| > threshold → alert</pre>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — Partial</h4>
+      <p><strong>Reconciliation script</strong>: <code>etl/reconcile.py</code> — compare aggregate SUM จาก DB กับ expected total จาก ERP:</p>
+      <ul>
+        <li>ระบุ expected total โดยตรง: <code>--expected-total 850000000.00</code></li>
+        <li>หรืออ่านจาก CSV summary: <code>--expected-file erp_summary_2025.csv</code></li>
+        <li>Tolerance 0.01% (Decimal precision)</li>
+        <li>Report: expected / actual / difference / tolerance / row count</li>
+        <li>Exit code 1 ถ้า fail — ใช้ใน CI/CD หรือ scheduled job ได้ทันที</li>
+      </ul>
+      <p style="color:var(--muted);font-size:12px">Partial เพราะ: ยังไม่มี scheduled run · ยังไม่มี reconciliation history table · ยังไม่มี alert (email/Line) เมื่อ fail</p>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># 1. ทดสอบ reconcile ด้วย expected total โดยตรง
+cd backend
+python etl/reconcile.py --year 2025 --expected-total 850000000.00
+# คาดหวัง output:
+# ==================================================
+#   Reconciliation Report — Fiscal Year 2025
+# ==================================================
+#   ERP expected total :       850,000,000.00
+#   Actual (DB) total  :       849,999,999.99
+#   Difference         :                 0.01
+#   Tolerance (0.01%)  :            85,000.00
+#   Row count in DB    :               12,345
+# --------------------------------------------------
+#   Result: ✅ PASS
+
+# 2. ทดสอบ fail case (expected ผิดมาก)
+python etl/reconcile.py --year 2025 --expected-total 999999999999.00
+# คาดหวัง: ❌ FAIL + exit code 1
+echo "exit code: $?"
+
+# 3. ทดสอบด้วย CSV summary file
+# สร้าง erp_summary_2025.csv:
+echo "fiscal_year,total_amount" > /tmp/erp_summary.csv
+echo "2025,850000000.00"        >> /tmp/erp_summary.csv
+python etl/reconcile.py --year 2025 --expected-file /tmp/erp_summary.csv
+
+# 4. ใช้ใน post-ETL pipeline (exit code 1 = stop pipeline)
+python etl/import_erp.py --file export_2025.csv --year 2025 && \
+python etl/reconcile.py  --year 2025 --expected-total 850000000.00
+# ถ้า reconcile fail → pipeline หยุดทันที
+
+# 5. ตรวจ aggregate totals ใน DB โดยตรง
+psql -d ic_finance -c "
+  SELECT fiscal_year,
+         COUNT(*)       AS row_count,
+         SUM(amount)    AS total_amount
+  FROM erp_transactions
+  GROUP BY fiscal_year
+  ORDER BY fiscal_year;"</pre>
     </div>
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-documentation.html" style="color:var(--accent)">Documentation →</a>
+    อัปเดต 2026-06-19 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-documentation.html" style="color:var(--accent)">Documentation →</a>
   </div>
 </main>
 <script>

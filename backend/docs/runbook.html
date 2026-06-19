@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Runbook — Seamless Dashboard</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    h3{font-size:16px;font-weight:700;margin:28px 0 10px;color:var(--text);}
+    h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    p,li{font-size:13.5px;}
+    ul{padding-left:18px;margin-bottom:10px;}
+    li{margin-bottom:4px;}
+    .scenario{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .scenario-head{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .scenario-head h3{margin:0;font-size:14px;}
+    .severity{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;flex-shrink:0;}
+    .sev-high{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+    .sev-med{background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3);}
+    .sev-low{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+    .scenario-body{padding:16px 20px;display:grid;gap:14px;}
+    .block h4{color:var(--muted);}
+    .block-symptom{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:12px 16px;}
+    .block-symptom h4{color:var(--red);}
+    .block-action{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:12px 16px;}
+    .block-action h4{color:var(--green);}
+    .block-escalate{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:6px;padding:12px 16px;}
+    .block-escalate h4{color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;line-height:1.6;}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0;}
+    th{text-align:left;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+    td{padding:8px 12px;border:1px solid var(--border);vertical-align:top;}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Operations Runbook</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Checklist Index</a>
+  <a href="backend.html">Backend Guide</a>
+  <div class="group">Scenarios</div>
+  <a href="#restart">1. Restart Service</a>
+  <a href="#logs">2. ตรวจ Logs</a>
+  <a href="#redis-down">3. Redis Down</a>
+  <a href="#db-error">4. DB / SSH Tunnel Error</a>
+  <a href="#high-errors">5. Error Rate สูง</a>
+  <a href="#rollback">6. Rollback</a>
+</nav>
+<main>
+  <div class="nav-btn"><a href="checklist-documentation.html">← Documentation Checklist</a><a href="checklist.html">กลับ Index →</a></div>
+  <h2>Operations Runbook <small>— Seamless Dashboard API</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 8px">คู่มือสำหรับ ops team: วิธีจัดการ incident และ routine tasks</p>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:28px">อัปเดต 2026-06-19 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ติดต่อ developer ถ้า action ไม่ได้ผลหลังรอ 5 นาที</strong></p>
+
+  <!-- Quick Reference -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:28px;">
+    <h4 style="margin-bottom:10px">Quick Reference — ตำแหน่งสำคัญ</h4>
+    <table>
+      <tr><th>สิ่งที่ต้องการ</th><th>ตำแหน่ง / คำสั่ง</th></tr>
+      <tr><td>API logs (JSON)</td><td><code>backend/logs/app.log</code></td></tr>
+      <tr><td>Health check</td><td><code>curl http://localhost:8000/health</code></td></tr>
+      <tr><td>Readiness check</td><td><code>curl http://localhost:8000/ready</code></td></tr>
+      <tr><td>Prometheus metrics</td><td><code>curl http://localhost:8000/metrics</code></td></tr>
+      <tr><td>Restart (Docker)</td><td><code>docker compose restart api</code></td></tr>
+      <tr><td>Restart (uvicorn)</td><td><code>systemctl restart seamless-api</code> หรือ kill+rerun</td></tr>
+      <tr><td>DB migration rollback</td><td><code>cd backend &amp;&amp; python migrations/migrate.py --rollback</code></td></tr>
+    </table>
+  </div>
+
+  <!-- 1. Restart Service -->
+  <div class="scenario" id="restart">
+    <div class="scenario-head"><span class="severity sev-low">Low</span><h3>1. Restart API Service</h3></div>
+    <div class="scenario-body">
+      <div class="block-action block"><h4>ขั้นตอน — Docker Compose</h4>
+        <pre># ตรวจสถานะก่อน restart
+docker compose ps
+docker compose logs api --tail=20
+
+# Graceful restart (รอ request ที่ค้างอยู่ก่อน)
+docker compose restart api
+
+# ถ้า restart ไม่ได้ผล — force recreate
+docker compose up -d --force-recreate api
+
+# ตรวจหลัง restart
+curl http://localhost:8000/health
+# คาดหวัง: {"status":"ok"}</pre>
+      </div>
+      <div class="block-action block"><h4>ขั้นตอน — uvicorn โดยตรง</h4>
+        <pre># หา process
+ps aux | grep uvicorn
+
+# ส่ง SIGTERM (graceful shutdown — รอ request ที่ค้าง)
+kill -TERM &lt;PID&gt;
+# รอ log "Shutdown complete" ก่อน process exit
+
+# เริ่มใหม่
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 &amp;
+
+# ตรวจ
+curl http://localhost:8000/health</pre>
+      </div>
+      <div class="block"><h4>สิ่งที่ต้อง check หลัง restart</h4>
+        <ul>
+          <li><code>/health</code> ต้อง 200 ภายใน 15 วินาที</li>
+          <li><code>/ready</code> ต้อง 200 (DB + Redis พร้อม)</li>
+          <li>ดู log ว่าไม่มี ERROR ใน 1 นาทีแรก</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Check Logs -->
+  <div class="scenario" id="logs">
+    <div class="scenario-head"><span class="severity sev-low">Routine</span><h3>2. ตรวจสอบ Logs</h3></div>
+    <div class="scenario-body">
+      <div class="block"><h4>Log files</h4>
+        <table>
+          <tr><th>ไฟล์</th><th>เนื้อหา</th><th>Format</th></tr>
+          <tr><td><code>backend/logs/app.log</code></td><td>Application events ทั้งหมด</td><td>JSON (structured)</td></tr>
+          <tr><td><code>docker compose logs api</code></td><td>stdout ของ container</td><td>plaintext + JSON</td></tr>
+        </table>
+      </div>
+      <div class="block-action block"><h4>คำสั่งที่ใช้บ่อย</h4>
+        <pre># ดู log ล่าสุด 50 บรรทัด
+tail -50 backend/logs/app.log
+
+# Filter เฉพาะ ERROR
+grep '"level":"ERROR"' backend/logs/app.log | tail -20
+
+# ดู request/response ของ user คนหนึ่ง
+grep '"user_id":"alice@example.com"' backend/logs/app.log | tail -10
+
+# Docker — follow live
+docker compose logs api -f --tail=50
+
+# ดู slow requests (status ≥ 500)
+grep '"status_code":5' backend/logs/app.log | tail -20</pre>
+      </div>
+      <div class="block"><h4>JSON log fields ที่สำคัญ</h4>
+        <table>
+          <tr><th>Field</th><th>ความหมาย</th></tr>
+          <tr><td><code>ts</code></td><td>Timestamp ISO8601</td></tr>
+          <tr><td><code>level</code></td><td>DEBUG / INFO / WARNING / ERROR</td></tr>
+          <tr><td><code>logger</code></td><td>module ที่ log เช่น <code>app.services.finance_service</code></td></tr>
+          <tr><td><code>msg</code></td><td>ข้อความ</td></tr>
+          <tr><td><code>exc</code></td><td>Stack trace (มีเฉพาะ ERROR)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Redis Down -->
+  <div class="scenario" id="redis-down">
+    <div class="scenario-head"><span class="severity sev-med">Medium</span><h3>3. Redis Down / Connection Refused</h3></div>
+    <div class="scenario-body">
+      <div class="block-symptom block"><h4>Symptoms</h4>
+        <ul>
+          <li><code>/ready</code> ตอบ <code>503 {"failing":["redis"]}</code></li>
+          <li>Log มี <code>"Cache get error"</code> หรือ <code>"Cache set error"</code> บ่อยๆ</li>
+          <li>Dashboard ยัง load ได้แต่ช้าลง (cache miss ทุก request)</li>
+          <li>API ไม่ crash — graceful degradation ทำงาน</li>
+        </ul>
+      </div>
+      <div class="block-action block"><h4>Immediate Action</h4>
+        <pre># ตรวจ Redis process
+docker compose ps redis
+# หรือ
+redis-cli ping
+# คาดหวัง: PONG
+
+# Restart Redis
+docker compose restart redis
+
+# ตรวจหลัง restart (รอ 5 วินาที)
+curl http://localhost:8000/ready
+# คาดหวัง: {"status":"ok"}
+
+# ถ้า restart ไม่ได้ผล — check disk space (Redis ใช้ RDB dump)
+df -h
+docker compose logs redis --tail=30</pre>
+      </div>
+      <div class="block-escalate block"><h4>Escalation</h4>
+        <p>ถ้า restart Redis ไม่ได้ผลใน 5 นาที: ติดต่อ developer<br>
+        ระหว่างรอ: API ยังทำงานได้ปกติ (cache miss → query DB โดยตรง) แต่ load บน DB จะสูงขึ้น</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. DB / SSH Tunnel Error -->
+  <div class="scenario" id="db-error">
+    <div class="scenario-head"><span class="severity sev-high">High</span><h3>4. DB Connection Error / SSH Tunnel Down</h3></div>
+    <div class="scenario-body">
+      <div class="block-symptom block"><h4>Symptoms</h4>
+        <ul>
+          <li><code>/ready</code> ตอบ <code>503 {"failing":["db"]}</code></li>
+          <li>Finance dashboard ตอบ <code>500 Internal Server Error</code></li>
+          <li>Log มี <code>"connection pool exhausted"</code> หรือ <code>"SSH tunnel"</code> error</li>
+          <li><code>/health</code> ยังตอบ 200 (liveness ไม่ตรวจ DB)</li>
+        </ul>
+      </div>
+      <div class="block-action block"><h4>ขั้นตอน</h4>
+        <pre># Step 1: ตรวจ readiness
+curl http://localhost:8000/ready
+
+# Step 2: ตรวจ SSH tunnel (ถ้า DB_MODE=ssh)
+# — ดู log หา "SSH tunnel" หรือ "Connection refused"
+grep -i "ssh\|tunnel\|connection" backend/logs/app.log | tail -10
+
+# Step 3: ทดสอบ SSH connection โดยตรง
+ssh -i /path/to/key deploy-user@jump.server.com "echo OK"
+
+# Step 4: ถ้า SSH OK แต่ DB ไม่ได้ — ตรวจ DB server
+ssh -i /path/to/key deploy-user@jump.server.com \
+  "psql -h db-host -U postgres -c 'SELECT 1'"
+
+# Step 5: Restart API (pool จะ reconnect)
+docker compose restart api
+
+# ตรวจหลัง restart
+curl http://localhost:8000/ready</pre>
+      </div>
+      <div class="block-escalate block"><h4>Escalation</h4>
+        <p>ถ้าตรวจแล้ว SSH OK และ DB ตอบได้ แต่ API ยัง 503: <strong>ติดต่อ developer ทันที</strong><br>
+        ถ้า DB server down จริง: ติดต่อ DBA / infrastructure team</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. High Error Rate -->
+  <div class="scenario" id="high-errors">
+    <div class="scenario-head"><span class="severity sev-high">High</span><h3>5. Error Rate สูง (5xx จำนวนมาก)</h3></div>
+    <div class="scenario-body">
+      <div class="block-symptom block"><h4>Symptoms</h4>
+        <ul>
+          <li>Users report "หน้าเว็บโหลดไม่ได้" หรือ "ข้อมูลไม่แสดง"</li>
+          <li>Log เต็มไปด้วย ERROR entries</li>
+          <li>Prometheus metrics: <code>http_requests_total{status=~"5.."}</code> สูง</li>
+        </ul>
+      </div>
+      <div class="block-action block"><h4>ขั้นตอน Triage</h4>
+        <pre># 1. ตรวจ error type
+grep '"level":"ERROR"' backend/logs/app.log | tail -20 | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        d = json.loads(line)
+        print(d.get('ts',''), d.get('msg',''))
+    except: print(line.strip())
+"
+
+# 2. ตรวจ health/ready
+curl http://localhost:8000/health
+curl http://localhost:8000/ready
+
+# 3. ตรวจว่า error เริ่มหลัง deploy ล่าสุดหรือไม่
+git -C /path/to/repo log --oneline -5
+
+# 4. ดู Prometheus metrics
+curl http://localhost:8000/metrics | grep http_requests_total</pre>
+      </div>
+      <div class="block-escalate block"><h4>ถ้าเกิดหลัง deploy ใหม่ → Rollback</h4>
+        <p>ดูขั้นตอน rollback ที่ <a href="#rollback" style="color:var(--accent)">Scenario 6</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Rollback -->
+  <div class="scenario" id="rollback">
+    <div class="scenario-head"><span class="severity sev-high">Critical</span><h3>6. Rollback เมื่อ Deploy พัง</h3></div>
+    <div class="scenario-body">
+      <div class="block-action block"><h4>App Rollback (Docker)</h4>
+        <pre># Step 1: ดู image versions ที่มี
+docker images seamless-dashboard-api --format "table {{.Tag}}\t{{.CreatedAt}}"
+
+# Step 2: แก้ image tag ใน docker-compose.yml เป็น version ก่อนหน้า
+# image: seamless-dashboard-api:&lt;previous-git-sha&gt;
+
+# Step 3: Deploy image เก่า
+docker compose up -d api
+
+# Step 4: ตรวจ
+curl http://localhost:8000/health
+curl http://localhost:8000/ready</pre>
+      </div>
+      <div class="block-action block"><h4>DB Migration Rollback (ถ้า migration ใหม่ทำให้พัง)</h4>
+        <pre>cd backend
+python migrations/migrate.py --rollback
+
+# ตรวจ migrations ที่ยัง apply อยู่
+psql -d ic_finance -c \
+  "SELECT filename, applied_at FROM schema_migrations ORDER BY id DESC LIMIT 5;"</pre>
+      </div>
+      <div class="block-escalate block"><h4>Escalation</h4>
+        <p>Rollback ต้องทำโดย developer เสมอ — ops team แจ้ง developer และเตรียม log + error message ให้พร้อม</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    อัปเดต 2026-06-19 &nbsp;·&nbsp; <a href="checklist-documentation.html" style="color:var(--accent)">← Documentation Checklist</a> &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">กลับ Index</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){
+  var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
+}
+</script>
+</body>
+</html>

@@ -426,7 +426,7 @@ curl -s http://localhost:8000/api/v1/auth/me \
           <li><code>migrations/006_create_audit_log.sql</code>: สร้าง table พร้อม index บน <code>user_id</code> และ <code>timestamp DESC</code></li>
           <li><code>middleware/audit.py</code>: ดักทุก authenticated request (มี Bearer token) → insert เข้า DB แบบ background task ไม่บล็อก response</li>
           <li>บันทึก: <code>user_id, action (METHOD /path), resource (query params), ip_address, status_code, timestamp</code></li>
-          <li>Skip paths อัตโนมัติ: <code>/health</code>, <code>/ready</code>, <code>/api/docs</code>, <code>/api/redoc</code>, <code>/api/openapi.json</code></li>
+          <li>Skip paths อัตโนมัติ: <code>/health</code>, <code>/ready</code>, <code>/metrics</code>, <code>/api/docs</code>, <code>/api/redoc</code>, <code>/api/openapi.json</code></li>
           <li>ถ้า DB insert fail → log warning เท่านั้น ไม่กระทบ request</li>
         </ul>
         <pre>-- ตัวอย่าง record ใน audit_log

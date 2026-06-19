@@ -250,23 +250,85 @@ tail -10 logs/app.log</pre>
     </div>
   </div></div>
 
-  <div class="item" id="bg-queue"><div class="item-head"><div><div class="item-title">5. Background Job Queue</div><div class="item-sub">ใช้ Celery + Redis สำหรับ heavy task ที่ใช้เวลานาน</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="bg-queue"><div class="item-head"><div><div class="item-title">5. Background Job Queue</div><div class="item-sub">ใช้ Celery + Redis สำหรับ heavy task ที่ใช้เวลานาน</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Background job queue คือระบบที่รับ task และประมวลผลแบบ async โดยไม่ block HTTP request เช่น user เรียก <code>POST /reports/generate</code> ระบบตอบ <code>202 Accepted</code> ทันที แล้ว process report ใน background worker แยกต่างหาก</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>HTTP request มี timeout (client browser timeout ~30-60s) ถ้า task ใช้เวลานานกว่านั้น request จะ timeout แม้ว่างาน process ยังไม่เสร็จ background queue แก้ปัญหานี้และยัง retry ได้เมื่อ worker crash</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ทุก request ตอบ synchronous ใน HTTP lifecycle เดียว Finance SQL ซับซ้อนแต่ยังอยู่ในระดับ ms ถ้าต้องการ generate PDF report หรือ export Excel จะต้องการ background queue</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ (เมื่อจำเป็น)</h4><ul>
-      <li>เพิ่ม Celery + Redis broker</li>
-      <li>สร้าง task: <code>generate_report.delay(params)</code> → ตอบ <code>task_id</code></li>
-      <li>เพิ่ม <code>GET /tasks/{task_id}</code>: ตรวจ status และดึง result</li>
+    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>Finance SQL ซับซ้อนแต่ยังอยู่ในระดับ ms ยังไม่มี endpoint ที่ generate PDF หรือ export Excel — ยังไม่มี use case จริงที่ต้องการ background queue · ทบทวนเมื่อมี heavy task ที่ใช้เวลา &gt;10s หรือมี request export จาก user จริง</p></div>
+    <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
+      <li>เพิ่ม <code>celery[redis]&gt;=5.4.0</code> ใน <code>requirements.txt</code></li>
+      <li>สร้าง <code>app/core/celery_app.py</code> — Celery instance ใช้ Redis DB 1 เป็น broker + result backend (แยกจาก cache DB 0)</li>
+      <li>สร้าง <code>app/tasks/report_tasks.py</code> — task ใช้ psycopg sync API โดยตรง (ไม่ share async pool กับ FastAPI)</li>
+      <li>เพิ่ม <code>POST /reports/generate</code> → ตอบ <code>202</code> พร้อม <code>task_id</code></li>
+      <li>เพิ่ม <code>GET /tasks/{task_id}</code> → ตรวจ status (<code>PENDING/STARTED/SUCCESS/FAILURE</code>) และดึง result</li>
+      <li>Deploy Celery worker เป็น process แยกจาก FastAPI server</li>
     </ul></div>
+    <div class="block"><h4>วิธีทดสอบ (เมื่อ implement แล้ว)</h4>
+      <pre># 1. Unit tests — mock Celery ไม่ต้องมี Redis/Worker จริง
+cd backend
+.venv/bin/python -m pytest tests/integration/test_reports.py tests/integration/test_tasks.py -v
+
+# 2. Integration test ด้วย task_always_eager (รัน task ใน process เดียวกัน)
+# ใน conftest.py เพิ่ม fixture:
+# celery_app.conf.task_always_eager = True
+
+# 3. Manual test — ต้องรัน Redis + Worker + FastAPI
+# Terminal 1: FastAPI
+uvicorn app.main:app --reload
+
+# Terminal 2: Celery worker
+celery -A app.core.celery_app worker --loglevel=info
+
+# Terminal 3: ทดสอบ flow
+# Step 1 — สร้าง task
+curl -X POST http://localhost:8000/api/v1/reports/generate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"year": 2025}'
+# คาดหวัง: 202 {"success":true,"data":{"task_id":"abc-123"}}
+
+# Step 2 — poll จนได้ SUCCESS
+curl http://localhost:8000/api/v1/tasks/abc-123 \
+  -H "Authorization: Bearer $TOKEN"
+# STARTED → SUCCESS → {"data":{"status":"SUCCESS","result":{...}}}</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="message-queue"><div class="item-head"><div><div class="item-title">6. Message Queue / Event Bus</div><div class="item-sub">พิจารณา RabbitMQ / Kafka สำหรับ decoupling service</div></div><div class="item-badges"><span class="p4">P4</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="message-queue"><div class="item-head"><div><div class="item-title">6. Message Queue / Event Bus</div><div class="item-sub">พิจารณา RabbitMQ / Kafka สำหรับ decoupling service</div></div><div class="item-badges"><span class="p4">P4</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Message queue (RabbitMQ) หรือ event bus (Kafka) คือ middleware ที่ทำให้ services สื่อสารกันแบบ async ผ่าน message/event แทนการ call API โดยตรง ทำให้ decouple กัน — producer ไม่รู้จัก consumer</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อ system มีหลาย service เช่น เมื่อมีการ import ERP data → trigger notification service + audit service + cache invalidation การใช้ event bus ทำให้เพิ่ม consumer ใหม่ได้โดยไม่แก้ producer</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ยังเป็น monolith ที่ไม่มี async messaging ทุกอย่าง call function โดยตรง เหมาะกับขนาด system ปัจจุบัน — ยังไม่จำเป็น</p></div>
+    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังเป็น monolith service เดียว ทุกอย่าง call function โดยตรงใน process เดียวกัน — เหมาะกับขนาดและ team ปัจจุบัน · ทบทวนเมื่อแยก service ออกจากกันจริง เช่น notification service, ERP import service, หรือเมื่อมี consumer &gt;1 ที่ต้องรับ event เดียวกัน</p></div>
+    <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
+      <li>เลือก broker ตาม use case: <strong>RabbitMQ</strong> สำหรับ task queue ทั่วไป, <strong>Kafka</strong> สำหรับ event stream ที่ต้องการ replay หรือ throughput สูง</li>
+      <li>กำหนด event schema: <code>{"event": "erp.imported", "payload": {...}, "timestamp": "..."}</code></li>
+      <li>สร้าง producer ใน FastAPI เมื่อ data เปลี่ยน เช่น หลัง ERP import สำเร็จ</li>
+      <li>สร้าง consumer service แยก subscribe event → trigger cache invalidation / notification</li>
+      <li>เพิ่ม Dead Letter Queue (DLQ) สำหรับ message ที่ process ไม่สำเร็จ</li>
+    </ul></div>
+    <div class="block"><h4>วิธีทดสอบ (เมื่อ implement แล้ว)</h4>
+      <pre># 1. Unit test — mock producer ไม่ต้องมี broker จริง
+from unittest.mock import patch, AsyncMock
+
+with patch("app.events.publisher.publish", AsyncMock()) as mock_pub:
+    # trigger action ที่ควร publish event
+    await client.post("/api/v1/erp/import", ...)
+    mock_pub.assert_called_once_with("erp.imported", {...})
+
+# 2. Integration test — ใช้ testcontainers หรือ docker-compose
+# docker-compose up rabbitmq -d
+# รัน test ที่ publish จริงแล้วตรวจ queue
+
+# 3. Manual test — ตรวจ message ใน broker UI
+# RabbitMQ Management UI: http://localhost:15672
+# ดู queue ว่ามี message หรือไม่ หลัง trigger event
+
+# ตรวจ consumer ได้รับ message
+# ดู log ของ consumer service ว่าประมวลผล event ครบ
+
+# 4. ทดสอบ Dead Letter Queue — ส่ง malformed message
+# ตรวจว่า message ถูก route ไป DLQ แทนการ drop ทิ้ง</pre>
+    </div>
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">

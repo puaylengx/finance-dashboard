@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -321,6 +321,96 @@ class TestToggleCoordinator:
                 "/api/v1/admin/coordinators/1", headers=fa_chief_headers
             )
         assert resp.status_code == 500
+
+    async def test_concurrent_modification_returns_409(self, client, fa_chief_headers):
+        from app.services.coordinator_service import ConcurrentModificationError
+
+        with patch(
+            "app.services.coordinator_service.toggle_coordinator",
+            AsyncMock(side_effect=ConcurrentModificationError(1)),
+        ):
+            resp = await client.patch(
+                "/api/v1/admin/coordinators/1", headers=fa_chief_headers
+            )
+        assert resp.status_code == 409
+        assert "modified" in resp.json()["detail"].lower()
+
+    async def test_x_expected_updated_at_header_is_passed_to_service(self, client, fa_chief_headers):
+        captured = {}
+
+        async def mock_toggle(**kwargs):
+            captured.update(kwargs)
+            return {**_COORD_ROW, "active": False}
+
+        with patch("app.services.coordinator_service.toggle_coordinator", side_effect=mock_toggle):
+            ts = "2026-06-19T10:00:00+00:00"
+            await client.patch(
+                "/api/v1/admin/coordinators/1",
+                headers={**fa_chief_headers, "X-Expected-Updated-At": ts},
+            )
+
+        assert captured.get("expected_updated_at") is not None
+
+
+@pytest.mark.asyncio
+class TestAddCoordinatorIdempotency:
+    async def test_idempotency_key_returns_cached_response(self, client, fa_chief_headers):
+        cached_response = {"success": True, "data": _COORD_ROW}
+
+        with patch(
+            "app.api.v1.endpoints.coordinator.get_idempotency_response",
+            AsyncMock(return_value=cached_response),
+        ) as mock_get:
+            resp = await client.post(
+                "/api/v1/admin/coordinators",
+                json={"username": "alice"},
+                headers={**fa_chief_headers, "Idempotency-Key": "uuid-abc-123"},
+            )
+
+        assert resp.status_code == 201
+        assert resp.json()["data"]["username"] == "alice"
+        mock_get.assert_called_once()
+
+    async def test_idempotency_key_stores_response_on_first_call(self, client, fa_chief_headers):
+        with patch(
+            "app.api.v1.endpoints.coordinator.get_idempotency_response",
+            AsyncMock(return_value=None),
+        ), patch(
+            "app.services.coordinator_service.add_coordinator",
+            AsyncMock(return_value=_COORD_ROW),
+        ), patch(
+            "app.api.v1.endpoints.coordinator.set_idempotency_response",
+            AsyncMock(),
+        ) as mock_set:
+            await client.post(
+                "/api/v1/admin/coordinators",
+                json={"username": "alice"},
+                headers={**fa_chief_headers, "Idempotency-Key": "uuid-abc-456"},
+            )
+
+        mock_set.assert_called_once()
+        _, call_kwargs = mock_set.call_args[0], mock_set.call_args
+        assert call_kwargs[0][1] == "uuid-abc-456"
+
+    async def test_no_idempotency_key_skips_cache(self, client, fa_chief_headers):
+        with patch(
+            "app.api.v1.endpoints.coordinator.get_idempotency_response",
+            AsyncMock(return_value=None),
+        ) as mock_get, patch(
+            "app.services.coordinator_service.add_coordinator",
+            AsyncMock(return_value=_COORD_ROW),
+        ), patch(
+            "app.api.v1.endpoints.coordinator.set_idempotency_response",
+            AsyncMock(),
+        ) as mock_set:
+            await client.post(
+                "/api/v1/admin/coordinators",
+                json={"username": "alice"},
+                headers=fa_chief_headers,
+            )
+
+        mock_get.assert_not_called()
+        mock_set.assert_not_called()
 
 
 @pytest.mark.asyncio

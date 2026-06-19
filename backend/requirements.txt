@@ -31,6 +31,9 @@ slowapi>=0.1.9
 colorlog>=6.8.0
 # Sentry (optional — ติดตั้งเพิ่มเติมถ้าต้องการ): pip install sentry-sdk[fastapi]>=2.0.0
 
+# Metrics
+prometheus-fastapi-instrumentator>=0.9.0
+
 # HTTP client (for Entra token validation)
 httpx>=0.27.0
 

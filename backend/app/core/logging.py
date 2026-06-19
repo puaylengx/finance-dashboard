@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from logging.handlers import RotatingFileHandler
@@ -13,8 +14,22 @@ _LOG_COLORS = {
 }
 
 _CONSOLE_FMT = "%(log_color)s%(levelname)-8s %(asctime)s [%(name)s] %(message)s%(reset)s"
-_FILE_FMT    = "%(levelname)-8s %(asctime)s [%(name)s] %(message)s"
 _DATE_FMT    = "%Y-%m-%d %H:%M:%S"
+
+
+class _JsonFormatter(logging.Formatter):
+    """JSON formatter for file handler — machine-parseable, ELK/Datadog ready."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict = {
+            "ts":     self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level":  record.levelname,
+            "logger": record.name,
+            "msg":    record.getMessage(),
+        }
+        if record.exc_info:
+            payload["exc"] = self.formatException(record.exc_info)
+        return json.dumps(payload, ensure_ascii=False)
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -45,7 +60,7 @@ def get_logger(name: str) -> logging.Logger:
         backupCount=10,
         encoding="utf-8",
     )
-    file_handler.setFormatter(logging.Formatter(_FILE_FMT, datefmt=_DATE_FMT))
+    file_handler.setFormatter(_JsonFormatter())
     logger.addHandler(file_handler)
 
     return logger

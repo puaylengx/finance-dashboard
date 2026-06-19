@@ -8,6 +8,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 from app.api.v1.router import v1_router
 from app.core.config import settings
 from app.core.database import close_db, get_db, init_db
@@ -66,6 +68,10 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+
+Instrumentator(
+    excluded_handlers=["/health", "/ready", "/metrics"],
+).instrument(app).expose(app)
 
 app.add_middleware(
     CORSMiddleware,

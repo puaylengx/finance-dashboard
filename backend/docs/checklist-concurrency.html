@@ -77,7 +77,7 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-logging.html">← Logging</a><a href="checklist-testing.html">Testing →</a></div>
-  <h2>Concurrency <small>— 3 requirements &nbsp; Pass 1 / Fail 2</small></h2>
+  <h2>Concurrency <small>— 3 requirements &nbsp; Pass 3 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การรองรับ concurrent users และการจัดการ race condition ใน financial data</p>
 
   <div class="item" id="async"><div class="item-head"><div><div class="item-title">1. Async FastAPI</div><div class="item-sub">ใช้ async/await ทั่วทั้ง codebase รองรับ concurrent request โดยไม่ block event loop</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -113,29 +113,72 @@ time (
     </div>
   </div></div>
 
-  <div class="item" id="db-lock"><div class="item-head"><div><div class="item-title">2. Database Lock Strategy</div><div class="item-sub">กำหนด locking strategy: optimistic lock สำหรับ read-heavy, pessimistic สำหรับ financial write</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="db-lock"><div class="item-head"><div><div class="item-title">2. Database Lock Strategy</div><div class="item-sub">กำหนด locking strategy: optimistic lock สำหรับ read-heavy, pessimistic สำหรับ financial write</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><strong>Optimistic locking</strong>: assume ไม่มี conflict — write โดยไม่ lock แต่ check version ก่อน commit ถ้า version เปลี่ยน (คนอื่น update แล้ว) → retry <strong>Pessimistic locking</strong>: lock row ก่อน read เลย (<code>SELECT FOR UPDATE</code>) ป้องกัน concurrent update แต่ throughput ต่ำกว่า</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า 2 admin toggle coordinator พร้อมกัน โดยไม่มี lock อาจเกิด race condition ที่ผลลัพธ์ขึ้นอยู่กับ timing ทำให้ active status ผิดพลาด สำหรับข้อมูลการเงิน inconsistency นี้เป็นปัญหาร้ายแรง</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี explicit locking strategy ปัจจุบัน write operation มีเฉพาะ coordinator CRUD ซึ่งมี concurrent write น้อยมากในทางปฏิบัติ แต่ไม่ได้ protected อย่างเป็นทางการ</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>Coordinator toggle: เพิ่ม <code>SELECT FOR UPDATE</code> ก่อน update เพื่อป้องกัน concurrent toggle</li>
-      <li>เพิ่ม <code>updated_at</code> check เพื่อ detect concurrent modification (optimistic lock)</li>
-      <li>ถ้ามี financial write ในอนาคต: กำหนด locking strategy ตาม business requirement</li>
-    </ul></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <p><strong>Pessimistic lock</strong>: <code>toggle_coordinator</code> ใช้ <code>SELECT ... FOR UPDATE</code> ล็อก row ก่อน UPDATE ทุกครั้ง ป้องกัน 2 request toggle พร้อมกัน · <code>coordinator_service.py</code></p>
+      <p><strong>Optimistic lock</strong>: endpoint รับ <code>X-Expected-Updated-At</code> header (optional) — ถ้า <code>updated_at</code> ใน DB ไม่ตรงกัน ตอบ <code>409 Conflict</code> พร้อม <code>ConcurrentModificationError</code></p>
+      <p>ถ้ามี financial write ในอนาคต: ใช้ pattern เดียวกัน — pessimistic lock สำหรับ critical write, optimistic สำหรับ low-conflict update</p>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># Unit / integration tests
+cd backend
+.venv/bin/python -m pytest tests/integration/test_coordinator.py -v -k "concurrent or expected_updated"
+# คาดหวัง: test_concurrent_modification_returns_409 PASSED
+#           test_x_expected_updated_at_header_is_passed_to_service PASSED
+
+# Manual — ทดสอบ optimistic lock
+# Step 1: ดึง updated_at ปัจจุบัน
+curl -s http://localhost:8000/api/v1/admin/coordinators/1 \
+  -H "Authorization: Bearer $TOKEN" | jq '.data.updated_at'
+# → "2026-06-19T10:30:00+07:00"
+
+# Step 2: toggle พร้อมส่ง X-Expected-Updated-At ที่ถูกต้อง → 200
+curl -X PATCH http://localhost:8000/api/v1/admin/coordinators/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Expected-Updated-At: 2026-06-19T10:30:00+07:00"
+
+# Step 3: ใช้ timestamp เก่า (stale) → 409
+curl -X PATCH http://localhost:8000/api/v1/admin/coordinators/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Expected-Updated-At: 2026-01-01T00:00:00+00:00"
+# คาดหวัง: 409 {"detail":"Record was modified by another request..."}</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="idempotency"><div class="item-head"><div><div class="item-title">3. Idempotency Keys</div><div class="item-sub">ทุก write API รองรับ idempotency key ป้องกัน duplicate submission จาก client retry</div></div><div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="idempotency"><div class="item-head"><div><div class="item-title">3. Idempotency Keys</div><div class="item-sub">ทุก write API รองรับ idempotency key ป้องกัน duplicate submission จาก client retry</div></div><div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Idempotency key คือ unique ID ที่ client ส่งมาพร้อม request เพื่อบอกว่า "ถ้า request นี้ถูกส่งซ้ำ ให้ถือว่าเป็น request เดิม" server เก็บผลของ request ที่ใช้ key นี้แล้ว และตอบผลเดิมโดยไม่ process ซ้ำ</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Network ไม่ reliable — client อาจส่ง request แล้วไม่ได้รับ response (timeout) และ retry ถ้าไม่มี idempotency key การ retry จะสร้าง resource ซ้ำ เช่น coordinator ถูก add 2 ครั้ง (แต่ UNIQUE constraint ช่วยได้กรณีนี้)</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี <code>Idempotency-Key</code> header support · ปัจจุบัน UNIQUE constraint บน <code>coordinator.username</code> ป้องกัน duplicate add ได้บางส่วน แต่ไม่ใช่ proper idempotency</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>รับ <code>Idempotency-Key: {uuid}</code> header ใน write endpoints</li>
-      <li>เก็บ <code>key → response</code> ใน Redis ด้วย TTL 24 ชั่วโมง</li>
-      <li>ถ้า key ซ้ำ: ตอบ cached response แทน process ใหม่</li>
-      <li>สำคัญมากถ้าเพิ่ม financial write operations ในอนาคต</li>
-    </ul></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <p><code>POST /admin/coordinators</code> รับ <code>Idempotency-Key: {uuid}</code> header (optional) · key scoped ต่อ user (<code>seamless:v1:idempotency:{user_id}:{key}</code>) · cache response ใน Redis TTL 24h · request ที่ 2 ด้วย key เดิมได้ cached response ทันที ไม่ process ซ้ำ · <code>cache.py</code>, <code>endpoints/coordinator.py</code></p>
+      <p>ถ้าเพิ่ม financial write endpoints ในอนาคต: ใช้ <code>get_idempotency_response</code> / <code>set_idempotency_response</code> จาก <code>cache.py</code> pattern เดิม</p>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># Unit / integration tests
+.venv/bin/python -m pytest tests/integration/test_coordinator.py -v -k "idempoten"
+# คาดหวัง: 3 tests PASSED
+
+# Manual — ทดสอบ idempotency (Redis ต้องรันอยู่)
+KEY="$(python3 -c 'import uuid; print(uuid.uuid4())')"
+
+# Request แรก — process จริง → 201
+curl -X POST http://localhost:8000/api/v1/admin/coordinators \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: $KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "alice"}'
+
+# Request ที่ 2 ด้วย key เดิม — cached response → 201 (ไม่ process ซ้ำ)
+curl -X POST http://localhost:8000/api/v1/admin/coordinators \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: $KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "alice"}'
+# คาดหวัง: response เหมือนกันทุกครั้ง ไม่มี duplicate ใน DB</pre>
+    </div>
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">

@@ -85,7 +85,7 @@ class TestEntraLoginEndpoint:
     async def test_entra_login_503_when_not_configured(self, client):
         from app.services.auth_service import EntraNotConfiguredError
         with patch(
-            "app.services.auth_service.login_with_entra_token",
+            "app.api.v1.endpoints.auth.login_with_entra_token",
             AsyncMock(side_effect=EntraNotConfiguredError("not configured")),
         ):
             resp = await client.post(
@@ -97,7 +97,7 @@ class TestEntraLoginEndpoint:
 
     async def test_entra_login_403_when_access_denied(self, client):
         with patch(
-            "app.services.auth_service.login_with_entra_token",
+            "app.api.v1.endpoints.auth.login_with_entra_token",
             AsyncMock(return_value=None),
         ):
             resp = await client.post(

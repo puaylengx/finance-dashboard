@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Dictionary — Seamless Dashboard</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:230px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:940px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+    h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    h3{font-size:16px;font-weight:700;margin:0;color:var(--text);}
+    p{font-size:13.5px;margin-bottom:8px;}
+    .table-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:28px;overflow:hidden;}
+    .table-head{display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .table-head h3{font-size:15px;}
+    .table-tag{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;flex-shrink:0;}
+    .tag-main{background:rgba(108,142,251,.15);color:var(--accent);border:1px solid rgba(108,142,251,.3);}
+    .tag-master{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+    .tag-system{background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3);}
+    .tag-audit{background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3);}
+    .table-body{padding:14px 20px;}
+    .table-desc{font-size:13px;color:var(--muted);margin-bottom:14px;}
+    table{width:100%;border-collapse:collapse;font-size:12.5px;margin:0;}
+    th{text-align:left;padding:7px 12px;background:var(--code-bg);border:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+    td{padding:7px 12px;border:1px solid var(--border);vertical-align:top;}
+    td:first-child{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);white-space:nowrap;}
+    .type{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+    .req{color:var(--red);font-size:11px;font-weight:700;}
+    .opt{color:var(--muted);font-size:11px;}
+    .pk{background:rgba(251,191,36,.1);color:var(--yellow);font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:monospace;}
+    .fk{background:rgba(108,142,251,.1);color:var(--accent);font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:monospace;}
+    .idx{background:rgba(52,211,153,.1);color:var(--green);font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:monospace;}
+    .idx-partial{background:rgba(96,165,250,.1);color:var(--blue);font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:monospace;}
+    code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    .indexes-note{margin-top:10px;font-size:12px;color:var(--muted);background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;}
+    .indexes-note strong{color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Data Dictionary</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist.html">← Checklist Index</a>
+  <a href="backend.html">Backend Guide</a>
+  <div class="group">Transaction</div>
+  <a href="#erp-transactions">erp_transactions</a>
+  <div class="group">Master Tables</div>
+  <a href="#master-cost-ctr">master_cost_ctr</a>
+  <a href="#master-fund">master_fund</a>
+  <a href="#master-gl">master_gl</a>
+  <a href="#master-io-goods">master_io_goods</a>
+  <a href="#master-io-activities">master_io_activities</a>
+  <a href="#master-io-project">master_io_project</a>
+  <a href="#master-io-work">master_io_work</a>
+  <a href="#master-ic-strategy">master_ic_strategy</a>
+  <a href="#master-mu-strategy">master_mu_strategy</a>
+  <div class="group">System</div>
+  <a href="#finance-coordinator">finance_coordinator</a>
+  <a href="#audit-log">audit_log</a>
+</nav>
+<main>
+  <div class="nav-btn"><a href="checklist-documentation.html">← Documentation Checklist</a><a href="checklist.html">กลับ Index →</a></div>
+  <h2>Data Dictionary <small>— Seamless Dashboard Database</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 4px">PostgreSQL database schema พร้อม business meaning สำหรับทุก column</p>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:28px">
+    <span class="table-tag tag-main">main</span> transaction data &nbsp;
+    <span class="table-tag tag-master">master</span> reference / lookup &nbsp;
+    <span class="table-tag tag-system">system</span> app management &nbsp;
+    <span class="table-tag tag-audit">audit</span> immutable trail
+  </p>
+
+  <!-- erp_transactions -->
+  <div class="table-block" id="erp-transactions">
+    <div class="table-head"><span class="table-tag tag-main">main</span><h3>erp_transactions</h3></div>
+    <div class="table-body">
+      <p class="table-desc">ข้อมูล transaction ทางการเงินที่ sync มาจากระบบ ERP (SAP) ขององค์กร แต่ละ row คือ 1 รายการค่าใช้จ่ายที่ผ่านการอนุมัติแล้ว ข้อมูลเข้าระบบผ่าน ETL batch (import_erp.py) ไม่ใช่ real-time feed<br>Migration: <code>001_create_finance_tables.sql</code> + <code>005_rename_erp_table.sql</code></p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมายทางธุรกิจ</th></tr></thead>
+        <tbody>
+          <tr><td>fiscal_year <span class="idx">idx</span></td><td class="type">BIGINT</td><td class="req">NOT NULL</td><td>ปีงบประมาณ (Thai fiscal year: ต.ค.–ก.ย.) เช่น 2568 = FY2025 เป็น filter หลักของทุก dashboard query</td></tr>
+          <tr><td>fiscal_month <span class="idx">idx</span></td><td class="type">BIGINT</td><td class="req">NOT NULL</td><td>เดือนงบประมาณ 1–16 (SAP ERP รองรับ 16 periods — period 13-16 คือ closing periods)</td></tr>
+          <tr><td>trimester</td><td class="type">BIGINT</td><td class="req">NOT NULL</td><td>ไตรมาสงบประมาณ 1–4 ใช้สำหรับ group ใน report ไตรมาส</td></tr>
+          <tr><td>day</td><td class="type">BIGINT</td><td class="req">NOT NULL</td><td>วันที่ของเดือน (1–31) ดึงจาก doc_date</td></tr>
+          <tr><td>month <span class="idx">idx</span></td><td class="type">BIGINT</td><td class="req">NOT NULL</td><td>เดือนปฏิทิน 1–12 (Calendar month) ใช้คู่กับ year สำหรับ pa_year filter</td></tr>
+          <tr><td>year <span class="idx">idx</span></td><td class="type">BIGINT</td><td class="req">NOT NULL</td><td>ปีปฏิทิน (Gregorian year) เช่น 2025 ใช้คู่กับ month</td></tr>
+          <tr><td>doc_no</td><td class="type">BIGINT</td><td class="req">NOT NULL</td><td>เลขที่เอกสาร SAP — unique per fiscal_year สามารถใช้ trace กลับไปที่ SAP ได้</td></tr>
+          <tr><td>doc_date</td><td class="type">DATE</td><td class="req">NOT NULL</td><td>วันที่เอกสาร (document date) อาจแตกต่างจาก posting date</td></tr>
+          <tr><td>funds_ctr</td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>Funds Center — รหัสศูนย์การเงินระดับองค์กร กำหนดว่าค่าใช้จ่ายนี้อยู่ภายใต้กองทุนใด</td></tr>
+          <tr><td>cost_ctr_id <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>Cost Center ID — รหัสศูนย์ต้นทุน เป็น FK ไปยัง master_cost_ctr.cost_center_id ใช้ filter dashboard ตาม department</td></tr>
+          <tr><td>cost_owner <span class="idx">idx</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>รหัสเจ้าของงบประมาณ — ผู้รับผิดชอบค่าใช้จ่ายนี้ อาจเป็น username หรือ employee ID</td></tr>
+          <tr><td>cost_note</td><td class="type">TEXT</td><td class="opt">NULL</td><td>หมายเหตุค่าใช้จ่าย — free text จาก SAP</td></tr>
+          <tr><td>io_goods <span class="idx-partial">partial idx</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>Internal Order — รหัส IO สำหรับรายการจัดซื้อสินค้า เป็น FK ไปยัง master_io_goods.io_good_id</td></tr>
+          <tr><td>io_work <span class="idx-partial">partial idx</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>Internal Order — รหัส IO สำหรับงาน/บริการ เป็น FK ไปยัง master_io_work.io_work_id</td></tr>
+          <tr><td>io_activity <span class="idx">idx</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>Internal Order — รหัสกิจกรรม เป็น FK ไปยัง master_io_activities.io_activity_id</td></tr>
+          <tr><td>io_project <span class="idx-partial">partial idx</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>Internal Order — รหัสโครงการ เป็น FK ไปยัง master_io_project.io_project_id</td></tr>
+          <tr><td>order_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>คำอธิบาย IO ที่ใช้ — ดึงมาจาก SAP เพื่อลด JOIN กับ master table ใน legacy queries</td></tr>
+          <tr><td>hr_ot</td><td class="type">TEXT</td><td class="opt">NULL</td><td>รหัสค่าล่วงเวลา (OT code) — ใช้เฉพาะค่าใช้จ่ายประเภท HR overtime</td></tr>
+          <tr><td>gl_id <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>General Ledger Account ID — รหัสบัญชีแยกประเภท เช่น 5100xxxx = ค่าวัสดุ, 5200xxxx = ค่าจ้าง FK ไปยัง master_gl.gl_id</td></tr>
+          <tr><td>gl_description</td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>ชื่อบัญชี GL ดึงมาจาก SAP ตอน ETL import (denormalized เพื่อ query speed)</td></tr>
+          <tr><td>amount</td><td class="type">NUMERIC(18,2)</td><td class="req">NOT NULL</td><td>จำนวนเงิน (บาท) มีทศนิยม 2 ตำแหน่ง ค่าลบ = การ credit / reversal ใช้ SUM(amount) ใน aggregate</td></tr>
+          <tr><td>details</td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รายละเอียดรายการ — free text จาก SAP posting note</td></tr>
+          <tr><td>mu_strategy</td><td class="type">NUMERIC</td><td class="opt">NULL</td><td>รหัส MU Strategy (Management Unit) ที่เชื่อมโยงกับ transaction นี้ FK ไปยัง master_mu_strategy</td></tr>
+          <tr><td>ic_strategy</td><td class="type">NUMERIC</td><td class="opt">NULL</td><td>รหัส IC Strategy (Investment Center) FK ไปยัง master_ic_strategy</td></tr>
+          <tr><td>created_at</td><td class="type">TIMESTAMPTZ</td><td class="req">NOT NULL</td><td>วันเวลาที่ insert เข้า DB (ETL import timestamp)</td></tr>
+          <tr><td>updated_at</td><td class="type">TIMESTAMPTZ</td><td class="opt">NULL</td><td>วันเวลาที่แก้ไขล่าสุด (ถ้า reimport)</td></tr>
+          <tr><td>updated_by / created_by</td><td class="type">TEXT</td><td class="opt">NULL</td><td>username ของ ETL process ที่ import ข้อมูล</td></tr>
+        </tbody>
+      </table>
+      <div class="indexes-note"><strong>Indexes:</strong> idx_erp_fiscal_year, idx_erp_fiscal_year_month (composite), idx_erp_year_month, idx_erp_gl_id, idx_erp_cost_ctr_id, idx_erp_cost_owner &nbsp;·&nbsp; Partial: idx_erp_io_goods / io_project / io_work (WHERE NOT NULL) &nbsp;·&nbsp; <strong>ETL strategy:</strong> DELETE fiscal_year + bulk INSERT (idempotent batch)</div>
+    </div>
+  </div>
+
+  <!-- master_cost_ctr -->
+  <div class="table-block" id="master-cost-ctr">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_cost_ctr</h3></div>
+    <div class="table-body">
+      <p class="table-desc">ข้อมูลอ้างอิงศูนย์ต้นทุน (Cost Center) ใช้ join กับ erp_transactions.cost_ctr_id เพื่อแสดงชื่อ department</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>cost_center_id <span class="pk">PK</span> <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสศูนย์ต้นทุน เช่น <code>CC1001</code> — ตรงกับรหัสใน SAP</td></tr>
+          <tr><td>cost_center_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>คำอธิบายทั่วไป</td></tr>
+          <tr><td>cost_center_eng</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อ department ภาษาอังกฤษ</td></tr>
+          <tr><td>cost_center_th</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อ department ภาษาไทย ใช้แสดงใน dashboard</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td><code>active</code> หรือ <code>inactive</code> — cost center ที่ปิดแล้วจะ filter ออกจาก dropdown</td></tr>
+          <tr><td>created_at / updated_at</td><td class="type">TIMESTAMPTZ</td><td class="opt">-</td><td>Audit timestamp — standard columns ทุก master table</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_fund -->
+  <div class="table-block" id="master-fund">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_fund</h3></div>
+    <div class="table-body">
+      <p class="table-desc">ข้อมูลอ้างอิงกองทุน (Fund) ที่เชื่อมกับ erp_transactions.funds_ctr</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>fund_id <span class="pk">PK</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสกองทุน เช่น <code>F001</code></td></tr>
+          <tr><td>fund_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อกองทุน เช่น "งบดำเนินการ", "งบลงทุน"</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>สถานะ active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_gl -->
+  <div class="table-block" id="master-gl">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_gl</h3></div>
+    <div class="table-body">
+      <p class="table-desc">บัญชีแยกประเภท (General Ledger) ใช้แบ่งประเภทค่าใช้จ่าย เช่น ค่าวัสดุ ค่าจ้างเหมา ค่าสาธารณูปโภค</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>gl_id <span class="pk">PK</span> <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสบัญชี GL เช่น <code>51000001</code> ตรงกับ SAP GL account</td></tr>
+          <tr><td>group_id</td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัส GL group — ใช้ group GL หลายตัวเข้า category เดียว เช่น group "5100" = วัสดุทั้งหมด</td></tr>
+          <tr><td>gl_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อบัญชีโดยละเอียด</td></tr>
+          <tr><td>group_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อกลุ่มบัญชี — ใช้แสดงใน dashboard header</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>สถานะ active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_io_goods -->
+  <div class="table-block" id="master-io-goods">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_io_goods</h3></div>
+    <div class="table-body">
+      <p class="table-desc">Internal Order สำหรับการจัดซื้อสินค้า/วัสดุ ใช้ track ค่าใช้จ่ายต่อ IO สำหรับงบประมาณวัสดุ</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>io_good_id <span class="pk">PK</span> <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัส Internal Order สินค้า</td></tr>
+          <tr><td>io_good_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>คำอธิบายโครงการ/ใบสั่งซื้อ</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_io_activities -->
+  <div class="table-block" id="master-io-activities">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_io_activities</h3></div>
+    <div class="table-body">
+      <p class="table-desc">Internal Order สำหรับกิจกรรม (Activities) ใช้ track ค่าใช้จ่ายต่อกิจกรรมหรืออีเวนต์</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>io_activity_id <span class="pk">PK</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสกิจกรรม</td></tr>
+          <tr><td>io_activity_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อกิจกรรม</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_io_project -->
+  <div class="table-block" id="master-io-project">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_io_project</h3></div>
+    <div class="table-body">
+      <p class="table-desc">Internal Order สำหรับโครงการ (Projects) มี relation ไปยัง cost_center, IC strategy, และ MU strategy</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>io_project_id <span class="pk">PK</span> <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสโครงการ</td></tr>
+          <tr><td>io_project_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อโครงการ</td></tr>
+          <tr><td>cost_center_id <span class="fk">FK</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>ศูนย์ต้นทุนที่รับผิดชอบโครงการ → master_cost_ctr</td></tr>
+          <tr><td>ic_strategy_id <span class="fk">FK</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>IC Strategy ที่โครงการนี้สังกัด → master_ic_strategy</td></tr>
+          <tr><td>mu_strategy_id <span class="fk">FK</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>MU Strategy ที่โครงการนี้สังกัด → master_mu_strategy</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_io_work -->
+  <div class="table-block" id="master-io-work">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_io_work</h3></div>
+    <div class="table-body">
+      <p class="table-desc">Internal Order สำหรับงาน/บริการ (Work/Service) ใช้ track ค่าจ้างเหมาหรือบริการภายนอก</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>io_work_id <span class="pk">PK</span> <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสงาน</td></tr>
+          <tr><td>io_work_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>คำอธิบายงาน/บริการ</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_ic_strategy -->
+  <div class="table-block" id="master-ic-strategy">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_ic_strategy</h3></div>
+    <div class="table-body">
+      <p class="table-desc">แผนยุทธศาสตร์ Investment Center (IC) — กรอบยุทธศาสตร์ระยะกลางขององค์กรที่โครงการต่างๆ ผูกอยู่</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>ic_strategy_id <span class="pk">PK</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสยุทธศาสตร์ IC</td></tr>
+          <tr><td>name_en</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อยุทธศาสตร์ภาษาอังกฤษ</td></tr>
+          <tr><td>ic_strategy_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>คำอธิบายยุทธศาสตร์</td></tr>
+          <tr><td>start_year / end_year</td><td class="type">BIGINT</td><td class="opt">NULL</td><td>ช่วงปีที่ยุทธศาสตร์มีผลบังคับ (Thai fiscal year)</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- master_mu_strategy -->
+  <div class="table-block" id="master-mu-strategy">
+    <div class="table-head"><span class="table-tag tag-master">master</span><h3>master_mu_strategy</h3></div>
+    <div class="table-body">
+      <p class="table-desc">แผนยุทธศาสตร์ Management Unit (MU) — แผนงานระดับหน่วยบริหาร ใช้จัดกลุ่มค่าใช้จ่ายตามพันธกิจ</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>mu_strategy_id <span class="pk">PK</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>รหัสยุทธศาสตร์ MU</td></tr>
+          <tr><td>name_en</td><td class="type">TEXT</td><td class="opt">NULL</td><td>ชื่อยุทธศาสตร์ภาษาอังกฤษ</td></tr>
+          <tr><td>mu_strategy_description</td><td class="type">TEXT</td><td class="opt">NULL</td><td>คำอธิบายยุทธศาสตร์</td></tr>
+          <tr><td>start_year / end_year</td><td class="type">BIGINT</td><td class="opt">NULL</td><td>ช่วงปีที่มีผลบังคับ</td></tr>
+          <tr><td>status</td><td class="type">TEXT</td><td class="opt">NULL</td><td>active/inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- finance_coordinator -->
+  <div class="table-block" id="finance-coordinator">
+    <div class="table-head"><span class="table-tag tag-system">system</span><h3>finance_coordinator</h3></div>
+    <div class="table-body">
+      <p class="table-desc">รายชื่อ Finance Coordinator ที่ได้รับสิทธิ์พิเศษในการดู dashboard ทุก cost center ผู้ใช้ที่ถูก toggle active=TRUE จะได้รับ coordinator role ใน JWT token ผ่าน cache<br>Migration: <code>003_create_coordinator.sql</code></p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>id <span class="pk">PK</span></td><td class="type">SERIAL</td><td class="req">NOT NULL</td><td>Auto-increment primary key</td></tr>
+          <tr><td>username <span class="idx">idx unique</span></td><td class="type">TEXT</td><td class="req">NOT NULL UNIQUE</td><td>Username ของ coordinator — ตรงกับ <code>sub</code> field ใน JWT token (Entra ID UPN)</td></tr>
+          <tr><td>active <span class="idx-partial">partial idx</span></td><td class="type">BOOLEAN</td><td class="req">NOT NULL DEFAULT TRUE</td><td>สถานะ — TRUE = มีสิทธิ์ coordinator, FALSE = ถูก revoke ชั่วคราว; Partial index ที่ active=TRUE เพิ่ม performance การ lookup</td></tr>
+          <tr><td>created_at</td><td class="type">TIMESTAMPTZ</td><td class="req">NOT NULL</td><td>วันเวลาที่เพิ่ม coordinator</td></tr>
+          <tr><td>updated_at</td><td class="type">TIMESTAMPTZ</td><td class="opt">NULL</td><td>วันเวลาที่ toggle ล่าสุด — ใช้สำหรับ optimistic locking (<code>X-Expected-Updated-At</code> header)</td></tr>
+          <tr><td>created_by / updated_by</td><td class="type">TEXT</td><td class="opt">NULL</td><td>username ของ FA ที่ทำการ add/toggle coordinator</td></tr>
+        </tbody>
+      </table>
+      <div class="indexes-note"><strong>Locking:</strong> toggle_coordinator ใช้ pessimistic lock (<code>SELECT FOR UPDATE</code>) + optimistic lock (<code>expected_updated_at</code> header) → 409 conflict ถ้า concurrent modification &nbsp;·&nbsp; Cache: Redis key <code>seamless:v1:auth:coordinator:{username}</code> ถูก invalidate ทุกครั้งที่ toggle</div>
+    </div>
+  </div>
+
+  <!-- audit_log -->
+  <div class="table-block" id="audit-log">
+    <div class="table-head"><span class="table-tag tag-audit">audit</span><h3>audit_log</h3></div>
+    <div class="table-body">
+      <p class="table-desc">บันทึกทุก authenticated API request ที่เกี่ยวกับข้อมูลการเงิน ออกแบบเป็น append-only — ควร REVOKE UPDATE, DELETE permission จาก app user ใน production<br>Migration: <code>006_create_audit_log.sql</code></p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td>id <span class="pk">PK</span></td><td class="type">BIGSERIAL</td><td class="req">NOT NULL</td><td>Auto-increment primary key (BIGSERIAL รองรับ row จำนวนมาก)</td></tr>
+          <tr><td>user_id <span class="idx">idx</span></td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>JWT subject (sub) — email หรือ UPN ของผู้ใช้ที่ทำ request</td></tr>
+          <tr><td>action</td><td class="type">TEXT</td><td class="req">NOT NULL</td><td>สิ่งที่ทำ เช่น <code>GET /api/v1/finance/dashboard</code>, <code>POST /api/v1/coordinator</code></td></tr>
+          <tr><td>resource</td><td class="type">TEXT</td><td class="opt">NULL</td><td>Resource identifier — เช่น coordinator ID ที่ถูก toggle</td></tr>
+          <tr><td>ip_address</td><td class="type">INET</td><td class="opt">NULL</td><td>IP address ของ client (IPv4 หรือ IPv6)</td></tr>
+          <tr><td>status_code</td><td class="type">SMALLINT</td><td class="opt">NULL</td><td>HTTP response code — 200/403/409/500 ช่วย filter requests ที่ fail</td></tr>
+          <tr><td>timestamp <span class="idx">idx DESC</span></td><td class="type">TIMESTAMPTZ</td><td class="req">NOT NULL DEFAULT now()</td><td>วันเวลาที่ทำ request (timezone-aware) Index แบบ DESC เพราะ query มักดูข้อมูลล่าสุดก่อน</td></tr>
+        </tbody>
+      </table>
+      <div class="indexes-note"><strong>Append-only design:</strong> Production ควรรัน <code>REVOKE UPDATE, DELETE ON audit_log FROM &lt;app_user&gt;;</code> เพื่อป้องกัน tampering &nbsp;·&nbsp; Query audit trail: <code>SELECT * FROM audit_log WHERE user_id = $1 ORDER BY timestamp DESC LIMIT 50;</code></div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);">
+    อัปเดต 2026-06-19 &nbsp;·&nbsp; Schema จาก migrations/ &nbsp;·&nbsp; <a href="checklist-documentation.html" style="color:var(--accent)">← Documentation Checklist</a> &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">กลับ Index</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){
+  var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
+}
+</script>
+</body>
+</html>

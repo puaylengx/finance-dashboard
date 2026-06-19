@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "Seamless Dashboard API"
     app_version: str = "1.0.0"
+    app_env: Literal["dev", "staging", "production"] = "dev"
     debug: bool = False
 
     # ALLOWED_ORIGINS เก็บเป็น str เพื่อหลีกเลี่ยง pydantic-settings json.loads()
@@ -77,6 +78,11 @@ class Settings(BaseSettings):
             raise ValueError(
                 "JWT_SECRET_KEY must be changed from the default value "
                 "before running in production (DEBUG=False)"
+            )
+        if self.app_env == "production" and self.draft_mode:
+            raise ValueError(
+                "DRAFT_MODE must be false when APP_ENV=production. "
+                "Set DRAFT_MODE=false in your production .env file."
             )
         return self
 

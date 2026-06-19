@@ -77,7 +77,7 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-architecture.html">← Architecture</a><a href="checklist-concurrency.html">Concurrency →</a></div>
-  <h2>Logging &amp; Monitoring <small>— 5 requirements &nbsp; Pass 0 / Partial 1 / Fail 4</small></h2>
+  <h2>Logging &amp; Monitoring <small>— 5 requirements &nbsp; Pass 0 / Partial 5 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การ observe ระบบในเวลาจริง — หมวดนี้ยังต้องปรับปรุงมากที่สุด</p>
 
   <div class="item" id="centralized-logging"><div class="item-head"><div><div class="item-title">1. Centralized Logging</div><div class="item-sub">ส่ง log ไปยัง Sentry / ELK Stack พร้อม structured JSON format</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
@@ -85,63 +85,158 @@
     <div class="block"><h4>คืออะไร</h4><p>Centralized logging คือการรวม log จากทุก server/container ไปเก็บที่ที่เดียว เพื่อให้ search, filter, และ analyze ได้ง่าย structured format (JSON) ทำให้ query ด้วย field เฉพาะได้ เช่น <code>level=ERROR AND user=alice</code></p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อมีหลาย server ไม่มีใครอยากเปิด SSH ไป grep log ทีละเครื่อง centralized logging ทำให้เห็นภาพรวมทันที สามารถ correlate event ข้าม service ได้ และตั้ง alert บน log pattern ได้</p></div>
     <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
-      <p>มีแล้ว: Rotating file log <code>logs/app.log</code> ✓ · Colored console output ✓ · Sentry integration (optional, เมื่อตั้ง <code>SENTRY_DSN</code>) ✓</p>
-      <p>ยังไม่มี: Structured JSON log format · ELK Stack / Datadog · log ยังเป็น human-readable text ที่ query ยาก</p>
+      <p>มีแล้ว: Rotating file log <code>logs/app.log</code> ✓ · Colored console output ✓ · Sentry integration (optional, เมื่อตั้ง <code>SENTRY_DSN</code>) ✓ · <strong>JSON file format ✓</strong> — <code>logging.py</code> ใช้ <code>_JsonFormatter</code> เขียน <code>{"ts","level","logger","msg"}</code> ลง <code>app.log</code></p>
+      <p>ยังไม่มี: Centralized platform (ELK / Datadog) — log ยังอยู่ใน local file เท่านั้น</p>
     </div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>เปลี่ยน log format เป็น JSON: <code>{"level":"INFO","msg":"...","user":"...","ts":"..."}</code></li>
-      <li>ตั้งค่า Sentry DSN เพื่อ capture error อัตโนมัติ (ทำได้ทันทีด้วย 1 env var)</li>
-      <li>ระยะยาว: ส่ง log ไปยัง ELK (Elasticsearch + Logstash + Kibana) หรือ Datadog</li>
-    </ul></div>
+    <div class="block block-todo"><h4>สถานะ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ELK Stack / Datadog ต้องการ infrastructure แยก ยังไม่มี production deployment จริง · ทบทวนเมื่อ deploy multi-server หรือมี requirement ต้องค้นหา log ข้าม container</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># ตรวจ JSON format ใน log file
+uvicorn app.main:app --reload &amp;
+curl -s http://localhost:8000/health
+cat logs/app.log | tail -3
+# คาดหวัง: {"ts":"2026-06-19T...","level":"INFO","logger":"app.main","msg":"..."}
+
+# ตรวจ JSON parse ได้
+cat logs/app.log | python3 -c "import sys,json; [json.loads(l) for l in sys.stdin]"
+# คาดหวัง: ไม่มี error = ทุกบรรทัดเป็น valid JSON
+
+# ตรวจ Sentry (ถ้ามี DSN)
+SENTRY_DSN=https://... uvicorn app.main:app
+# ดู log: "Sentry initialized"</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="metrics"><div class="item-head"><div><div class="item-title">2. Metrics Collection</div><div class="item-sub">เก็บ metrics ด้วย Prometheus + Grafana: request rate, error rate, latency</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="metrics"><div class="item-head"><div><div class="item-title">2. Metrics Collection</div><div class="item-sub">เก็บ metrics ด้วย Prometheus + Grafana: request rate, error rate, latency</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Partial</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Metrics คือ numeric measurements ที่เก็บตามเวลา เช่น request per second, error rate %, DB query duration (p50/p95/p99) Prometheus scrape metrics จาก app endpoint (<code>/metrics</code>) ทุก 15s แล้วเก็บใน time-series DB Grafana ทำ visualization</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Log บอกว่า "อะไรผิดพลาด" แต่ metrics บอกว่า "ระบบ healthy ไหม" เช่น error rate พุ่งจาก 0.1% เป็น 5% หลัง deploy ใหม่ — ตรวจพบได้ทันทีจาก dashboard โดยไม่ต้อง grep log</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี <code>/metrics</code> endpoint · ไม่มี Prometheus scraping · ไม่มี Grafana dashboard · ปัจจุบันไม่มีทางรู้ว่า latency เป็นเท่าไร หรือ error rate เป็นเท่าไรโดยไม่อ่าน log</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>เพิ่ม <code>prometheus-fastapi-instrumentator</code> — expose <code>/metrics</code> อัตโนมัติ</li>
-      <li>ตั้ง Prometheus scrape config ให้ pull จาก <code>app:8000/metrics</code> ทุก 15s</li>
-      <li>สร้าง Grafana dashboard: request rate, error rate, p95 latency, DB pool usage</li>
-    </ul></div>
+    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
+      <p>มีแล้ว: <code>GET /metrics</code> ✓ — <code>prometheus-fastapi-instrumentator</code> expose request count, latency histogram (p50/p95/p99), in-progress requests โดยอัตโนมัติ · <code>main.py</code></p>
+      <p>ยังไม่มี: Prometheus server scraping · Grafana dashboard — ต้องการ infrastructure แยก</p>
+    </div>
+    <div class="block block-todo"><h4>สถานะ — เลื่อนไปก่อน (Intentional Defer)</h4><p>Prometheus server + Grafana ต้องการ infrastructure deployment ยังไม่มี production server · ทบทวนเมื่อ deploy จริงหรือมี requirement ต้องดู latency / error rate แบบ real-time</p></div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># ตรวจ /metrics endpoint
+uvicorn app.main:app --reload &amp;
+curl -s http://localhost:8000/health  # สร้าง traffic ก่อน
+curl -s http://localhost:8000/metrics | head -30
+# คาดหวัง: ได้ Prometheus text format
+# http_requests_total{...} 1.0
+# http_request_duration_seconds_bucket{...} ...
+
+# ตรวจ metric เพิ่มขึ้นหลัง request
+curl -s http://localhost:8000/api/v1/finance -H "Authorization: Bearer $TOKEN"
+curl -s http://localhost:8000/metrics | grep http_requests_total
+
+# ตรวจ Prometheus scrape (ถ้ามี Prometheus server)
+# เพิ่มใน prometheus.yml:
+# scrape_configs:
+#   - job_name: finance-dashboard
+#     static_configs:
+#       - targets: ['localhost:8000']
+#     scrape_interval: 15s</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="tracing"><div class="item-head"><div><div class="item-title">3. Distributed Tracing</div><div class="item-sub">ใช้ OpenTelemetry + Jaeger trace request ข้าม service</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="tracing"><div class="item-head"><div><div class="item-title">3. Distributed Tracing</div><div class="item-sub">ใช้ OpenTelemetry + Jaeger trace request ข้าม service</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Distributed tracing ติดตาม request ตลอด lifecycle: HTTP request → auth check → cache lookup → DB query → response แต่ละ step (span) มี duration ทำให้รู้ว่าขั้นตอนไหนเป็น bottleneck Jaeger/Zipkin เป็น UI แสดง trace</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อ request ช้าแบบไม่รู้ว่าเพราะอะไร tracing บอกได้ทันทีว่า 80% ของเวลาหายไปที่ DB query ไหน ทำให้ debug performance issue ได้เร็วกว่า log มาก</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ยังเป็น single service ดังนั้นยังไม่จำเป็นเร่งด่วน แต่เมื่อ response ช้า debug ได้ยากเพราะไม่มี breakdown ของแต่ละ step</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ (เมื่อต้องการ)</h4><ul>
-      <li>เพิ่ม <code>opentelemetry-instrumentation-fastapi</code> + <code>opentelemetry-instrumentation-psycopg</code></li>
-      <li>ตั้ง Jaeger exporter: ส่ง trace ไปยัง Jaeger instance</li>
-      <li>ทุก DB query และ Redis call จะ auto-instrumented</li>
+    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังเป็น single service ดังนั้นยังไม่จำเป็นเร่งด่วน · Jaeger instance ต้องการ infrastructure แยก · ทบทวนเมื่อแยก service หรือพบ performance issue ที่ log ไม่เพียงพอ debug</p></div>
+    <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
+      <li>เพิ่ม <code>opentelemetry-instrumentation-fastapi</code> + <code>opentelemetry-instrumentation-psycopg</code> + <code>opentelemetry-exporter-jaeger</code></li>
+      <li>ตั้ง Jaeger exporter ใน <code>main.py</code>: ส่ง trace ไปยัง Jaeger instance ทุก request</li>
+      <li>ทุก DB query และ Redis call จะ auto-instrumented ได้ทันที</li>
+      <li>เพิ่ม custom span สำหรับ business logic เช่น <code>with tracer.start_as_current_span("finance.query"):</code></li>
     </ul></div>
+    <div class="block"><h4>วิธีทดสอบ (เมื่อ implement แล้ว)</h4>
+      <pre># รัน Jaeger ด้วย Docker
+docker run -d --name jaeger -p 16686:16686 -p 6831:6831/udp jaegertracing/all-in-one
+
+# รัน app พร้อม tracing
+OTEL_EXPORTER_JAEGER_AGENT_HOST=localhost uvicorn app.main:app --reload
+
+# สร้าง request
+curl -s http://localhost:8000/api/v1/finance -H "Authorization: Bearer $TOKEN"
+
+# ดู trace ใน Jaeger UI
+open http://localhost:16686
+# Search service: finance-dashboard → ดู spans ของ DB query และ Redis
+
+# ตรวจ span duration breakdown
+# HTTP request span → auth span → DB query span → response
+# ดูว่า step ไหนใช้เวลามากที่สุด</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="alerting"><div class="item-head"><div><div class="item-title">4. Alerting Rules</div><div class="item-sub">กำหนด alert เมื่อ error rate &gt; 1%, latency p99 &gt; 2s, disk &gt; 80%</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="alerting"><div class="item-head"><div><div class="item-title">4. Alerting Rules</div><div class="item-sub">กำหนด alert เมื่อ error rate &gt; 1%, latency p99 &gt; 2s, disk &gt; 80%</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Alerting rules คือ condition ที่เมื่อ metric เกิน threshold จะส่ง notification ไปยัง on-call engineer เช่น Slack, PagerDuty, email เช่น ถ้า error rate &gt; 1% ใน 5 นาทีที่ผ่านมา → alert ทันที</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี alert engineer จะไม่รู้ว่าระบบมีปัญหาจนกว่า user จะโทรมาแจ้ง alert ทำให้ Mean Time to Detect (MTTD) ลดจากชั่วโมงเหลือนาที ส่งผลโดยตรงต่อ uptime SLO</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ต้องการ Metrics Collection ก่อน จึงจะตั้ง alert rule ได้ ปัจจุบันถ้าระบบล่มจะรู้ก็ต่อเมื่อมีคนแจ้ง</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ (หลัง Metrics ready)</h4><ul>
-      <li>ตั้ง Prometheus AlertManager rules: error_rate &gt; 1%, p99_latency &gt; 2s, disk_usage &gt; 80%</li>
+    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ต้องการ Prometheus AlertManager ซึ่งเป็น infrastructure แยก · <code>/metrics</code> endpoint พร้อมแล้ว แต่ยังไม่มี Prometheus server ที่จะ scrape · ทบทวนเมื่อ deploy Prometheus + Grafana จริง</p></div>
+    <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
+      <li>ตั้ง Prometheus AlertManager rules: <code>error_rate &gt; 1%</code>, <code>p99_latency &gt; 2s</code>, <code>disk_usage &gt; 80%</code></li>
       <li>Integrate กับ Slack webhook หรือ Line Notify สำหรับ alert notification</li>
       <li>กำหนด on-call rotation และ escalation policy</li>
     </ul></div>
+    <div class="block"><h4>วิธีทดสอบ (เมื่อ implement แล้ว)</h4>
+      <pre># ตั้ง AlertManager rule ตัวอย่าง (alertmanager.yml)
+groups:
+  - name: finance-dashboard
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.01
+        for: 2m
+        annotations:
+          summary: "Error rate {{ $value | humanizePercentage }}"
+
+# ทดสอบ alert ด้วยการ trigger error จริง
+for i in $(seq 1 20); do
+  curl -s http://localhost:8000/api/v1/nonexistent
+done
+# ดู AlertManager UI: http://localhost:9093 → alert ควร fire หลัง 2 นาที
+
+# ทดสอบ Slack notification
+curl -X POST $SLACK_WEBHOOK_URL \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Test alert from finance-dashboard"}'</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="slo"><div class="item-head"><div><div class="item-title">5. SLI / SLO Definition</div><div class="item-sub">กำหนด uptime target 99.9%, p95 latency &lt; 500ms สำหรับ API หลัก</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="slo"><div class="item-head"><div><div class="item-title">5. SLI / SLO Definition</div><div class="item-sub">กำหนด uptime target 99.9%, p95 latency &lt; 500ms สำหรับ API หลัก</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><strong>SLI (Service Level Indicator)</strong>: metric ที่วัดได้จริง เช่น % request ที่ตอบภายใน 500ms <strong>SLO (Service Level Objective)</strong>: target ที่ต้องการ เช่น 99.9% uptime <strong>SLA</strong>: commitment ต่อ customer (มี penalty ถ้าไม่ได้) SLI+SLO เป็น internal target</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี SLO ทีมไม่รู้ว่า "ดีพอ" คืออะไร SLO ทำให้ตัดสินใจได้ว่าเมื่อไรต้องหยุด feature และไป fix reliability และเป็น baseline ที่วัดผลได้ว่า system ดีขึ้นหรือแย่ลงหลัง change</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มีการ define SLI/SLO อย่างเป็นทางการ · ไม่มีการวัด uptime · ไม่มี error budget</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>Define SLI: (1) Availability = successful requests / total requests (2) Latency = % requests &lt; 500ms</li>
-      <li>Define SLO: Availability ≥ 99.9% (43.8 min downtime/month), p95 latency &lt; 500ms</li>
-      <li>วัด SLI จาก Prometheus metrics (ต้องทำ Metrics Collection ก่อน)</li>
-      <li>Review SLO ทุกไตรมาส</li>
-    </ul></div>
+    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4>
+      <p>SLI/SLO ถูก define แล้ว (ดูด้านล่าง) แต่ยังวัดไม่ได้จริงเพราะยังไม่มี Prometheus server · ทบทวนเมื่อ Metrics Collection พร้อม</p>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">
+        <tr style="background:var(--surface2)"><th style="padding:6px 10px;text-align:left;border:1px solid var(--border)">SLI</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border)">วิธีวัด</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border)">SLO Target</th></tr>
+        <tr><td style="padding:6px 10px;border:1px solid var(--border)">Availability</td><td style="padding:6px 10px;border:1px solid var(--border)">successful_requests / total_requests</td><td style="padding:6px 10px;border:1px solid var(--border)">≥ 99.9% (43.8 min downtime/month)</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid var(--border)">Latency</td><td style="padding:6px 10px;border:1px solid var(--border)">% requests ที่ตอบภายใน 500ms</td><td style="padding:6px 10px;border:1px solid var(--border)">p95 &lt; 500ms</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid var(--border)">Error Budget</td><td style="padding:6px 10px;border:1px solid var(--border)">1 - Availability SLO</td><td style="padding:6px 10px;border:1px solid var(--border)">0.1% = 43.8 min/month</td></tr>
+      </table>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ (เมื่อ Prometheus พร้อม)</h4>
+      <pre># PromQL สำหรับวัด SLI จริง
+# Availability SLI — % requests ที่ไม่ใช่ 5xx ใน 30 วัน
+1 - (
+  sum(rate(http_requests_total{status=~"5.."}[30d]))
+  /
+  sum(rate(http_requests_total[30d]))
+)
+
+# Latency SLI — % requests ที่เร็วกว่า 500ms
+sum(rate(http_request_duration_seconds_bucket{le="0.5"}[30d]))
+/
+sum(rate(http_request_duration_seconds_count[30d]))
+
+# ตรวจ error budget คงเหลือ
+# ถ้า Availability SLI = 99.95% และ SLO = 99.9%
+# → ใช้ error budget ไป 50% แล้ว → ควร review
+
+# Review SLO ทุกไตรมาส
+# ดูว่า SLI ผ่าน SLO หรือไม่ และปรับ target ตาม reality</pre>
+    </div>
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">

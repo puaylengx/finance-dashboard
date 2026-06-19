@@ -1,7 +1,10 @@
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=app --cov-report=term-missing --cov-report=html"
+addopts = "--cov=app --cov-report=term-missing --cov-report=html --ignore=tests/performance"
+markers = [
+    "performance: marks tests as performance tests requiring a real DB (deselected by default)",
+]
 
 [tool.coverage.run]
 source = ["app"]

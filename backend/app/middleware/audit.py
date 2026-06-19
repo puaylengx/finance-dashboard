@@ -9,7 +9,7 @@ from app.core.security import decode_access_token
 
 logger = get_logger(__name__)
 
-_SKIP_PATHS = frozenset({"/health", "/api/docs", "/api/redoc", "/api/openapi.json"})
+_SKIP_PATHS = frozenset({"/health", "/ready", "/api/docs", "/api/redoc", "/api/openapi.json"})
 
 
 async def _write_audit(

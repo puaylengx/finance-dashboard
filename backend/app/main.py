@@ -10,9 +10,9 @@ from slowapi.util import get_remote_address
 
 from app.api.v1.router import v1_router
 from app.core.config import settings
-from app.core.database import close_db, init_db
+from app.core.database import close_db, get_db, init_db
 from app.core.logging import get_logger
-from app.core.redis_client import close_redis, init_redis
+from app.core.redis_client import close_redis, get_redis, init_redis
 from app.middleware.audit import audit_log_middleware
 
 logger = get_logger(__name__)
@@ -107,3 +107,32 @@ app.include_router(v1_router, prefix="/api/v1")
 @app.get("/health", tags=["System"])
 async def health_check():
     return {"status": "ok", "version": settings.app_version}
+
+
+@app.get("/ready", tags=["System"])
+async def readiness_check():
+    errors: list[str] = []
+
+    try:
+        async with get_db() as conn:
+            await conn.execute("SELECT 1")
+    except Exception as exc:
+        logger.warning("Readiness DB check failed: %s", exc)
+        errors.append("db")
+
+    redis = get_redis()
+    if redis is None:
+        errors.append("redis")
+    else:
+        try:
+            await redis.ping()
+        except Exception as exc:
+            logger.warning("Readiness Redis check failed: %s", exc)
+            errors.append("redis")
+
+    if errors:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"status": "unavailable", "failing": errors},
+        )
+    return {"status": "ok"}

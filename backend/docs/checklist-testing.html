@@ -78,7 +78,7 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-concurrency.html">← Concurrency</a><a href="checklist-cicd.html">Deployment &amp; CI/CD →</a></div>
-  <h2>Testing <small>— 4 requirements &nbsp; Pass 2 / Fail 2</small></h2>
+  <h2>Testing <small>— 4 requirements &nbsp; Pass 3 / Partial 1 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การทดสอบ API, services, performance และ database queries</p>
 
   <div class="item" id="unit-tests"><div class="item-head"><div><div class="item-title">1. Unit Tests</div><div class="item-sub">ครอบคลุม service layer และ business logic ด้วย pytest และ coverage ≥ 80%</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -148,37 +148,77 @@ pytest tests/ -k "login" -v</pre>
     </div>
   </div></div>
 
-  <div class="item" id="load-testing"><div class="item-head"><div><div class="item-title">3. Load Testing</div><div class="item-sub">ทดสอบ performance ด้วย k6 หรือ Locust เพื่อหา bottleneck และกำหนด capacity</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="load-testing"><div class="item-head"><div><div class="item-title">3. Load Testing</div><div class="item-sub">ทดสอบ performance ด้วย k6 หรือ Locust เพื่อหา bottleneck และกำหนด capacity</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Load testing คือการจำลอง concurrent users จำนวนมากส่ง request พร้อมกัน เพื่อ: (1) หา throughput สูงสุดที่ system รองรับได้ (2) หา bottleneck (DB, Redis, CPU) (3) ตรวจสอบ response time ว่าอยู่ใน SLA ภายใต้ load จริง</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ระบบอาจ perform ดีตอน dev (1-2 concurrent users) แต่พังตอน production เมื่อมีหลายสิบ users พร้อมกัน load test ช่วย identify ปัญหาก่อน go-live เช่น DB connection pool exhausted, Redis timeout, หรือ memory leak</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี load testing scripts หรือ baseline performance metrics ยังไม่รู้ว่า system รองรับ concurrent users ได้กี่คน</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>ติดตั้ง <strong>k6</strong> (JavaScript) หรือ <strong>Locust</strong> (Python) สำหรับ load testing</li>
-      <li>เขียน test scenario: GET /finance ด้วย 50 concurrent users นาน 5 นาที</li>
-      <li>กำหนด success criteria: p95 response time &lt; 2 วินาที, error rate &lt; 1%</li>
-      <li>ทดสอบ Redis cache hit/miss ratio ภายใต้ load</li>
-      <li>ทดสอบ DB connection pool behavior เมื่อ concurrent query สูง</li>
-    </ul></div>
+    <div class="block block-todo"><h4>Defer — ต้องรันกับ server จริง</h4><p>Load test ต้องรัน server จริงพร้อม production-like data และ infrastructure ทำในขั้นตอน pre-production/staging ก่อน go-live ไม่ใช่ในระหว่างพัฒนา</p>
+      <p><strong>เมื่อ staging พร้อม ให้ดำเนินการ:</strong></p>
+      <ul>
+        <li>ติดตั้ง <strong>Locust</strong> (Python — ใช้ venv เดิมได้): <code>pip install locust</code></li>
+        <li>เขียน <code>load_tests/locustfile.py</code> — scenario: GET /api/v1/finance ด้วย 50 concurrent users นาน 5 นาที</li>
+        <li>กำหนด success criteria: p95 response time &lt; 2 วินาที, error rate &lt; 1%</li>
+        <li>ตรวจสอบ Redis cache hit/miss ratio ภายใต้ load</li>
+        <li>ตรวจสอบ DB connection pool behavior (<code>pool_size</code> ใน <code>database.py</code>)</li>
+      </ul>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ (เมื่อพร้อม)</h4>
+      <pre># ติดตั้ง Locust
+pip install locust
+
+# เขียน load_tests/locustfile.py แล้วรัน
+locust -f load_tests/locustfile.py \
+  --host http://staging.internal:8000 \
+  --users 50 --spawn-rate 5 --run-time 5m --headless
+
+# ดู metrics ใน Prometheus + Grafana ระหว่าง load
+# หรือ locust --web-ui ที่ port 8089</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="db-perf-test"><div class="item-head"><div><div class="item-title">4. DB Query Performance Test</div><div class="item-sub">ทดสอบ SQL query performance ด้วย EXPLAIN ANALYZE เพื่อ detect slow query</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="db-perf-test"><div class="item-head"><div><div class="item-title">4. DB Query Performance Test</div><div class="item-sub">ทดสอบ SQL query performance ด้วย EXPLAIN ANALYZE เพื่อ detect slow query</div></div><div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><code>EXPLAIN ANALYZE</code> เป็น PostgreSQL command ที่แสดง execution plan จริงของ query พร้อม actual time ใช้ชี้ให้เห็นว่า query ใช้ index หรือ Seq Scan, nested loop หรือ hash join และ actual vs estimated rows</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard ใช้ CTE query ซับซ้อนบน table ขนาดใหญ่ ถ้า query ไม่ใช้ index จะช้ามากเมื่อข้อมูลเพิ่มขึ้น ควรทดสอบ query time กับ dataset จริง ไม่ใช่แค่ dev data ที่มีน้อย row</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>มี indexes ใน migration 004 แต่ไม่มี systematic query performance testing ไม่มี slow query log หรือ query time assertions ใน tests</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>รัน <code>EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)</code> กับ main finance query</li>
-      <li>ตรวจสอบว่า indexes ใน migration 004 ถูก used จริงหรือ planner เลือก Seq Scan แทน</li>
-      <li>เพิ่ม <code>pg_stat_statements</code> extension เพื่อ track slow queries อัตโนมัติ</li>
-      <li>เขียน pytest fixture ที่ assert query time &lt; X ms กับ test dataset ที่มีข้อมูลเพียงพอ</li>
-      <li>ตั้ง <code>log_min_duration_statement = 200</code> ใน PostgreSQL config เพื่อ log slow queries</li>
-    </ul>
-    <pre>-- ตัวอย่างวิธี analyze
-EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT ... FROM erp_transactions
-WHERE fiscal_year = 2025 AND cost_ctr_id = 'CC001';
--- ดู "Index Scan using idx_erp_fiscal_year" vs "Seq Scan"</pre>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+      <ul>
+        <li><strong>EXPLAIN ANALYZE scripts</strong>: <code>load_tests/explain_queries.sql</code> — ครอบคลุม 7 scenarios: fiscal_year, fiscal_year+month, cost_ctr_id, full CTE, io_goods partial index, pg_stat_statements, และ index usage health check</li>
+        <li><strong>pg_stat_statements migration</strong>: <code>migrations/007_enable_pg_stat_statements.sql</code> พร้อม postgresql.conf config แนะนำ (<code>log_min_duration_statement = 200</code>)</li>
+        <li><strong>pytest performance tests</strong>: <code>tests/performance/test_db_query_performance.py</code> — 8 tests ครอบคลุม Index Scan verification, query execution time thresholds, และ pg_stat_statements availability</li>
+        <li><strong>Marker</strong>: <code>@pytest.mark.performance</code> — exclude จาก default run, เปิดใช้ด้วย <code>PERFORMANCE_TEST=1</code></li>
+      </ul>
+    </div>
+    <div class="block"><h4>วิธีทดสอบ</h4>
+      <pre># 1. รัน EXPLAIN ANALYZE scripts กับ DB จริง
+psql -d finance_db -f load_tests/explain_queries.sql
+# ดู "Index Scan using idx_erp_fiscal_year" vs "Seq Scan"
+# ถ้าเห็น Seq Scan: รัน ANALYZE erp_transactions; เพื่อ refresh statistics
+
+# 2. Enable pg_stat_statements (ครั้งเดียว — ต้องมี superuser)
+psql -d finance_db -f migrations/007_enable_pg_stat_statements.sql
+# เพิ่มใน postgresql.conf:
+#   shared_preload_libraries = 'pg_stat_statements'
+#   log_min_duration_statement = 200
+
+# 3. รัน performance pytest tests กับ DB จริง
+PERFORMANCE_TEST=1 .venv/bin/python -m pytest tests/performance/ -v
+# คาดหวัง:
+#   test_fiscal_year_uses_index              PASSED
+#   test_fiscal_year_month_uses_composite_index PASSED
+#   test_cost_ctr_id_uses_index             PASSED
+#   test_dashboard_cte_under_threshold       PASSED (&lt; 3000 ms)
+
+# 4. ตรวจ slow queries หลังมี traffic
+psql -d finance_db -c "
+  SELECT LEFT(query,80), calls, ROUND(mean_exec_time::numeric,2) AS avg_ms
+  FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 5;"
+
+# 5. ตรวจ index usage health (index ไหนไม่ถูกใช้)
+psql -d finance_db -c "
+  SELECT tablename, indexname, idx_scan
+  FROM pg_stat_user_indexes
+  WHERE tablename = 'erp_transactions'
+  ORDER BY idx_scan DESC;"</pre>
     </div>
   </div></div>
 

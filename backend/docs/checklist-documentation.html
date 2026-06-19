@@ -4,8 +4,8 @@
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Documentation — Requirement Checklist</title>
   <style>
-    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
-    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
     html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
     html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}
     html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}
@@ -55,26 +55,43 @@
     .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
     .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
-  </style>
+  
+    /* Table of Contents Styles */
+    .toc-container { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 32px; }
+    .toc-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+    .toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+    .toc a { color: var(--muted); text-decoration: none; font-size: 13px; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+    .toc a:hover, .toc a.active { color: var(--text); font-weight: 600; }
+    .toc a::before { content: "•"; color: var(--accent); font-weight: bold; }
+    .toc a.active::before { color: var(--accent2); }
+</style>
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
 </head>
 <body>
 <nav>
-  <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <div class="logo">
+    <h1>Seamless Dashboard</h1>
+    <p>System Docs &amp; Checklists</p>
+  </div>
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  
   <div class="group">Overview</div>
-  <a href="checklist.html">← Index &amp; Summary</a>
-  <div class="group">หมวดหมู่</div>
-  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
-  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
-  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
-  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
-  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
-  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
-  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
-  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
-  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
-  <a href="checklist-documentation.html" class="active">Documentation <span class="cnt">4</span></a>
+  <a href="checklist.html" id="nav-checklist">Checklist Index &amp; Summary</a>
+  <a href="backend.html" id="nav-backend">Backend Guide</a>
+  <a href="data-dictionary.html" id="nav-data-dict">Data Dictionary</a>
+  <a href="runbook.html" id="nav-runbook">Operations Runbook</a>
+  
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-api-design.html" id="nav-api">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html" id="nav-data-mgmt">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html" id="nav-security">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html" id="nav-arch">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html" id="nav-logging">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html" id="nav-concurrency">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html" id="nav-testing">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html" id="nav-cicd">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html" id="nav-pipeline">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html" id="nav-docs" class="active">Documentation <span class="cnt">4</span></a>
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-data-pipeline.html">← Data Pipeline</a><a href="checklist.html">กลับ Index →</a></div>

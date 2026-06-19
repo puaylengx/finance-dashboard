@@ -78,26 +78,29 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-data-pipeline.html">← Data Pipeline</a><a href="checklist.html">กลับ Index →</a></div>
-  <h2>Documentation <small>— 4 requirements &nbsp; Pass 1 / Partial 1 / Fail 2</small></h2>
+  <h2>Documentation <small>— 4 requirements &nbsp; Pass 4</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">เอกสารที่จำเป็นสำหรับ developer, operator และ auditor</p>
 
-  <div class="item" id="adr"><div class="item-head"><div><div class="item-title">1. Architecture Decision Records (ADR)</div><div class="item-sub">บันทึกการตัดสินใจด้าน architecture สำคัญ พร้อม context และ trade-off</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="adr"><div class="item-head"><div><div class="item-title">1. Architecture Decision Records (ADR)</div><div class="item-sub">บันทึกการตัดสินใจด้าน architecture สำคัญ พร้อม context และ trade-off</div></div><div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
-    <div class="block"><h4>คืออะไร</h4><p>ADR คือ document สั้นๆ ที่บันทึกการตัดสินใจด้าน architecture แต่ละครั้ง ได้แก่: (1) Context — ทำไมถึงต้องตัดสินใจ (2) Decision — ตัดสินใจอะไร (3) Consequences — ผลที่ตามมา ทั้ง positive และ negative ตัวอย่าง: "ทำไมถึงเลือก Redis แทน Memcached" หรือ "ทำไมถึงใช้ psycopg3 แทน SQLAlchemy"</p></div>
-    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>6 เดือนต่อมา developer ใหม่ (หรือตัวเองก็ตาม) จะไม่รู้ว่าทำไมถึงเลือก design นี้ และอาจ refactor ออกไปโดยไม่รู้ว่า design เดิมมี reason ที่ดี ADR เก็บ "ความรู้ที่อยู่ในหัว" ให้ทีมทุกคนเข้าถึงได้</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี ADR directory หรือ document ใดๆ การตัดสินใจ architecture (เช่น SSH tunnel approach, Fernet encryption, DRAFT_MODE) ไม่ได้ถูก document ไว้</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>สร้าง <code>backend/docs/adr/</code> directory</li>
-      <li>เขียน ADR สำหรับ decision สำคัญที่มีอยู่แล้ว: SSH tunnel, Fernet encryption, Draft Mode, psycopg3 choice</li>
-      <li>ใช้ template: Title / Status / Context / Decision / Consequences</li>
-    </ul>
-    <pre># backend/docs/adr/001-ssh-tunnel-db-connection.md
-# Status: Accepted
-# Context: Database อยู่บน internal network ไม่เปิด port ออก internet
-# Decision: ใช้ SSH tunnel ผ่าน bastion host
-# Consequences:
-#   + ไม่ต้องเปิด DB port ออก internet (security)
-#   - เพิ่ม latency เล็กน้อย, ต้องมี SSH key management</pre>
+    <div class="block"><h4>คืออะไร</h4><p>ADR คือ document สั้นๆ ที่บันทึกการตัดสินใจด้าน architecture แต่ละครั้ง ได้แก่: (1) Context — ทำไมถึงต้องตัดสินใจ (2) Decision — ตัดสินใจอะไร (3) Consequences — ผลที่ตามมา ทั้ง positive และ negative</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี ADR directory <code>backend/docs/adr/</code> พร้อม 4 ADR files ครอบคลุม decision สำคัญ:</p>
+      <ul>
+        <li><code>001-ssh-tunnel-db-connection.md</code> — ทำไมถึงใช้ SSH tunnel แทนการเปิด DB port</li>
+        <li><code>002-psycopg3-async-over-sqlalchemy.md</code> — ทำไมถึงใช้ psycopg3 โดยตรงแทน SQLAlchemy ORM</li>
+        <li><code>003-draft-mode-local-auth.md</code> — ทำไมถึงมี Draft Mode สำหรับ local development</li>
+        <li><code>004-redis-response-caching.md</code> — ทำไมถึงเลือก Redis เป็น response cache</li>
+      </ul>
+    </div>
+    <div class="block block-pass"><h4>วิธีทดสอบ / ตรวจสอบ</h4>
+      <pre># ตรวจว่า ADR files มีครบ
+ls backend/docs/adr/
+# คาดหวัง: 001-ssh-tunnel-db-connection.md, 002-psycopg3-async-over-sqlalchemy.md
+#           003-draft-mode-local-auth.md, 004-redis-response-caching.md
+
+# เปิดอ่าน ADR หนึ่งตัว
+cat backend/docs/adr/001-ssh-tunnel-db-connection.md
+# ต้องมี: ## Context, ## Decision, ## Consequences</pre>
     </div>
   </div></div>
 
@@ -105,43 +108,84 @@
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Developer Setup Guide คือ document ที่บอก developer ใหม่ว่าต้องทำอะไรบ้างตั้งแต่ clone repo จนถึงรัน server ได้ รวมถึง: prerequisites, environment variables ที่ต้องตั้ง, วิธี run migrations, วิธีรัน dev server</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี setup guide developer ใหม่ต้องใช้เวลาหลายวันถามคนโน้นคนนี้ เสียเวลาทั้งทีม ยิ่งถ้า developer เดิมลาออกไปแล้ว ความรู้นั้นหายไปด้วย</p></div>
-    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี <code>README.md</code> หรือ <code>backend/docs/backend.html</code> ที่ cover การ setup project รวมถึง SSH config, environment variables, และวิธีรัน server</p></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี <code>backend/docs/backend.html</code> ที่ cover การ setup project รวมถึง SSH config, environment variables (.env.example), วิธีรัน migrations และ dev server ครบถ้วน</p></div>
+    <div class="block block-pass"><h4>วิธีทดสอบ / ตรวจสอบ</h4>
+      <pre># เปิด docs ใน browser
+open backend/docs/backend.html
+
+# ตรวจ .env.example ว่ามี field ครบ
+cat backend/.env.example | grep "^[A-Z]" | wc -l
+# คาดหวัง: มี env vars ที่จำเป็นครบ
+
+# ทดสอบ follow setup guide จริง: clone → install → migrate → run
+cd backend &amp;&amp; pip install -r requirements.txt
+python migrations/migrate.py
+uvicorn app.main:app --reload</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="runbook"><div class="item-head"><div><div class="item-title">3. Runbook / Operations Guide</div><div class="item-sub">คู่มือสำหรับ ops team: วิธี restart service, วิธี check logs, วิธีจัดการ incident</div></div><div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div></div>
+  <div class="item" id="runbook"><div class="item-head"><div><div class="item-title">3. Runbook / Operations Guide</div><div class="item-sub">คู่มือสำหรับ ops team: วิธี restart service, วิธี check logs, วิธีจัดการ incident</div></div><div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Runbook คือ document สำหรับ operations team (ไม่ใช่ developer) บอกวิธีจัดการ task routine และ incident เช่น: "วิธี restart API server", "วิธีดู error logs", "ถ้า Redis down ทำอะไร", "ถ้า DB connection pool exhausted ทำอะไร"</p></div>
-    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อเกิด incident ตี 2 ops team ต้องจัดการได้โดยไม่ต้องโทรหา developer ถ้าไม่มี runbook ทุกปัญหาเล็กๆ กลายเป็นต้องรอ developer ซึ่งทำให้ MTTR (Mean Time To Recover) นานขึ้น</p></div>
-    <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4><p>ไม่มี runbook หรือ operations guide ใดๆ</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>เขียน runbook ครอบคลุม scenarios หลัก:</li>
-      <li><strong>Restart service</strong>: command ที่ใช้, สิ่งที่ต้อง check หลัง restart</li>
-      <li><strong>Check logs</strong>: log file อยู่ที่ไหน, format เป็นอย่างไร, วิธี filter error</li>
-      <li><strong>Redis down</strong>: symptom, immediate action (restart), escalation path</li>
-      <li><strong>DB connection error</strong>: ตรวจ SSH tunnel, ตรวจ DB status, วิธี reconnect</li>
-      <li><strong>High error rate</strong>: วิธีดู Sentry dashboard, วิธี rollback ถ้าจำเป็น</li>
-    </ul></div>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี <code>backend/docs/runbook.html</code> ครอบคลุม 6 scenarios:</p>
+      <ul>
+        <li><strong>Restart service</strong> — Docker Compose และ uvicorn โดยตรง</li>
+        <li><strong>Check logs</strong> — JSON log fields, คำสั่ง filter error, Docker logs</li>
+        <li><strong>Redis down</strong> — symptoms, restart steps, escalation path</li>
+        <li><strong>DB / SSH tunnel error</strong> — ขั้นตอน triage SSH connection จนถึงตรวจ DB</li>
+        <li><strong>High error rate</strong> — triage 5xx errors, ตรวจ Prometheus metrics</li>
+        <li><strong>Rollback</strong> — app rollback ด้วย Docker image + DB migration rollback</li>
+      </ul>
+    </div>
+    <div class="block block-pass"><h4>วิธีทดสอบ / ตรวจสอบ</h4>
+      <pre># เปิด runbook ใน browser
+open backend/docs/runbook.html
+
+# ทดสอบ health check command จาก runbook
+curl http://localhost:8000/health
+# คาดหวัง: {"status":"ok"}
+
+curl http://localhost:8000/ready
+# คาดหวัง: {"status":"ok"} ถ้า DB + Redis พร้อม
+# หรือ: {"failing":["redis"]} ถ้า Redis down
+
+# ทดสอบ restart scenario
+docker compose restart api
+curl http://localhost:8000/health  # ต้อง 200 ภายใน 15 วินาที
+
+# ทดสอบ log filtering
+grep '"level":"ERROR"' backend/logs/app.log | tail -5</pre>
+    </div>
   </div></div>
 
-  <div class="item" id="data-dictionary"><div class="item-head"><div><div class="item-title">4. Data Dictionary</div><div class="item-sub">อธิบาย schema ของทุก table, field name, data type และ business meaning</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Partial</span></div></div>
+  <div class="item" id="data-dictionary"><div class="item-head"><div><div class="item-title">4. Data Dictionary</div><div class="item-sub">อธิบาย schema ของทุก table, field name, data type และ business meaning</div></div><div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Data Dictionary คือ document ที่อธิบายทุก table และ field ใน database ว่า: ชื่อคืออะไร, data type อะไร, และสำคัญที่สุด <strong>ความหมายทาง business</strong> คืออะไร เช่น <code>gl_id</code> ย่อมาจากอะไร, <code>cost_ctr_id</code> แตกต่างจาก <code>cost_owner</code> อย่างไร</p></div>
-    <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Database schema บอก technical structure แต่ไม่บอก business meaning developer ใหม่ต้องเดาว่า <code>erp_transactions</code> table มี column อะไรที่ relate กับ budget vs actual ถ้ามี data dictionary เข้าใจทันที</p></div>
-    <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4><p>มี migration SQL files ที่แสดง table structure แต่ไม่มี document ที่อธิบาย business meaning ของแต่ละ field migration files อยู่ที่ <code>backend/migrations/</code> แต่ไม่มี comment อธิบาย field</p></div>
-    <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4><ul>
-      <li>สร้าง <code>backend/docs/data-dictionary.html</code> (หรือ markdown)</li>
-      <li>Document ทุก table: <code>erp_transactions</code>, <code>cost_center_master</code>, <code>finance_coordinator</code> และ master tables อื่นๆ</li>
-      <li>แต่ละ field ระบุ: ชื่อ, type, nullable, business meaning, ตัวอย่างค่า</li>
-      <li>ระบุ relationships: FK ไปยัง table ไหน, join ยังไง</li>
-    </ul>
-    <pre># ตัวอย่าง Data Dictionary entry
-## erp_transactions
-| Field        | Type    | Description                              |
-|-------------|---------|------------------------------------------|
-| gl_id       | VARCHAR | GL Account ID จาก ERP (General Ledger)  |
-| fiscal_year | INT     | ปีงบประมาณ (พ.ศ.) เช่น 2568             |
-| fiscal_month| INT     | เดือน 1-12 นับจากตุลาคม (ต.ค.=1)       |
-| amount      | NUMERIC | ยอดเงิน (บาท) ค่าลบ = รายจ่าย         |</pre>
+    <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4><p>มี <code>backend/docs/data-dictionary.html</code> ครอบคลุมทุก table ใน database:</p>
+      <ul>
+        <li><strong>erp_transactions</strong> — 22 columns พร้อม business meaning, indexes, ETL strategy</li>
+        <li><strong>master_cost_ctr, master_fund, master_gl</strong> — reference tables สำหรับ cost center, fund, GL account</li>
+        <li><strong>master_io_goods/activities/project/work</strong> — Internal Order master tables</li>
+        <li><strong>master_ic_strategy, master_mu_strategy</strong> — ยุทธศาสตร์ IC/MU</li>
+        <li><strong>finance_coordinator</strong> — system table พร้อมอธิบาย locking strategy และ cache key</li>
+        <li><strong>audit_log</strong> — append-only audit trail พร้อม production security note</li>
+      </ul>
+    </div>
+    <div class="block block-pass"><h4>วิธีทดสอบ / ตรวจสอบ</h4>
+      <pre># เปิด data dictionary ใน browser
+open backend/docs/data-dictionary.html
+
+# ตรวจ cross-reference: ชื่อ column ในเอกสารตรงกับ database จริง
+psql -d ic_finance -c "\d erp_transactions"
+# เปรียบเทียบ column names กับที่ระบุใน data-dictionary.html
+
+# ตรวจ GL account format
+psql -d ic_finance -c "SELECT DISTINCT gl_id FROM erp_transactions LIMIT 5;"
+# ตรงกับที่อธิบายใน data dictionary ว่า "เช่น 51000001"
+
+# ตรวจ fiscal_year range
+psql -d ic_finance -c "SELECT DISTINCT fiscal_year FROM erp_transactions ORDER BY 1;"
+# ต้องเป็น integer ปีพุทธศักราช เช่น 2566, 2567, 2568</pre>
     </div>
   </div></div>
 
@@ -149,11 +193,11 @@
     <p style="font-size:13px;font-weight:700;margin-bottom:10px">สรุปภาพรวม Checklist ทั้งหมด</p>
     <p style="font-size:13px;color:var(--muted)">ครบ 60 requirements ใน 10 หมวดหมู่ · <a href="checklist.html" style="color:var(--accent)">ดู Index และสรุปผล</a></p>
     <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
-      <div style="font-size:13px"><span style="color:var(--green);font-weight:700">23 Pass</span> <span style="color:var(--muted)">พร้อม production</span></div>
-      <div style="font-size:13px"><span style="color:var(--yellow);font-weight:700">11 Partial</span> <span style="color:var(--muted)">ต้องปรับปรุง</span></div>
-      <div style="font-size:13px"><span style="color:var(--red);font-weight:700">26 Fail</span> <span style="color:var(--muted)">ต้องสร้างใหม่</span></div>
+      <div style="font-size:13px"><span style="color:var(--green);font-weight:700">36 Pass</span> <span style="color:var(--muted)">พร้อม production</span></div>
+      <div style="font-size:13px"><span style="color:var(--yellow);font-weight:700">18 Partial</span> <span style="color:var(--muted)">ต้องปรับปรุง</span></div>
+      <div style="font-size:13px"><span style="color:var(--red);font-weight:700">6 Fail</span> <span style="color:var(--muted)">ต้องสร้างใหม่</span></div>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-top:12px">ตรวจสอบ 2026-06-15</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px">อัปเดต 2026-06-19</p>
   </div>
 </main>
 <script>

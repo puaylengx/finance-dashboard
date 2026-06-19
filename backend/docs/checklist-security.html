@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="dark">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Security — Requirement Checklist</title>
   <style>
     :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
+    html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}
+    html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}
+    html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
     nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
@@ -49,10 +57,12 @@
     .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
   </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
 </head>
 <body>
 <nav>
   <div class="logo"><h1>Seamless Dashboard</h1><p>Requirement Checklist</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
   <div class="group">Overview</div>
   <a href="checklist.html">← Index &amp; Summary</a>
   <div class="group">หมวดหมู่</div>
@@ -116,8 +126,9 @@ echo $TOKEN | cut -d'.' -f2 | base64 -d 2>/dev/null | python3 -m json.tool</pre>
       <div class="block"><h4>คืออะไร</h4><p>Microsoft Entra ID (เดิมชื่อ Azure AD) คือ enterprise identity provider ที่องค์กรส่วนใหญ่ใช้ SSO (Single Sign-On) ทำให้ user login ครั้งเดียวใช้ได้ทุก app ไม่ต้องจำ password แยกสำหรับแต่ละระบบ</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>User ไม่ต้องสร้าง account ใหม่ — ใช้ account องค์กรที่มีอยู่แล้ว IT ยังคุม access ได้ส่วนกลาง (ถ้าไล่พนักงานออก revoke access ครั้งเดียวหมดทุก app) ลดความเสี่ยงจาก weak password</p></div>
       <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
-        <p><code>auth_service.py:94-177</code> — validate MS Entra token ด้วย JWKS (RS256) extract <code>jobTitle</code> → parse เป็น role/position issue JWT ของระบบ</p>
+        <p><code>auth_service.py</code> — validate MS Entra token ด้วย JWKS (RS256) extract <code>jobTitle</code> → parse เป็น role/position issue JWT ของระบบ</p>
         <p><code>draft_login</code> สำหรับ dev โดยไม่ต้องเชื่อม Azure จริง (เมื่อ <code>DRAFT_MODE=true</code>)</p>
+        <p><strong>Circuit Breaker ✓</strong> — ป้องกัน Azure JWKS endpoint ล่มทำให้ login ค้าง: timeout ลดจาก 10s → 5s · ล้มเหลว 3 ครั้งติด → circuit เปิด cooldown 60s → ตอบ <code>503</code> ทันทีไม่รอ network · หลัง 60s ลองใหม่อัตโนมัติ · <code>auth_service.py:_fetch_entra_jwks()</code></p>
       </div>
       <div class="block"><h4>วิธีทดสอบ (Draft Mode)</h4>
         <p>ใช้ <code>draft-login</code> เพื่อ simulate Entra token โดยไม่ต้องมี Azure account จริง:</p>
@@ -142,6 +153,42 @@ curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
   -d '{"job_title": "other", "name": "noauth@example.com"}' \
   | python3 -m json.tool</pre>
         <p style="margin-top:6px"><strong>ผลที่คาดหวัง:</strong> Case 1–2 ได้ token พร้อม <code>role</code> และ <code>position</code> ที่ถูกต้อง / Case 3 ได้ 403 หรือ token ที่ไม่มีสิทธิ์เข้าถึง data</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ (Circuit Breaker)</h4>
+        <p><strong>Unit tests — ครอบคลุม 6 scenarios</strong></p>
+        <pre>cd backend
+.venv/bin/python3 -m pytest tests/unit/test_auth_service_circuit.py -v
+# ผลที่คาดหวัง: 6 passed</pre>
+        <p style="margin-top:8px"><strong>Scenarios ที่ทดสอบ:</strong></p>
+        <ul>
+          <li><code>test_success_resets_failure_count</code> — success หลัง failure จะ reset counter เป็น 0</li>
+          <li><code>test_single_failure_increments_count</code> — failure 1 ครั้ง: counter +1, circuit ยังปิดอยู่</li>
+          <li><code>test_threshold_failures_open_circuit</code> — failure ครบ 3 ครั้ง: circuit เปิด + ตอบ <code>EntraNotConfiguredError</code></li>
+          <li><code>test_open_circuit_fails_fast_without_http_call</code> — circuit เปิด: ไม่มี HTTP call เกิดขึ้นเลย</li>
+          <li><code>test_circuit_recovers_after_cooldown</code> — หลัง cooldown หมด: ลอง Azure อีกครั้งได้</li>
+          <li><code>test_cached_jwks_bypasses_circuit</code> — มี cache อยู่: ไม่ผ่าน circuit เลย</li>
+        </ul>
+        <p style="margin-top:8px"><strong>ตรวจ circuit breaker state โดยตรง</strong></p>
+        <pre>cd backend
+.venv/bin/python3 -c "
+import app.services.auth_service as svc
+import time
+
+# จำลอง circuit เปิด
+svc._jwks_circuit_open_until = time.monotonic() + 30
+
+# ตรวจว่า fail fast
+import asyncio
+async def test():
+    try:
+        await svc._fetch_entra_jwks()
+    except svc.EntraNotConfiguredError as e:
+        print('Circuit open — fast fail:', e)
+
+asyncio.run(test())
+"
+# คาดหวัง: พิมพ์ 'Circuit open — fast fail: Azure JWKS temporarily unavailable — retry in 30s'</pre>
+        <p style="margin-top:6px"><strong>ผลที่คาดหวัง:</strong> circuit เปิดแล้วตอบทันทีโดยไม่รอ network timeout · ระบบยังทำงานได้ใน draft mode ระหว่าง cooldown</p>
       </div>
     </div>
   </div>
@@ -533,5 +580,13 @@ document.body.appendChild(f);
     อัปเดต 2026-06-18 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-architecture.html" style="color:var(--accent)">Architecture →</a>
   </div>
 </main>
+<script>
+function toggleTheme(){
+  var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
+}
+</script>
 </body>
 </html>

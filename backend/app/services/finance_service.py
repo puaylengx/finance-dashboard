@@ -5,6 +5,8 @@ from app.core.logging import get_logger
 from app.core.security import ILIKE_ROOT_OVERRIDE, is_division, is_fa
 from app.schemas.finance import FinanceQueryParams, IOQueryParams
 
+__all__ = ["get_dashboard", "get_io"]
+
 _FINANCE_TABLE_KEYS = (
     "table_by_gl", "table_by_cost_center",
     "table_by_gl_division", "table_by_cost_center_division",

@@ -1,12 +1,34 @@
 from datetime import datetime
+from typing import TypedDict
 from zoneinfo import ZoneInfo
 
 from app.core.cache import invalidate_coordinator_cache
 from app.core.database import get_admin_db
 from app.core.logging import get_logger
 
+__all__ = ["CoordinatorRow", "CoordinatorListResult", "list_coordinators", "add_coordinator", "toggle_coordinator"]
+
 logger = get_logger(__name__)
 _TZ_THAI = ZoneInfo("Asia/Bangkok")
+
+
+class CoordinatorRow(TypedDict):
+    id: int
+    username: str
+    active: bool
+    created_at: datetime
+    updated_at: datetime | None
+    created_by: str
+    updated_by: str | None
+
+
+class CoordinatorListResult(TypedDict):
+    success: bool
+    data: list[CoordinatorRow]
+    page: int
+    page_size: int
+    total: int
+    total_pages: int
 
 
 def _now_thai() -> datetime:
@@ -27,7 +49,7 @@ async def list_coordinators(
     active: bool | None = None,
     page: int = 1,
     page_size: int = 20,
-) -> dict:
+) -> CoordinatorListResult:
     conditions: list[str] = []
     sql_params: dict = {}
 
@@ -74,7 +96,7 @@ async def list_coordinators(
     }
 
 
-async def add_coordinator(username: str, created_by: str) -> dict:
+async def add_coordinator(username: str, created_by: str) -> CoordinatorRow:
     now = _now_thai()
     async with get_admin_db() as conn:
         async with conn.cursor() as cur:
@@ -97,7 +119,7 @@ async def add_coordinator(username: str, created_by: str) -> dict:
     return result
 
 
-async def toggle_coordinator(coord_id: int, updated_by: str) -> dict | None:
+async def toggle_coordinator(coord_id: int, updated_by: str) -> CoordinatorRow | None:
     now = _now_thai()
     async with get_admin_db() as conn:
         async with conn.cursor() as cur:

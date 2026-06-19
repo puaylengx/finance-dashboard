@@ -5,6 +5,10 @@ from app.core.cache import invalidate_coordinator_cache
 from app.core.database import get_admin_db
 from app.core.logging import get_logger
 
+
+class ConcurrentModificationError(Exception):
+    """Raised when updated_at check fails — another request modified the record first."""
+
 logger = get_logger(__name__)
 _TZ_THAI = ZoneInfo("Asia/Bangkok")
 
@@ -97,21 +101,41 @@ async def add_coordinator(username: str, created_by: str) -> dict:
     return result
 
 
-async def toggle_coordinator(coord_id: int, updated_by: str) -> dict | None:
+async def toggle_coordinator(
+    coord_id: int,
+    updated_by: str,
+    expected_updated_at: datetime | None = None,
+) -> dict | None:
     now = _now_thai()
     async with get_admin_db() as conn:
         async with conn.cursor() as cur:
-            await cur.execute("""
+            # Pessimistic lock: prevents concurrent toggle race condition
+            await cur.execute(
+                "SELECT id, updated_at FROM finance_coordinator WHERE id = %(id)s FOR UPDATE",
+                {"id": coord_id},
+            )
+            current = await cur.fetchone()
+            if not current:
+                return None
+
+            # Optimistic lock check: reject if client's version is stale
+            if expected_updated_at is not None:
+                db_updated_at = current[1]
+                if db_updated_at != expected_updated_at:
+                    raise ConcurrentModificationError(coord_id)
+
+            await cur.execute(
+                """
                 UPDATE finance_coordinator
                    SET active     = NOT active,
                        updated_at = %(now)s,
                        updated_by = %(updated_by)s
                  WHERE id = %(id)s
                 RETURNING id, username, active, created_at, updated_at, created_by, updated_by
-            """, {"now": now, "updated_by": updated_by, "id": coord_id})
+                """,
+                {"now": now, "updated_by": updated_by, "id": coord_id},
+            )
             row = await cur.fetchone()
-            if not row:
-                return None
             result = _row_to_dict(cur.description, row)
         await conn.commit()
 

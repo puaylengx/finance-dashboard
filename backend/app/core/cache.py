@@ -65,3 +65,21 @@ async def invalidate_pattern(pattern: str) -> int:
 
 async def invalidate_coordinator_cache(username: str) -> None:
     await invalidate_pattern(auth_coordinator_key(username))
+
+
+# ── Idempotency ───────────────────────────────────────────────────────────────
+
+_IDEMPOTENCY_PREFIX = "seamless:v1:idempotency"
+_IDEMPOTENCY_TTL = 86_400  # 24 hours
+
+
+def idempotency_cache_key(user_id: str, key: str) -> str:
+    return f"{_IDEMPOTENCY_PREFIX}:{user_id}:{key}"
+
+
+async def get_idempotency_response(user_id: str, key: str) -> dict | None:
+    return await get_cached(idempotency_cache_key(user_id, key))
+
+
+async def set_idempotency_response(user_id: str, key: str, response: dict) -> None:
+    await set_cached(idempotency_cache_key(user_id, key), response, _IDEMPOTENCY_TTL)

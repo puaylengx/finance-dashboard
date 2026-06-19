@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 
 from app.api.v1.deps import require_fa_with_position
+from app.core.cache import get_idempotency_response, set_idempotency_response
 from app.core.logging import get_logger
 from app.schemas.common import APIResponse, PaginatedResponse
 from app.schemas.coordinator import CoordinatorCreate, CoordinatorResponse
 from app.services import coordinator_service
+from app.services.coordinator_service import ConcurrentModificationError
 
 router = APIRouter(prefix="/admin/coordinators", tags=["Coordinator Management"])
 logger = get_logger(__name__)
@@ -41,13 +45,27 @@ async def list_coordinators(
         409: {"description": "Username already exists (will reactivate instead)"},
     },
 )
-async def add_coordinator(body: CoordinatorCreate, user: dict = Depends(require_fa_with_position)):
+async def add_coordinator(
+    body: CoordinatorCreate,
+    user: dict = Depends(require_fa_with_position),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key", max_length=255),
+):
+    if idempotency_key:
+        cached = await get_idempotency_response(user["sub"], idempotency_key)
+        if cached is not None:
+            return cached
+
     try:
         result = await coordinator_service.add_coordinator(
             username=body.username,
             created_by=user["sub"],
         )
-        return {"success": True, "data": result}
+        response = {"success": True, "data": result}
+
+        if idempotency_key:
+            await set_idempotency_response(user["sub"], idempotency_key, response)
+
+        return response
     except Exception as exc:
         logger.error("Add coordinator failed: %s", exc)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Operation failed")
@@ -59,13 +77,24 @@ async def add_coordinator(body: CoordinatorCreate, user: dict = Depends(require_
     summary="Toggle coordinator active/inactive — FA + position required",
     responses={
         404: {"description": "Coordinator not found"},
+        409: {"description": "Record modified by another request — refresh and retry"},
     },
 )
-async def toggle_coordinator(coord_id: int, user: dict = Depends(require_fa_with_position)):
+async def toggle_coordinator(
+    coord_id: int,
+    user: dict = Depends(require_fa_with_position),
+    x_expected_updated_at: datetime | None = Header(None, alias="X-Expected-Updated-At"),
+):
     try:
         result = await coordinator_service.toggle_coordinator(
             coord_id=coord_id,
             updated_by=user["sub"],
+            expected_updated_at=x_expected_updated_at,
+        )
+    except ConcurrentModificationError:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail="Record was modified by another request. Refresh and try again.",
         )
     except Exception as exc:
         logger.error("Toggle coordinator failed: %s", exc)

@@ -247,6 +247,24 @@
   <a href="data-dictionary.html" id="nav-data-dict">Data Dictionary</a>
   <a href="runbook.html" id="nav-runbook">Operations Runbook</a>
   
+  <div class="group">Sections</div>
+  <a href="#overview">Architecture</a>
+  <a href="#structure">Project Structure</a>
+  <a href="#setup">Setup &amp; Run</a>
+  <a href="#config">Configuration</a>
+  <a href="#database">Database</a>
+  <a href="#cache">Redis Cache</a>
+  <a href="#security">Security</a>
+  <a href="#logging">Logging</a>
+  <a href="#auth">Authentication</a>
+  <a href="#finance">Finance / Budget</a>
+  <a href="#io">IO Dashboard</a>
+  <a href="#coordinator">Coordinator</a>
+  <a href="#schema">DB Schema</a>
+  <a href="#migrations">Migrations</a>
+  <a href="#tests">Testing</a>
+  <a href="#checklist">Checklist</a>
+
   <div class="group">หมวดหมู่ Checklist</div>
   <a href="checklist-api-design.html" id="nav-api">API Design <span class="cnt">8</span></a>
   <a href="checklist-data-management.html" id="nav-data-mgmt">Data Management <span class="cnt">10</span></a>
@@ -1323,15 +1341,18 @@ open htmlcov/index.html</pre>
 </main>
 
 <script>
-  // Highlight active TOC link on scroll
   const sections = document.querySelectorAll('section[id]');
-  const links = document.querySelectorAll('.toc a');
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sectionLinks = document.querySelectorAll('nav a[href^="#"]');
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const a = document.querySelector(`.toc a[href="#${e.target.id}"]`);
-        if (a) a.classList.add('active');
+        tocLinks.forEach(l => l.classList.remove('active'));
+        sectionLinks.forEach(l => l.classList.remove('active'));
+        const a1 = document.querySelector(`.toc a[href="#${e.target.id}"]`);
+        const a2 = document.querySelector(`nav a[href="#${e.target.id}"]`);
+        if (a1) a1.classList.add('active');
+        if (a2) a2.classList.add('active');
       }
     });
   }, { rootMargin: '-20% 0px -70% 0px' });

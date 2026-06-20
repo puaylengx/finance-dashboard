@@ -10,18 +10,18 @@
         <SkeletonCard height="280px" />
       </template>
 
-      <div v-else-if="isError" class="rounded-xl border border-[#f87171]/30 bg-[#f87171]/10 p-5 text-sm text-[#f87171]">
+      <div v-else-if="isError" class="rounded-xl border border-danger/30 bg-danger/10 p-5 text-sm text-danger">
         โหลดข้อมูลไม่สำเร็จ: {{ error?.message }}
       </div>
 
       <template v-else-if="data">
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <KpiCard label="ยอดรวม (THB)"         :value="data.kpis.total_amount" color="text-[#6c8efb]" />
-          <KpiCard label="งบประมาณ (THB)"        :value="data.kpis.total_budget" color="text-[#a78bfa]" />
-          <KpiCard label="IO Goods (THB)"        :value="data.kpis.total_amount_io_goods" color="text-[#34d399]" />
-          <KpiCard label="IO Project (THB)"      :value="data.kpis.total_amount_io_project" color="text-[#fbbf24]" />
-          <KpiCard label="จำนวน IO Goods"        :value="data.kpis.count_io_goods" color="text-[#60a5fa]" />
-          <KpiCard label="จำนวน IO Project"      :value="data.kpis.count_io_project" color="text-[#f472b6]" />
+          <KpiCard label="ยอดรวม (THB)"    :value="data.kpis.total_amount"          color="text-accent" />
+          <KpiCard label="งบประมาณ (THB)"   :value="data.kpis.total_budget"          color="text-accent2" />
+          <KpiCard label="IO Goods (THB)"   :value="data.kpis.total_amount_io_goods" color="text-success" />
+          <KpiCard label="IO Project (THB)" :value="data.kpis.total_amount_io_project" color="text-warning" />
+          <KpiCard label="จำนวน IO Goods"   :value="data.kpis.count_io_goods"        color="text-accent" />
+          <KpiCard label="จำนวน IO Project" :value="data.kpis.count_io_project"      color="text-accent2" />
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -38,15 +38,15 @@
         </div>
 
         <!-- IO Goods Pivot -->
-        <div class="rounded-xl border border-[#2e3250] bg-[#1a1d27] overflow-hidden">
-          <div class="flex items-center justify-between px-5 py-4 border-b border-[#2e3250]">
-            <div class="text-sm font-medium text-[#8892b0]">IO Goods</div>
-            <button @click="exportIoGoods" class="text-xs text-[#6c8efb] hover:underline">Export CSV</button>
+        <div class="rounded-xl border border-border bg-surface overflow-hidden">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+            <div class="text-sm font-medium text-muted">IO Goods</div>
+            <button @click="exportIoGoods" class="text-xs text-accent hover:underline">Export CSV</button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
-                <tr class="text-[#8892b0] text-left">
+                <tr class="text-muted text-left">
                   <th class="px-4 py-3 font-medium">IO Code</th>
                   <th class="px-4 py-3 font-medium">Description</th>
                   <th class="px-4 py-3 font-medium text-right">Amount</th>
@@ -55,26 +55,26 @@
               <tbody>
                 <template v-for="item in data.pivot_table_by_io_goods" :key="item.io_goods">
                   <tr
-                    class="border-t border-[#2e3250] bg-[#22263a] cursor-pointer hover:bg-[#2a2f4a] transition-colors"
+                    class="border-t border-border bg-surface2 cursor-pointer hover:brightness-95 transition-all"
                     @click="toggleGoods(item.io_goods)"
                   >
-                    <td class="px-4 py-3 font-mono text-xs text-[#6c8efb]">{{ item.io_goods }}</td>
-                    <td class="px-4 py-3 text-[#e2e8f0]">
-                      <span class="text-[#8892b0] text-xs mr-1">{{ expandedGoods.has(item.io_goods) ? '▾' : '▸' }}</span>
+                    <td class="px-4 py-3 font-mono text-xs text-accent">{{ item.io_goods }}</td>
+                    <td class="px-4 py-3 text-fg">
+                      <span class="text-muted text-xs mr-1">{{ expandedGoods.has(item.io_goods) ? '▾' : '▸' }}</span>
                       {{ item.io_goods_description }}
                     </td>
-                    <td class="px-4 py-3 text-right text-[#34d399]">{{ fmt(item.total_amount) }}</td>
+                    <td class="px-4 py-3 text-right text-success">{{ fmt(item.total_amount) }}</td>
                   </tr>
                   <template v-if="expandedGoods.has(item.io_goods)">
-                    <tr v-for="d in item.order_breakdown" :key="d.details" class="border-t border-[#2e3250]">
+                    <tr v-for="d in item.order_breakdown" :key="d.details" class="border-t border-border bg-surface">
                       <td class="px-4 py-2" />
-                      <td class="px-4 py-2 text-xs text-[#8892b0] pl-10">{{ d.details }}</td>
-                      <td class="px-4 py-2 text-right text-xs text-[#e2e8f0]">{{ fmt(d.amount) }}</td>
+                      <td class="px-4 py-2 text-xs text-muted pl-10">{{ d.details }}</td>
+                      <td class="px-4 py-2 text-right text-xs text-fg">{{ fmt(d.amount) }}</td>
                     </tr>
                   </template>
                 </template>
                 <tr v-if="!data.pivot_table_by_io_goods.length">
-                  <td colspan="3" class="px-4 py-6 text-center text-[#8892b0]">ไม่พบข้อมูล</td>
+                  <td colspan="3" class="px-4 py-6 text-center text-muted">ไม่พบข้อมูล</td>
                 </tr>
               </tbody>
             </table>

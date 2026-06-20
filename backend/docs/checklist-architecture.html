@@ -9,8 +9,11 @@
     html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
     html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}
     html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}
+    html[data-theme="light"] .block-defer{background:rgba(96,165,250,.1);}
     html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
     html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
     .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
     .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -33,7 +36,7 @@
     .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
     .item-body{padding:18px 20px;display:grid;gap:14px;}
     .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
-    .block p,.block li{font-size:13.5px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
     .block ul{padding-left:18px;}
     .block li{margin-bottom:5px;}
     .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
@@ -42,20 +45,26 @@
     .block-partial h4{color:var(--yellow);}
     .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
     .block-todo h4{color:var(--yellow);}
+    .block-defer{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:6px;padding:14px 16px;}
+    .block-defer h4{color:var(--blue);}
     .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
     .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
     .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .defer{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.25);}
     .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
     .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
     .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
     .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
     .p4{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,146,176,.18);color:var(--muted);}
     code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
-    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
     .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
     .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
     .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
   
     /* Table of Contents Styles */
@@ -97,7 +106,7 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-security.html">← Security</a><a href="checklist-logging.html">Logging →</a></div>
-  <h2>Architecture <small>— 6 requirements &nbsp; Pass 2 / Partial 2 / Fail 2</small></h2>
+  <h2>Architecture <small>— 6 requirements &nbsp; Pass 3 / Partial 1 / Defer 2 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">โครงสร้างและสถาปัตยกรรมของระบบที่ทำให้ maintain, scale, และ operate ได้ง่าย</p>
 
   <div class="item" id="clean-arch"><div class="item-head"><div><div class="item-title">1. Clean Architecture</div><div class="item-sub">แยก layer: Router → Service → Repository → Model อิสระจากกัน test ง่าย</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -267,11 +276,11 @@ tail -10 logs/app.log</pre>
     </div>
   </div></div>
 
-  <div class="item" id="bg-queue"><div class="item-head"><div><div class="item-title">5. Background Job Queue</div><div class="item-sub">ใช้ Celery + Redis สำหรับ heavy task ที่ใช้เวลานาน</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="bg-queue"><div class="item-head"><div><div class="item-title">5. Background Job Queue</div><div class="item-sub">ใช้ Celery + Redis สำหรับ heavy task ที่ใช้เวลานาน</div></div><div class="item-badges"><span class="p3">P3</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Background job queue คือระบบที่รับ task และประมวลผลแบบ async โดยไม่ block HTTP request เช่น user เรียก <code>POST /reports/generate</code> ระบบตอบ <code>202 Accepted</code> ทันที แล้ว process report ใน background worker แยกต่างหาก</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>HTTP request มี timeout (client browser timeout ~30-60s) ถ้า task ใช้เวลานานกว่านั้น request จะ timeout แม้ว่างาน process ยังไม่เสร็จ background queue แก้ปัญหานี้และยัง retry ได้เมื่อ worker crash</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>Finance SQL ซับซ้อนแต่ยังอยู่ในระดับ ms ยังไม่มี endpoint ที่ generate PDF หรือ export Excel — ยังไม่มี use case จริงที่ต้องการ background queue · ทบทวนเมื่อมี heavy task ที่ใช้เวลา &gt;10s หรือมี request export จาก user จริง</p></div>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>Finance SQL ซับซ้อนแต่ยังอยู่ในระดับ ms ยังไม่มี endpoint ที่ generate PDF หรือ export Excel — ยังไม่มี use case จริงที่ต้องการ background queue · ทบทวนเมื่อมี heavy task ที่ใช้เวลา &gt;10s หรือมี request export จาก user จริง</p></div>
     <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
       <li>เพิ่ม <code>celery[redis]&gt;=5.4.0</code> ใน <code>requirements.txt</code></li>
       <li>สร้าง <code>app/core/celery_app.py</code> — Celery instance ใช้ Redis DB 1 เป็น broker + result backend (แยกจาก cache DB 0)</li>
@@ -311,11 +320,11 @@ curl http://localhost:8000/api/v1/tasks/abc-123 \
     </div>
   </div></div>
 
-  <div class="item" id="message-queue"><div class="item-head"><div><div class="item-title">6. Message Queue / Event Bus</div><div class="item-sub">พิจารณา RabbitMQ / Kafka สำหรับ decoupling service</div></div><div class="item-badges"><span class="p4">P4</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="message-queue"><div class="item-head"><div><div class="item-title">6. Message Queue / Event Bus</div><div class="item-sub">พิจารณา RabbitMQ / Kafka สำหรับ decoupling service</div></div><div class="item-badges"><span class="p4">P4</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Message queue (RabbitMQ) หรือ event bus (Kafka) คือ middleware ที่ทำให้ services สื่อสารกันแบบ async ผ่าน message/event แทนการ call API โดยตรง ทำให้ decouple กัน — producer ไม่รู้จัก consumer</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อ system มีหลาย service เช่น เมื่อมีการ import ERP data → trigger notification service + audit service + cache invalidation การใช้ event bus ทำให้เพิ่ม consumer ใหม่ได้โดยไม่แก้ producer</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังเป็น monolith service เดียว ทุกอย่าง call function โดยตรงใน process เดียวกัน — เหมาะกับขนาดและ team ปัจจุบัน · ทบทวนเมื่อแยก service ออกจากกันจริง เช่น notification service, ERP import service, หรือเมื่อมี consumer &gt;1 ที่ต้องรับ event เดียวกัน</p></div>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังเป็น monolith service เดียว ทุกอย่าง call function โดยตรงใน process เดียวกัน — เหมาะกับขนาดและ team ปัจจุบัน · ทบทวนเมื่อแยก service ออกจากกันจริง เช่น notification service, ERP import service, หรือเมื่อมี consumer &gt;1 ที่ต้องรับ event เดียวกัน</p></div>
     <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
       <li>เลือก broker ตาม use case: <strong>RabbitMQ</strong> สำหรับ task queue ทั่วไป, <strong>Kafka</strong> สำหรับ event stream ที่ต้องการ replay หรือ throughput สูง</li>
       <li>กำหนด event schema: <code>{"event": "erp.imported", "payload": {...}, "timestamp": "..."}</code></li>

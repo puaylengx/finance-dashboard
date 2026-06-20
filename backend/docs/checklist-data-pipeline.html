@@ -9,8 +9,11 @@
     html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
     html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}
     html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}
+    html[data-theme="light"] .block-defer{background:rgba(96,165,250,.1);}
     html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
     html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
     .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
     .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -28,12 +31,12 @@
     h2 small{font-size:13px;font-weight:400;color:var(--muted);}
     .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
     .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
-    .item-title{font-size:15px;font-weight:700;}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
     .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
     .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
     .item-body{padding:18px 20px;display:grid;gap:14px;}
     .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
-    .block p,.block li{font-size:13.5px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
     .block ul{padding-left:18px;}
     .block li{margin-bottom:5px;}
     .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
@@ -42,18 +45,24 @@
     .block-partial h4{color:var(--yellow);}
     .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
     .block-todo h4{color:var(--yellow);}
+    .block-defer{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:6px;padding:14px 16px;}
+    .block-defer h4{color:var(--blue);}
     .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
     .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
     .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
     .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
     .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
     .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
     code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
-    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
     .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
     .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
     .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
   
     /* Table of Contents Styles */
@@ -95,7 +104,7 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-cicd.html">← Deployment &amp; CI/CD</a><a href="checklist-documentation.html">Documentation →</a></div>
-  <h2>Data Pipeline <small>— 3 requirements &nbsp; Pass 1 / Partial 2</small></h2>
+  <h2>Data Pipeline <small>— 3 requirements &nbsp; Pass 1 / Partial 2 / Defer 0 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">กระบวนการ import ข้อมูลจาก ERP, data validation และ reconciliation</p>
 
   <div class="item" id="etl"><div class="item-head"><div><div class="item-title">1. ETL / Data Import Process</div><div class="item-sub">กระบวนการ import ข้อมูลจาก ERP ไปยัง PostgreSQL มี error handling และ retry mechanism</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>

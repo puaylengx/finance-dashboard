@@ -9,6 +9,28 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
 from prometheus_fastapi_instrumentator import Instrumentator
+import prometheus_fastapi_instrumentator.routing as _pfi_routing
+from starlette.routing import Match
+
+def _safe_get_route_name(scope, routes, route_name=None):
+    """Patched version — skips routes without .path (e.g. _IncludedRouter)."""
+    for route in routes:
+        match, child_scope = route.matches(scope)
+        if match == Match.FULL:
+            if not hasattr(route, "path"):
+                continue
+            route_name = route.path
+            child_scope = {**scope, **child_scope}
+            if hasattr(route, "routes") and route.routes:
+                child = _safe_get_route_name(child_scope, route.routes, route_name)
+                route_name = None if child is None else route_name + child
+            return route_name
+        elif match == Match.PARTIAL and route_name is None:
+            if hasattr(route, "path"):
+                route_name = route.path
+    return None
+
+_pfi_routing._get_route_name = _safe_get_route_name
 
 from app.api.v1.router import v1_router
 from app.core.config import settings

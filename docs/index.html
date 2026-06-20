@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seamless Dashboard — Documentation</title>
+  <style>
+    :root{
+      --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;
+      --accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;
+      --red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;
+      --radius:10px;
+    }
+    html[data-theme="light"]{
+      --bg:#f0f2f8;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;
+      --accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;
+      --red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--text:#1e2438;--muted:#64748b;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;min-height:100vh;}
+
+    /* ── Header ── */
+    header{
+      background:var(--surface);border-bottom:1px solid var(--border);
+      padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:56px;
+      position:sticky;top:0;z-index:100;
+    }
+    .logo{display:flex;align-items:center;gap:10px;}
+    .logo-mark{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;}
+    .logo-text{font-size:14px;font-weight:700;color:var(--text);}
+    .logo-sub{font-size:11px;color:var(--muted);margin-left:4px;}
+    .header-right{display:flex;align-items:center;gap:12px;}
+    .theme-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    .badge-updated{font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:2px 8px;}
+
+    /* ── Hero ── */
+    .hero{
+      text-align:center;padding:64px 24px 48px;
+      background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(108,142,251,.12),transparent);
+    }
+    .hero h1{font-size:36px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
+    .hero p{color:var(--muted);font-size:15px;max-width:520px;margin:0 auto 32px;}
+    .hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;}
+    .hero-stat{text-align:center;}
+    .hero-stat .val{font-size:24px;font-weight:800;color:var(--text);}
+    .hero-stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+
+    /* ── Main layout ── */
+    main{max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
+
+    /* ── Section headers ── */
+    .section-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;margin-top:48px;}
+    .section-header:first-child{margin-top:0;}
+    .section-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+    .icon-backend{background:rgba(108,142,251,.15);}
+    .icon-frontend{background:rgba(167,139,250,.15);}
+    .section-header h2{font-size:17px;font-weight:700;}
+    .section-header span{font-size:12px;color:var(--muted);margin-left:4px;}
+
+    /* ── Card grid ── */
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+    .card{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:18px 20px;text-decoration:none;color:inherit;
+      transition:border-color .15s,transform .15s,box-shadow .15s;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25);}
+    html[data-theme="light"] .card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1);}
+    .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+    .card-title{font-size:14px;font-weight:700;color:var(--text);}
+    .card-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+    .card-footer{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+
+    /* ── Badges ── */
+    .tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+    .tag-pass{background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .tag-fail{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .tag-partial{background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .tag-defer{background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.25);}
+    .tag-neutral{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+    .tag-count{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+
+    /* ── Divider ── */
+    .divider{border:none;border-top:1px solid var(--border);margin:40px 0 0;}
+
+    /* ── Quick links ── */
+    .quick-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:40px;}
+    .quick-link{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:20px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;transition:all .15s;}
+    .quick-link:hover{color:var(--text);border-color:var(--accent);}
+
+    /* ── Footer ── */
+    footer{text-align:center;padding:24px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);}
+
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:640px){.hero h1{font-size:26px;}.card-grid{grid-template-columns:1fr;}header{padding:0 16px;}.hero{padding:40px 16px 32px;}main{padding:24px 16px 60px;}.hero-stats{gap:20px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">S</div>
+    <span class="logo-text">Seamless Dashboard</span>
+    <span class="logo-sub">/ Docs</span>
+  </div>
+  <div class="header-right">
+    <span class="badge-updated">อัปเดต 2026-06-20</span>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>System Documentation</h1>
+  <p>รวม requirement checklist, architecture guide, data dictionary และ runbook ของระบบ Seamless Finance Dashboard</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="val">95</div><div class="lbl">requirements</div></div>
+    <div class="hero-stat"><div class="val">18</div><div class="lbl">หมวดหมู่</div></div>
+    <div class="hero-stat"><div class="val">2</div><div class="lbl">subsystems</div></div>
+    <div class="hero-stat"><div class="val">27</div><div class="lbl">doc pages</div></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ─── BACKEND ─────────────────────────────── -->
+  <div class="section-header">
+    <div class="section-icon icon-backend">⚙️</div>
+    <div>
+      <h2>Backend <span>— FastAPI · Python · PostgreSQL · Redis</span></h2>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <a class="card" href="../backend/docs/checklist.html">
+      <div class="card-top">
+        <div class="card-title">Requirement Checklist — Index</div>
+        <span class="tag tag-neutral">Index</span>
+      </div>
+      <div class="card-desc">ภาพรวมทุกหมวด · Pass 38 / Partial 10 / Defer 11 / Fail 1 · จุดเสี่ยงก่อน production</div>
+      <div class="card-footer">
+        <span class="tag tag-pass">38 Pass</span>
+        <span class="tag tag-partial">10 Partial</span>
+        <span class="tag tag-defer">11 Defer</span>
+        <span class="tag tag-fail">1 Fail</span>
+        <span class="tag tag-count">60 items</span>
+      </div>
+    </a>
+
+    <a class="card" href="../backend/docs/backend.html">
+      <div class="card-top">
+        <div class="card-title">Backend Guide</div>
+        <span class="tag tag-neutral">Guide</span>
+      </div>
+      <div class="card-desc">Architecture overview, setup, environment variables, และ deployment guide</div>
+      <div class="card-footer"><span class="tag tag-neutral">Developer Guide</span></div>
+    </a>
+
+    <a class="card" href="../backend/docs/data-dictionary.html">
+      <div class="card-top">
+        <div class="card-title">Data Dictionary</div>
+        <span class="tag tag-neutral">Reference</span>
+      </div>
+      <div class="card-desc">Schema ทุกตาราง, column types, constraints, และ relationships ของ PostgreSQL database</div>
+      <div class="card-footer"><span class="tag tag-neutral">Database Schema</span></div>
+    </a>
+
+    <a class="card" href="../backend/docs/runbook.html">
+      <div class="card-top">
+        <div class="card-title">Operations Runbook</div>
+        <span class="tag tag-neutral">Ops</span>
+      </div>
+      <div class="card-desc">วิธีรับมือเหตุการณ์ฉุกเฉิน, restart procedures, และ on-call checklist</div>
+      <div class="card-footer"><span class="tag tag-neutral">On-call Reference</span></div>
+    </a>
+  </div>
+
+  <!-- Backend checklist categories -->
+  <div style="margin-top:16px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Checklist Categories — Backend</div>
+    <div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+
+      <a class="card" href="../backend/docs/checklist-api-design.html">
+        <div class="card-top"><div class="card-title">API Design</div><span class="tag tag-pass">Pass 8/8</span></div>
+        <div class="card-desc">Pagination · Response Envelope · Versioning · Error format</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-data-management.html">
+        <div class="card-top"><div class="card-title">Data Management</div><span class="tag tag-defer">Defer 3</span></div>
+        <div class="card-desc">Migration · Backup · Read Replica · Retention</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-security.html">
+        <div class="card-top"><div class="card-title">Security</div><span class="tag tag-partial">Partial 4</span></div>
+        <div class="card-desc">JWT · HTTPS · Rate Limiting · Audit Log · PDPA</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-architecture.html">
+        <div class="card-top"><div class="card-title">Architecture</div><span class="tag tag-defer">Defer 2</span></div>
+        <div class="card-desc">Health Check · Background Queue · Message Queue</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-logging.html">
+        <div class="card-top"><div class="card-title">Logging &amp; Monitoring</div><span class="tag tag-defer">Defer 3</span></div>
+        <div class="card-desc">Structured Log · /metrics · Tracing · Alerting · SLO</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-concurrency.html">
+        <div class="card-top"><div class="card-title">Concurrency</div><span class="tag tag-pass">Pass 3/3</span></div>
+        <div class="card-desc">SELECT FOR UPDATE · Idempotency-Key · Async</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-testing.html">
+        <div class="card-top"><div class="card-title">Testing</div><span class="tag tag-defer">Defer 1</span></div>
+        <div class="card-desc">Unit · Integration · DB Query Perf · Load Test</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-cicd.html">
+        <div class="card-top"><div class="card-title">Deployment &amp; CI/CD</div><span class="tag tag-partial">Partial 1</span></div>
+        <div class="card-desc">Docker · CI Pipeline · Zero-Downtime · DR</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-data-pipeline.html">
+        <div class="card-top"><div class="card-title">Data Pipeline</div><span class="tag tag-partial">Partial 2</span></div>
+        <div class="card-desc">ETL · Validation · Reconciliation</div>
+      </a>
+
+      <a class="card" href="../backend/docs/checklist-documentation.html">
+        <div class="card-top"><div class="card-title">Documentation</div><span class="tag tag-pass">Pass 4/4</span></div>
+        <div class="card-desc">ADR · Developer Setup · Runbook · Data Dictionary</div>
+      </a>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ─── FRONTEND ─────────────────────────────── -->
+  <div class="section-header">
+    <div class="section-icon icon-frontend">🖥️</div>
+    <div>
+      <h2>Frontend <span>— Vue 3 · TypeScript · Vite · TanStack Query</span></h2>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <a class="card" href="../frontend/docs/checklist-frontend.html">
+      <div class="card-top">
+        <div class="card-title">Requirement Checklist — Index</div>
+        <span class="tag tag-neutral">Index</span>
+      </div>
+      <div class="card-desc">ภาพรวมทุกหมวด · Pass 21 / Partial 1 / Defer 1 / Fail 12 · จุดเสี่ยงก่อน production</div>
+      <div class="card-footer">
+        <span class="tag tag-pass">21 Pass</span>
+        <span class="tag tag-partial">1 Partial</span>
+        <span class="tag tag-defer">1 Defer</span>
+        <span class="tag tag-fail">12 Fail</span>
+        <span class="tag tag-count">35 items</span>
+      </div>
+    </a>
+
+    <a class="card" href="../frontend/docs/frontend.html">
+      <div class="card-top">
+        <div class="card-title">Frontend Guide</div>
+        <span class="tag tag-neutral">Guide</span>
+      </div>
+      <div class="card-desc">Architecture overview, component structure, state management, และ development setup</div>
+      <div class="card-footer"><span class="tag tag-neutral">Developer Guide</span></div>
+    </a>
+  </div>
+
+  <!-- Frontend checklist categories -->
+  <div style="margin-top:16px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Checklist Categories — Frontend</div>
+    <div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+
+      <a class="card" href="../frontend/docs/checklist-fe-ux.html">
+        <div class="card-top"><div class="card-title">UX/UI</div><span class="tag tag-fail">Fail 2</span></div>
+        <div class="card-desc">Intuitive · Responsive · Design System · Dark Mode · Empty State</div>
+      </a>
+
+      <a class="card" href="../frontend/docs/checklist-fe-performance.html">
+        <div class="card-top"><div class="card-title">Performance</div><span class="tag tag-fail">Fail 2</span></div>
+        <div class="card-desc">Code Splitting · CDN · Core Web Vitals · Virtual Scroll · Image Opt</div>
+      </a>
+
+      <a class="card" href="../frontend/docs/checklist-fe-architecture.html">
+        <div class="card-top"><div class="card-title">Architecture</div><span class="tag tag-fail">Fail 2</span></div>
+        <div class="card-desc">Component-Based · Pinia · TypeScript · Route Guard · Env Config</div>
+      </a>
+
+      <a class="card" href="../frontend/docs/checklist-fe-api.html">
+        <div class="card-top"><div class="card-title">API Integration</div><span class="tag tag-fail">Fail 2</span></div>
+        <div class="card-desc">Axios + TanStack · Error UI · Skeleton · Auth Interceptor · Optimistic</div>
+      </a>
+
+      <a class="card" href="../frontend/docs/checklist-fe-security.html">
+        <div class="card-top"><div class="card-title">Security</div><span class="tag tag-partial">Partial 1</span></div>
+        <div class="card-desc">XSS · HTTP-only Cookie · RBAC · Session Timeout · CSRF · CSP</div>
+      </a>
+
+      <a class="card" href="../frontend/docs/checklist-fe-testing.html">
+        <div class="card-top"><div class="card-title">Testing</div><span class="tag tag-defer">Defer 1</span></div>
+        <div class="card-desc">Vitest · Playwright E2E · Component Tests · Visual Regression</div>
+      </a>
+
+      <a class="card" href="../frontend/docs/checklist-fe-cicd.html">
+        <div class="card-top"><div class="card-title">CI/CD</div><span class="tag tag-fail">Fail 2</span></div>
+        <div class="card-desc">Automated Deploy · Bundle Size Budget · Lighthouse CI</div>
+      </a>
+
+      <a class="card" href="../frontend/docs/checklist-fe-accessibility.html">
+        <div class="card-top"><div class="card-title">Accessibility</div><span class="tag tag-pass">Pass 2/2</span></div>
+        <div class="card-desc">WCAG 2.1 AA · Screen Reader (NVDA / VoiceOver)</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ─── Quick links ─────────────────────────── -->
+  <hr class="divider" />
+  <div style="margin-top:24px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">Quick Links</div>
+    <div class="quick-links">
+      <a class="quick-link" href="../backend/docs/checklist-security.html">Backend Security</a>
+      <a class="quick-link" href="../frontend/docs/checklist-fe-security.html">Frontend Security</a>
+      <a class="quick-link" href="../backend/docs/checklist-cicd.html">Backend CI/CD</a>
+      <a class="quick-link" href="../frontend/docs/checklist-fe-cicd.html">Frontend CI/CD</a>
+      <a class="quick-link" href="../backend/docs/data-dictionary.html">Data Dictionary</a>
+      <a class="quick-link" href="../backend/docs/runbook.html">Operations Runbook</a>
+      <a class="quick-link" href="../backend/docs/checklist-architecture.html">Backend Architecture</a>
+      <a class="quick-link" href="../frontend/docs/checklist-fe-architecture.html">Frontend Architecture</a>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Seamless Dashboard &nbsp;·&nbsp; System Documentation &nbsp;·&nbsp; อัปเดต 2026-06-20 &nbsp;·&nbsp; 95 requirements · 18 หมวดหมู่
+</footer>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
+}
+(function(){var t=document.documentElement.getAttribute('data-theme');document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';})();
+</script>
+</body>
+</html>

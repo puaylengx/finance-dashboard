@@ -10,16 +10,16 @@
         <SkeletonCard height="280px" />
       </template>
 
-      <div v-else-if="isError" class="rounded-xl border border-[#f87171]/30 bg-[#f87171]/10 p-5 text-sm text-[#f87171]">
+      <div v-else-if="isError" class="rounded-xl border border-danger/30 bg-danger/10 p-5 text-sm text-danger">
         โหลดข้อมูลไม่สำเร็จ: {{ error?.message }}
       </div>
 
       <template v-else-if="data">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard label="ยอดใช้จ่าย (THB)"  :value="data.kpis.total_amount" color="text-[#6c8efb]" />
-          <KpiCard label="งบประมาณ (THB)"     :value="data.kpis.total_budget" color="text-[#a78bfa]" />
-          <KpiCard label="จำนวนเอกสาร"        :value="data.kpis.doc_count"    color="text-[#34d399]" />
-          <KpiCard label="เฉลี่ย/เอกสาร"      :value="data.kpis.avg_amount_per_doc" color="text-[#fbbf24]" />
+          <KpiCard label="ยอดใช้จ่าย (THB)"  :value="data.kpis.total_amount"       color="text-accent" />
+          <KpiCard label="งบประมาณ (THB)"     :value="data.kpis.total_budget"       color="text-accent2" />
+          <KpiCard label="จำนวนเอกสาร"        :value="data.kpis.doc_count"          color="text-success" />
+          <KpiCard label="เฉลี่ย/เอกสาร"      :value="data.kpis.avg_amount_per_doc" color="text-warning" />
         </div>
 
         <TrendChart :items="data.trend_month" title="แนวโน้มงบประมาณรายเดือน" />
@@ -77,9 +77,9 @@ const { data, isPending, isError, error } = useQuery({
 })
 
 const ccCols = [
-  { key: 'cost_center_eng',         label: 'Code',        class: 'font-mono text-xs text-[#6c8efb]' },
-  { key: 'cost_center_description', label: 'Description'  },
-  { key: 'total', label: 'Amount (THB)', class: 'text-right text-[#34d399]', format: (v: unknown) => fmt(v as number) },
+  { key: 'cost_center_eng',         label: 'Code',          class: 'font-mono text-xs text-accent' },
+  { key: 'cost_center_description', label: 'Description' },
+  { key: 'total', label: 'Amount (THB)', class: 'text-right text-success', format: (v: unknown) => fmt(v as number) },
 ]
 const ccRows = computed(() => (data.value?.table_by_cost_center ?? []) as unknown as Record<string, unknown>[])
 

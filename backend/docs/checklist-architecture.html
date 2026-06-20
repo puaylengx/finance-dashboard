@@ -216,7 +216,7 @@ print('CoordinatorListResult fields:', list(get_type_hints(CoordinatorListResult
     <div class="block"><h4>คืออะไร</h4><p><strong>/health (liveness)</strong>: ตรวจว่า process ยังทำงานอยู่ไหม ถ้าไม่ตอบ orchestrator จะ restart container <strong>/ready (readiness)</strong>: ตรวจว่า app พร้อมรับ traffic ไหม (DB + Redis connect ได้) ถ้าไม่พร้อม orchestrator จะไม่ส่ง traffic มา</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Kubernetes และ Docker Swarm ใช้ health check ตัดสินใจว่าจะ restart container ไหม และจะ route traffic ไปไหม ถ้าไม่มี /ready อาจส่ง traffic ไปยัง container ที่ DB ยังไม่ connect ทำให้ request พัง</p></div>
     <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
-      <p><code>GET /health</code> — ตอบ <code>{"status":"ok","version":"..."}` ไม่ว่า DB/Redis จะพังหรือไม่ (liveness เท่านั้น) · <code>main.py:107</code></p>
+      <p><code>GET /health</code> — ตอบ <code>{"status":"ok","version":"..."}</code> ไม่ว่า DB/Redis จะพังหรือไม่ (liveness เท่านั้น) · <code>main.py:107</code></p>
       <p><code>GET /ready</code> — รัน <code>SELECT 1</code> กับ DB และ <code>redis.ping()</code> จริง ถ้า service ใด fail ตอบ <code>503</code> พร้อม <code>{"status":"unavailable","failing":["db"]}</code> · <code>main.py:112</code></p>
       <pre>livenessProbe:
   httpGet: { path: /health, port: 8000 }
@@ -368,6 +368,7 @@ function toggleTheme(){
   localStorage.setItem('theme',t);
   document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
 }
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
 </script>
 </body>
 </html>

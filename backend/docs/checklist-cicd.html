@@ -331,6 +331,7 @@ function toggleTheme(){
   localStorage.setItem('theme',t);
   document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
 }
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
 </script>
 </body>
 </html>

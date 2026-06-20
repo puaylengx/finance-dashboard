@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frontend Requirement Checklist — Index</title>
+  <style>
+    :root {
+      --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;
+      --accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;
+      --red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892b0;
+      --sidebar-w:220px;--radius:8px;--code-bg:#141824;--purple:#c084fc;
+    }
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:1000px;padding:40px 36px 80px;}
+    section{margin-bottom:48px;scroll-margin-top:20px;}
+    h2{font-size:19px;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:18px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{background:var(--surface2);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.5px;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);}
+    td{padding:9px 12px;border-bottom:1px solid rgba(46,50,80,.5);vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:rgba(108,142,251,.03);}
+    .pass{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .partial{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .fail{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .defer{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.25);}
+    .p1{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    .p4{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,146,176,.18);color:var(--muted);}
+    .summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:32px;}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;}
+    .stat .val{font-size:28px;font-weight:800;}
+    .stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
+    .legend{display:flex;gap:16px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:24px;font-size:12px;}
+    .legend-item{display:flex;align-items:center;gap:6px;}
+    a.cat-link{color:var(--accent);text-decoration:none;font-weight:600;}
+    a.cat-link:hover{text-decoration:underline;}
+    code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}.summary-grid{grid-template-columns:repeat(3,1fr);}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo">
+    <h1>Seamless Dashboard</h1>
+    <p>Frontend Docs &amp; Checklists</p>
+  </div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+
+  <div class="group">Overview</div>
+  <a href="checklist-frontend.html" class="active">Checklist Index &amp; Summary</a>
+  <a href="frontend.html">Frontend Guide</a>
+
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html">Accessibility <span class="cnt">2</span></a>
+</nav>
+<main>
+  <div style="margin-bottom:32px">
+    <h1 style="font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">Frontend Requirement Checklist</h1>
+    <p style="color:var(--muted)">ตรวจสอบเมื่อ 2026-06-20 &nbsp;·&nbsp; 35 requirements &nbsp;·&nbsp; 8 หมวดหมู่</p>
+  </div>
+
+  <section>
+    <div class="summary-grid">
+      <div class="stat"><div class="val" style="color:var(--green)">21</div><div class="lbl">Pass ✓</div></div>
+      <div class="stat"><div class="val" style="color:var(--yellow)">1</div><div class="lbl">Partial ◑</div></div>
+      <div class="stat"><div class="val" style="color:var(--blue)">1</div><div class="lbl">Defer ⟳</div></div>
+      <div class="stat"><div class="val" style="color:var(--red)">12</div><div class="lbl">Fail ✗</div></div>
+      <div class="stat"><div class="val" style="color:#fca5a5">5</div><div class="lbl">P1 Critical</div></div>
+      <div class="stat"><div class="val" style="color:var(--yellow)">19</div><div class="lbl">P2 High</div></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="pass">Pass</span> มีครบถ้วน</div>
+      <div class="legend-item"><span class="partial">Partial</span> มีบางส่วน</div>
+      <div class="legend-item"><span class="defer">Defer</span> เลื่อนรอ external service</div>
+      <div class="legend-item"><span class="fail">Fail</span> ยังไม่มี</div>
+      <div class="legend-item"><span class="p1">P1</span> Critical — ต้องมีก่อน production</div>
+      <div class="legend-item"><span class="p2">P2</span> High — ควรทำเร็วๆ นี้</div>
+      <div class="legend-item"><span class="p3">P3</span> Medium — สำหรับ scale</div>
+      <div class="legend-item"><span class="p4">P4</span> Low — อนาคต</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>ภาพรวมทุกหมวดหมู่</h2>
+    <table>
+      <tr><th>หมวดหมู่</th><th>รายการ</th><th style="color:var(--green)">Pass</th><th style="color:var(--yellow)">Partial</th><th style="color:var(--blue)">Defer</th><th style="color:var(--red)">Fail</th><th>รายละเอียด</th></tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-ux.html">UX/UI</a></td><td>5</td>
+        <td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">2</td>
+        <td style="color:var(--muted);font-size:12px">Intuitive ✓ · Responsive ✓ · Design System ✓ · Dark Mode ✗ · Empty State ✗</td>
+      </tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-performance.html">Performance</a></td><td>5</td>
+        <td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">2</td>
+        <td style="color:var(--muted);font-size:12px">Code Splitting ✓ · CDN ✓ · Core Web Vitals ✓ · Virtual Scrolling ✗ · Image Opt ✗</td>
+      </tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-architecture.html">Architecture</a></td><td>5</td>
+        <td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">2</td>
+        <td style="color:var(--muted);font-size:12px">Component-Based ✓ · Pinia ✓ · TypeScript Strict ✓ · Route Guard ✗ · Env Config ✗</td>
+      </tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-api.html">API Integration</a></td><td>5</td>
+        <td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">2</td>
+        <td style="color:var(--muted);font-size:12px">Axios+TanStack ✓ · Error UI ✓ · Skeleton ✓ · Axios Auth Interceptor ✗ · Optimistic ✗</td>
+      </tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-security.html">Security</a></td><td>6</td>
+        <td style="color:var(--green)">4</td><td style="color:var(--yellow)">1</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">1</td>
+        <td style="color:var(--muted);font-size:12px">XSS ✓ · HTTP-only ✓ · RBAC ✓ · Session Timeout ✓ · CSRF: Partial · CSP ✗</td>
+      </tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-testing.html">Testing</a></td><td>4</td>
+        <td style="color:var(--green)">2</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">1</td><td style="color:var(--red)">1</td>
+        <td style="color:var(--muted);font-size:12px">Unit Tests ✓ · E2E Tests ✓ · Component Tests ✗ · Visual Regression: Defer (Percy/Chromatic)</td>
+      </tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-cicd.html">CI/CD</a></td><td>3</td>
+        <td style="color:var(--green)">1</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">2</td>
+        <td style="color:var(--muted);font-size:12px">Automated Build ✓ · Bundle Size Budget ✗ · Lighthouse CI ✗</td>
+      </tr>
+      <tr>
+        <td><a class="cat-link" href="checklist-fe-accessibility.html">Accessibility</a></td><td>2</td>
+        <td style="color:var(--green)">2</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">0</td>
+        <td style="color:var(--muted);font-size:12px">ครบทุกข้อ — WCAG 2.1 AA ✓ · Screen Reader ✓</td>
+      </tr>
+      <tr style="font-weight:700;background:var(--surface2)">
+        <td>รวม</td><td>35</td>
+        <td style="color:var(--green)">21</td><td style="color:var(--yellow)">1</td><td style="color:var(--blue)">1</td><td style="color:var(--red)">12</td>
+        <td></td>
+      </tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>จุดเสี่ยงที่ต้องแก้ก่อน (P1 + Fail/Partial)</h2>
+    <table>
+      <tr><th>#</th><th>รายการ</th><th>หมวดหมู่</th><th>สถานะ</th><th>ความเสี่ยง</th></tr>
+      <tr>
+        <td>1</td>
+        <td><a class="cat-link" href="checklist-fe-architecture.html#route-guard">Route Guard</a></td>
+        <td>Architecture</td>
+        <td><span class="fail">Fail</span> <span class="p1">P1</span></td>
+        <td style="color:var(--red);font-size:12px">ไม่มี navigation guard → user ที่ไม่มีสิทธิ์เข้า route ได้ตรงๆ</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><a class="cat-link" href="checklist-fe-api.html#axios-auth">Axios Interceptor (Auth)</a></td>
+        <td>API Integration</td>
+        <td><span class="fail">Fail</span> <span class="p1">P1</span></td>
+        <td style="color:var(--red);font-size:12px">ไม่มี auth interceptor → 401 ไม่ถูกจัดการ, session หมดไม่ redirect</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><a class="cat-link" href="checklist-fe-security.html#csrf">CSRF Protection</a></td>
+        <td>Security</td>
+        <td><span class="partial">Partial</span> <span class="p2">P2</span></td>
+        <td style="color:var(--yellow);font-size:12px">HTTP-only SameSite=Strict ช่วยได้ส่วนหนึ่ง ยังไม่มี CSRF token header</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><a class="cat-link" href="checklist-fe-security.html#csp">Content Security Policy</a></td>
+        <td>Security</td>
+        <td><span class="fail">Fail</span> <span class="p2">P2</span></td>
+        <td style="color:var(--yellow);font-size:12px">ไม่มี CSP header → browser ไม่มีการ restrict แหล่ง script/style</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><a class="cat-link" href="checklist-fe-architecture.html#env-config">Environment Configuration</a></td>
+        <td>Architecture</td>
+        <td><span class="fail">Fail</span> <span class="p2">P2</span></td>
+        <td style="color:var(--yellow);font-size:12px">API URL อาจถูก hardcode → deploy ต่าง environment ยาก และ dev URL หลุด production</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><a class="cat-link" href="checklist-fe-performance.html#virtual-scroll">Virtual Scrolling</a></td>
+        <td>Performance</td>
+        <td><span class="fail">Fail</span> <span class="p2">P2</span></td>
+        <td style="color:var(--yellow);font-size:12px">ตาราง 10,000+ แถว render ทั้งหมด → browser hang, memory leak</td>
+      </tr>
+    </table>
+  </section>
+
+  <div style="padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted)">
+    <strong style="color:var(--text)">Seamless Dashboard — Frontend Requirement Checklist</strong> &nbsp;·&nbsp;
+    อัปเดต 2026-06-20 &nbsp;·&nbsp; 35 items &nbsp;·&nbsp;
+    คลิกชื่อหมวดหมู่เพื่อดูรายละเอียดและคำอธิบายทุกข้อ
+  </div>
+</main>
+<script>
+function toggleTheme(){
+  var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
+}
+(function(){var t=document.documentElement.getAttribute('data-theme');document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';})();
+</script>
+</body>
+</html>

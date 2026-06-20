@@ -9,8 +9,11 @@
     html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
     html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}
     html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}
+    html[data-theme="light"] .block-defer{background:rgba(96,165,250,.1);}
     html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
     html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
     .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
     .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -28,12 +31,12 @@
     h2 small{font-size:13px;font-weight:400;color:var(--muted);}
     .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
     .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
-    .item-title{font-size:15px;font-weight:700;}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
     .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
     .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
     .item-body{padding:18px 20px;display:grid;gap:14px;}
     .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
-    .block p,.block li{font-size:13.5px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
     .block ul{padding-left:18px;}
     .block li{margin-bottom:5px;}
     .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}
@@ -42,17 +45,25 @@
     .block-partial h4{color:var(--yellow);}
     .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
     .block-todo h4{color:var(--yellow);}
+    .block-defer{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:6px;padding:14px 16px;}
+    .block-defer h4{color:var(--blue);}
     .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
     .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
     .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .defer{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.25);}
     .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
     .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
     .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
     code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
     .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
     .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
     .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
   
     /* Table of Contents Styles */
@@ -94,7 +105,7 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-architecture.html">← Architecture</a><a href="checklist-concurrency.html">Concurrency →</a></div>
-  <h2>Logging &amp; Monitoring <small>— 5 requirements &nbsp; Pass 0 / Partial 5 / Fail 0</small></h2>
+  <h2>Logging &amp; Monitoring <small>— 5 requirements &nbsp; Pass 0 / Partial 2 / Defer 3 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การ observe ระบบในเวลาจริง — หมวดนี้ยังต้องปรับปรุงมากที่สุด</p>
 
   <div class="item" id="centralized-logging"><div class="item-head"><div><div class="item-title">1. Centralized Logging</div><div class="item-sub">ส่ง log ไปยัง Sentry / ELK Stack พร้อม structured JSON format</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div></div>
@@ -105,7 +116,7 @@
       <p>มีแล้ว: Rotating file log <code>logs/app.log</code> ✓ · Colored console output ✓ · Sentry integration (optional, เมื่อตั้ง <code>SENTRY_DSN</code>) ✓ · <strong>JSON file format ✓</strong> — <code>logging.py</code> ใช้ <code>_JsonFormatter</code> เขียน <code>{"ts","level","logger","msg"}</code> ลง <code>app.log</code></p>
       <p>ยังไม่มี: Centralized platform (ELK / Datadog) — log ยังอยู่ใน local file เท่านั้น</p>
     </div>
-    <div class="block block-todo"><h4>สถานะ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ELK Stack / Datadog ต้องการ infrastructure แยก ยังไม่มี production deployment จริง · ทบทวนเมื่อ deploy multi-server หรือมี requirement ต้องค้นหา log ข้าม container</p></div>
+    <div class="block block-defer"><h4>สถานะ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ELK Stack / Datadog ต้องการ infrastructure แยก ยังไม่มี production deployment จริง · ทบทวนเมื่อ deploy multi-server หรือมี requirement ต้องค้นหา log ข้าม container</p></div>
     <div class="block"><h4>วิธีทดสอบ</h4>
       <pre># ตรวจ JSON format ใน log file
 uvicorn app.main:app --reload &amp;
@@ -131,7 +142,7 @@ SENTRY_DSN=https://... uvicorn app.main:app
       <p>มีแล้ว: <code>GET /metrics</code> ✓ — <code>prometheus-fastapi-instrumentator</code> expose request count, latency histogram (p50/p95/p99), in-progress requests โดยอัตโนมัติ · <code>main.py</code></p>
       <p>ยังไม่มี: Prometheus server scraping · Grafana dashboard — ต้องการ infrastructure แยก</p>
     </div>
-    <div class="block block-todo"><h4>สถานะ — เลื่อนไปก่อน (Intentional Defer)</h4><p>Prometheus server + Grafana ต้องการ infrastructure deployment ยังไม่มี production server · ทบทวนเมื่อ deploy จริงหรือมี requirement ต้องดู latency / error rate แบบ real-time</p></div>
+    <div class="block block-defer"><h4>สถานะ — เลื่อนไปก่อน (Intentional Defer)</h4><p>Prometheus server + Grafana ต้องการ infrastructure deployment ยังไม่มี production server · ทบทวนเมื่อ deploy จริงหรือมี requirement ต้องดู latency / error rate แบบ real-time</p></div>
     <div class="block"><h4>วิธีทดสอบ</h4>
       <pre># ตรวจ /metrics endpoint
 uvicorn app.main:app --reload &amp;
@@ -155,11 +166,11 @@ curl -s http://localhost:8000/metrics | grep http_requests_total
     </div>
   </div></div>
 
-  <div class="item" id="tracing"><div class="item-head"><div><div class="item-title">3. Distributed Tracing</div><div class="item-sub">ใช้ OpenTelemetry + Jaeger trace request ข้าม service</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="tracing"><div class="item-head"><div><div class="item-title">3. Distributed Tracing</div><div class="item-sub">ใช้ OpenTelemetry + Jaeger trace request ข้าม service</div></div><div class="item-badges"><span class="p3">P3</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Distributed tracing ติดตาม request ตลอด lifecycle: HTTP request → auth check → cache lookup → DB query → response แต่ละ step (span) มี duration ทำให้รู้ว่าขั้นตอนไหนเป็น bottleneck Jaeger/Zipkin เป็น UI แสดง trace</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>เมื่อ request ช้าแบบไม่รู้ว่าเพราะอะไร tracing บอกได้ทันทีว่า 80% ของเวลาหายไปที่ DB query ไหน ทำให้ debug performance issue ได้เร็วกว่า log มาก</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังเป็น single service ดังนั้นยังไม่จำเป็นเร่งด่วน · Jaeger instance ต้องการ infrastructure แยก · ทบทวนเมื่อแยก service หรือพบ performance issue ที่ log ไม่เพียงพอ debug</p></div>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังเป็น single service ดังนั้นยังไม่จำเป็นเร่งด่วน · Jaeger instance ต้องการ infrastructure แยก · ทบทวนเมื่อแยก service หรือพบ performance issue ที่ log ไม่เพียงพอ debug</p></div>
     <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
       <li>เพิ่ม <code>opentelemetry-instrumentation-fastapi</code> + <code>opentelemetry-instrumentation-psycopg</code> + <code>opentelemetry-exporter-jaeger</code></li>
       <li>ตั้ง Jaeger exporter ใน <code>main.py</code>: ส่ง trace ไปยัง Jaeger instance ทุก request</li>
@@ -186,11 +197,11 @@ open http://localhost:16686
     </div>
   </div></div>
 
-  <div class="item" id="alerting"><div class="item-head"><div><div class="item-title">4. Alerting Rules</div><div class="item-sub">กำหนด alert เมื่อ error rate &gt; 1%, latency p99 &gt; 2s, disk &gt; 80%</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="alerting"><div class="item-head"><div><div class="item-title">4. Alerting Rules</div><div class="item-sub">กำหนด alert เมื่อ error rate &gt; 1%, latency p99 &gt; 2s, disk &gt; 80%</div></div><div class="item-badges"><span class="p3">P3</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Alerting rules คือ condition ที่เมื่อ metric เกิน threshold จะส่ง notification ไปยัง on-call engineer เช่น Slack, PagerDuty, email เช่น ถ้า error rate &gt; 1% ใน 5 นาทีที่ผ่านมา → alert ทันที</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี alert engineer จะไม่รู้ว่าระบบมีปัญหาจนกว่า user จะโทรมาแจ้ง alert ทำให้ Mean Time to Detect (MTTD) ลดจากชั่วโมงเหลือนาที ส่งผลโดยตรงต่อ uptime SLO</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ต้องการ Prometheus AlertManager ซึ่งเป็น infrastructure แยก · <code>/metrics</code> endpoint พร้อมแล้ว แต่ยังไม่มี Prometheus server ที่จะ scrape · ทบทวนเมื่อ deploy Prometheus + Grafana จริง</p></div>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ต้องการ Prometheus AlertManager ซึ่งเป็น infrastructure แยก · <code>/metrics</code> endpoint พร้อมแล้ว แต่ยังไม่มี Prometheus server ที่จะ scrape · ทบทวนเมื่อ deploy Prometheus + Grafana จริง</p></div>
     <div class="block"><h4>แผนการ implement เมื่อพร้อม</h4><ul>
       <li>ตั้ง Prometheus AlertManager rules: <code>error_rate &gt; 1%</code>, <code>p99_latency &gt; 2s</code>, <code>disk_usage &gt; 80%</code></li>
       <li>Integrate กับ Slack webhook หรือ Line Notify สำหรับ alert notification</li>
@@ -220,11 +231,11 @@ curl -X POST $SLACK_WEBHOOK_URL \
     </div>
   </div></div>
 
-  <div class="item" id="slo"><div class="item-head"><div><div class="item-title">5. SLI / SLO Definition</div><div class="item-sub">กำหนด uptime target 99.9%, p95 latency &lt; 500ms สำหรับ API หลัก</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="slo"><div class="item-head"><div><div class="item-title">5. SLI / SLO Definition</div><div class="item-sub">กำหนด uptime target 99.9%, p95 latency &lt; 500ms สำหรับ API หลัก</div></div><div class="item-badges"><span class="p3">P3</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><strong>SLI (Service Level Indicator)</strong>: metric ที่วัดได้จริง เช่น % request ที่ตอบภายใน 500ms <strong>SLO (Service Level Objective)</strong>: target ที่ต้องการ เช่น 99.9% uptime <strong>SLA</strong>: commitment ต่อ customer (มี penalty ถ้าไม่ได้) SLI+SLO เป็น internal target</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี SLO ทีมไม่รู้ว่า "ดีพอ" คืออะไร SLO ทำให้ตัดสินใจได้ว่าเมื่อไรต้องหยุด feature และไป fix reliability และเป็น baseline ที่วัดผลได้ว่า system ดีขึ้นหรือแย่ลงหลัง change</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4>
       <p>SLI/SLO ถูก define แล้ว (ดูด้านล่าง) แต่ยังวัดไม่ได้จริงเพราะยังไม่มี Prometheus server · ทบทวนเมื่อ Metrics Collection พร้อม</p>
       <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">
         <tr style="background:var(--surface2)"><th style="padding:6px 10px;text-align:left;border:1px solid var(--border)">SLI</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border)">วิธีวัด</th><th style="padding:6px 10px;text-align:left;border:1px solid var(--border)">SLO Target</th></tr>
@@ -257,7 +268,7 @@ sum(rate(http_request_duration_seconds_count[30d]))
   </div></div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    ตรวจสอบ 2026-06-15 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-concurrency.html" style="color:var(--accent)">Concurrency →</a>
+    อัปเดต 2026-06-19 &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-concurrency.html" style="color:var(--accent)">Concurrency →</a>
   </div>
 </main>
 <script>

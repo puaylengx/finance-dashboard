@@ -9,8 +9,11 @@
     html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
     html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}
     html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}
+    html[data-theme="light"] .block-defer{background:rgba(96,165,250,.1);}
     html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
     html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
     .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
     .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -42,6 +45,8 @@
     .block-partial h4{color:var(--yellow);}
     .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
     .block-todo h4{color:var(--yellow);}
+    .block-defer{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:6px;padding:14px 16px;}
+    .block-defer h4{color:var(--blue);}
     .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
     .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
@@ -55,6 +60,9 @@
     .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
     .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
     .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
   
     /* Table of Contents Styles */
@@ -99,7 +107,7 @@
     <a href="checklist.html">← Summary</a>
     <a href="checklist-data-management.html">Data Management →</a>
   </div>
-  <h2>API Design <small>— 8 requirements &nbsp; Pass 8 / Partial 0 / Fail 0</small></h2>
+  <h2>API Design <small>— 8 requirements &nbsp; Pass 8 / Partial 0 / Defer 0 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ออกแบบ API ให้ถูกต้อง สม่ำเสมอ และปลอดภัย ตามมาตรฐาน REST</p>
 
   <!-- 1. API Versioning -->

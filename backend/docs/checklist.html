@@ -13,6 +13,8 @@
     }
     html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
     html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
     .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
     .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -36,11 +38,12 @@
     .pass{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
     .partial{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
     .fail{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .defer{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.25);}
     .p1{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
     .p2{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
     .p3{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
     .p4{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,146,176,.18);color:var(--muted);}
-    .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:32px;}
+    .summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:32px;}
     .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;}
     .stat .val{font-size:28px;font-weight:800;}
     .stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
@@ -49,6 +52,9 @@
     a.cat-link{color:var(--accent);text-decoration:none;font-weight:600;}
     a.cat-link:hover{text-decoration:underline;}
     code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}.summary-grid{grid-template-columns:repeat(3,1fr);}}
   
     /* Table of Contents Styles */
@@ -97,7 +103,8 @@
   <section>
     <div class="summary-grid">
       <div class="stat"><div class="val" style="color:var(--green)">36</div><div class="lbl">Pass ✓</div></div>
-      <div class="stat"><div class="val" style="color:var(--yellow)">18</div><div class="lbl">Partial ◑</div></div>
+      <div class="stat"><div class="val" style="color:var(--yellow)">7</div><div class="lbl">Partial ◑</div></div>
+      <div class="stat"><div class="val" style="color:var(--blue)">11</div><div class="lbl">Defer ⟳</div></div>
       <div class="stat"><div class="val" style="color:var(--red)">6</div><div class="lbl">Fail ✗</div></div>
       <div class="stat"><div class="val" style="color:#fca5a5">18</div><div class="lbl">P1 Critical</div></div>
       <div class="stat"><div class="val" style="color:var(--yellow)">21</div><div class="lbl">P2 High</div></div>
@@ -105,6 +112,7 @@
     <div class="legend">
       <div class="legend-item"><span class="pass">Pass</span> มีครบถ้วน</div>
       <div class="legend-item"><span class="partial">Partial</span> มีบางส่วน</div>
+      <div class="legend-item"><span class="defer">Defer</span> เลื่อนรอ infra</div>
       <div class="legend-item"><span class="fail">Fail</span> ยังไม่มี</div>
       <div class="legend-item"><span class="p1">P1</span> Critical — ต้องมีก่อน production</div>
       <div class="legend-item"><span class="p2">P2</span> High — ควรทำเร็วๆ นี้</div>
@@ -116,18 +124,18 @@
   <section>
     <h2>ภาพรวมทุกหมวดหมู่</h2>
     <table>
-      <tr><th>หมวดหมู่</th><th>รายการ</th><th style="color:var(--green)">Pass</th><th style="color:var(--yellow)">Partial</th><th style="color:var(--red)">Fail</th><th>รายละเอียด</th></tr>
-      <tr><td><a class="cat-link" href="checklist-api-design.html">API Design</a></td><td>8</td><td style="color:var(--green)">8</td><td style="color:var(--yellow)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">ครบทุกข้อ — Pagination ✓ · Response Envelope ✓ ({"success","data"} ทุก endpoint)</td></tr>
-      <tr><td><a class="cat-link" href="checklist-data-management.html">Data Management</a></td><td>10</td><td style="color:var(--green)">7</td><td style="color:var(--yellow)">3</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Read Replica · Backup · Retention: Defer ทั้งหมด (ERP คือ source of truth)</td></tr>
-      <tr><td><a class="cat-link" href="checklist-security.html">Security</a></td><td>11</td><td style="color:var(--green)">6</td><td style="color:var(--yellow)">4</td><td style="color:var(--red)">1</td><td style="color:var(--muted);font-size:12px">PDPA ยังขาด · Audit Log (REVOKE + retention ยังไม่ครบ) · Token Refresh</td></tr>
-      <tr><td><a class="cat-link" href="checklist-architecture.html">Architecture</a></td><td>6</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">3</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Health Check ✓ · Background Queue: Defer · Message Queue: Defer (monolith เดียว ยังไม่จำเป็น)</td></tr>
-      <tr><td><a class="cat-link" href="checklist-logging.html">Logging &amp; Monitoring</a></td><td>5</td><td style="color:var(--green)">0</td><td style="color:var(--yellow)">5</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">JSON log ✓ · /metrics ✓ · Tracing / Alerting / SLO: Defer (ต้องการ infra)</td></tr>
-      <tr><td><a class="cat-link" href="checklist-concurrency.html">Concurrency</a></td><td>3</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">ครบทุกข้อ — SELECT FOR UPDATE ✓ · Idempotency-Key ✓</td></tr>
-      <tr><td><a class="cat-link" href="checklist-testing.html">Testing</a></td><td>4</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">1</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">DB Query Perf ✓ · Load Test Defer (staging)</td></tr>
-      <tr><td><a class="cat-link" href="checklist-cicd.html">Deployment &amp; CI/CD</a></td><td>6</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">3</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Docker ✓ · Env Separation ✓ · Rollback ✓ · CI ✓ · Zero-Downtime: Defer · DR: Defer</td></tr>
-      <tr><td><a class="cat-link" href="checklist-data-pipeline.html">Data Pipeline</a></td><td>3</td><td style="color:var(--green)">1</td><td style="color:var(--yellow)">2</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Validation ✓ · ETL script Partial · Reconciliation Partial</td></tr>
-      <tr><td><a class="cat-link" href="checklist-documentation.html">Documentation</a></td><td>4</td><td style="color:var(--green)">4</td><td style="color:var(--yellow)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">ADR ✓ · Developer Setup ✓ · Runbook ✓ · Data Dictionary ✓</td></tr>
-      <tr style="font-weight:700;background:var(--surface2)"><td>รวม</td><td>60</td><td style="color:var(--green)">36</td><td style="color:var(--yellow)">18</td><td style="color:var(--red)">6</td><td></td></tr>
+      <tr><th>หมวดหมู่</th><th>รายการ</th><th style="color:var(--green)">Pass</th><th style="color:var(--yellow)">Partial</th><th style="color:var(--blue)">Defer</th><th style="color:var(--red)">Fail</th><th>รายละเอียด</th></tr>
+      <tr><td><a class="cat-link" href="checklist-api-design.html">API Design</a></td><td>8</td><td style="color:var(--green)">8</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">ครบทุกข้อ — Pagination ✓ · Response Envelope ✓ ({"success","data"} ทุก endpoint)</td></tr>
+      <tr><td><a class="cat-link" href="checklist-data-management.html">Data Management</a></td><td>10</td><td style="color:var(--green)">7</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">3</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Read Replica · Backup · Retention: Defer ทั้งหมด (ERP คือ source of truth)</td></tr>
+      <tr><td><a class="cat-link" href="checklist-security.html">Security</a></td><td>11</td><td style="color:var(--green)">6</td><td style="color:var(--yellow)">4</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">1</td><td style="color:var(--muted);font-size:12px">PDPA ยังขาด · Audit Log (REVOKE + retention ยังไม่ครบ) · Token Refresh</td></tr>
+      <tr><td><a class="cat-link" href="checklist-architecture.html">Architecture</a></td><td>6</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">1</td><td style="color:var(--blue)">2</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Health Check ✓ · Microservices: Partial · Background Queue + Message Queue: Defer</td></tr>
+      <tr><td><a class="cat-link" href="checklist-logging.html">Logging &amp; Monitoring</a></td><td>5</td><td style="color:var(--green)">0</td><td style="color:var(--yellow)">2</td><td style="color:var(--blue)">3</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">JSON log ✓ · /metrics ✓ · Tracing / Alerting / SLO: Defer (ต้องการ infra)</td></tr>
+      <tr><td><a class="cat-link" href="checklist-concurrency.html">Concurrency</a></td><td>3</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">ครบทุกข้อ — SELECT FOR UPDATE ✓ · Idempotency-Key ✓</td></tr>
+      <tr><td><a class="cat-link" href="checklist-testing.html">Testing</a></td><td>4</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">1</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">DB Query Perf ✓ · Load Test: Defer (staging)</td></tr>
+      <tr><td><a class="cat-link" href="checklist-cicd.html">Deployment &amp; CI/CD</a></td><td>6</td><td style="color:var(--green)">3</td><td style="color:var(--yellow)">1</td><td style="color:var(--blue)">2</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Docker ✓ · CI Pipeline: Partial · Zero-Downtime + DR: Defer</td></tr>
+      <tr><td><a class="cat-link" href="checklist-data-pipeline.html">Data Pipeline</a></td><td>3</td><td style="color:var(--green)">1</td><td style="color:var(--yellow)">2</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">Validation ✓ · ETL script Partial · Reconciliation Partial</td></tr>
+      <tr><td><a class="cat-link" href="checklist-documentation.html">Documentation</a></td><td>4</td><td style="color:var(--green)">4</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">0</td><td style="color:var(--muted);font-size:12px">ADR ✓ · Developer Setup ✓ · Runbook ✓ · Data Dictionary ✓</td></tr>
+      <tr style="font-weight:700;background:var(--surface2)"><td>รวม</td><td>60</td><td style="color:var(--green)">36</td><td style="color:var(--yellow)">7</td><td style="color:var(--blue)">11</td><td style="color:var(--red)">6</td><td></td></tr>
     </table>
   </section>
 

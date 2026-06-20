@@ -9,8 +9,11 @@
     html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
     html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}
     html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}
+    html[data-theme="light"] .block-defer{background:rgba(96,165,250,.1);}
     html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
     html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
     .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
     .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -42,10 +45,13 @@
     .block-partial h4{color:var(--yellow);}
     .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}
     .block-todo h4{color:var(--yellow);}
+    .block-defer{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:6px;padding:14px 16px;}
+    .block-defer h4{color:var(--blue);}
     .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}
     .block-warn h4{color:var(--red);}
     .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
     .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .defer{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.25);}
     .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
     .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
     .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
@@ -55,6 +61,9 @@
     .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
     .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
     .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
   
     /* Table of Contents Styles */
@@ -99,7 +108,7 @@
     <a href="checklist-api-design.html">← API Design</a>
     <a href="checklist-security.html">Security →</a>
   </div>
-  <h2>Data Management <small>— 10 requirements &nbsp; Pass 7 / Partial 3 / Fail 0</small></h2>
+  <h2>Data Management <small>— 10 requirements &nbsp; Pass 7 / Partial 0 / Defer 3 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การจัดการ database, caching, migration, และความสมบูรณ์ของข้อมูล</p>
 
   <div class="item" id="postgresql"><div class="item-head"><div><div class="item-title">1. PostgreSQL (SSH/Direct)</div><div class="item-sub">รองรับการเชื่อมต่อทั้งแบบ SSH tunnel และ direct connection</div></div><div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div></div>
@@ -218,12 +227,12 @@ tail -20 logs/app.log | grep -i "pool\|connection"</pre>
     </div>
   </div></div>
 
-  <div class="item" id="read-replica"><div class="item-head"><div><div class="item-title">6. Read Replica</div><div class="item-sub">แยก read traffic ไปยัง PostgreSQL read replica เพื่อลดภาระ primary DB</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="read-replica"><div class="item-head"><div><div class="item-title">6. Read Replica</div><div class="item-sub">แยก read traffic ไปยัง PostgreSQL read replica เพื่อลดภาระ primary DB</div></div><div class="item-badges"><span class="p3">P3</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Read replica คือ PostgreSQL instance ที่ sync ข้อมูลจาก primary แบบ real-time (streaming replication) สำหรับ read-only query เท่านั้น ทำให้ primary DB รับเฉพาะ write operation ลด load ได้มาก</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard มีเฉพาะ read query (SELECT) เกือบทั้งหมด ถ้า concurrent users มากขึ้นจน primary DB เริ่ม overload read replica จะช่วยกระจาย load ได้โดยไม่ต้องเปลี่ยน code มาก</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังไม่ได้ deploy · ผู้ใช้งานไม่มาก · Redis cache (TTL 300s) ช่วยลด read load ได้เพียงพอสำหรับ load ปัจจุบัน — ทบทวนเมื่อ concurrent users สูงขึ้นจริงหรือมี cache miss บ่อย</p></div>
-    <div class="block block-todo"><h4>เมื่อถึงเวลา (trigger: DB load สูง / cache miss บ่อย)</h4><ul>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ยังไม่ได้ deploy · ผู้ใช้งานไม่มาก · Redis cache (TTL 300s) ช่วยลด read load ได้เพียงพอสำหรับ load ปัจจุบัน — ทบทวนเมื่อ concurrent users สูงขึ้นจริงหรือมี cache miss บ่อย</p></div>
+    <div class="block block-defer"><h4>เมื่อถึงเวลา (trigger: DB load สูง / cache miss บ่อย)</h4><ul>
       <li>ตั้ง PostgreSQL streaming replication: primary → replica</li>
       <li>เพิ่ม <code>READ_REPLICA_HOST</code> ใน config (ค่า default = primary host ถ้ายังไม่มี replica)</li>
       <li>เพิ่ม <code>get_read_db()</code> ใน <code>database.py</code> ที่ fallback ไป primary pool อัตโนมัติ</li>
@@ -291,12 +300,12 @@ curl -s -X PATCH "http://localhost:8000/api/v1/admin/coordinators/$COORD_ID" \
     </div>
   </div></div>
 
-  <div class="item" id="db-backup"><div class="item-head"><div><div class="item-title">9. Database Backup</div><div class="item-sub">ทำ full backup รายวัน + incremental รายชั่วโมง + PITR รองรับย้อนหลัง 30 วัน</div></div><div class="item-badges"><span class="p2">P2</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="db-backup"><div class="item-head"><div><div class="item-title">9. Database Backup</div><div class="item-sub">ทำ full backup รายวัน + incremental รายชั่วโมง + PITR รองรับย้อนหลัง 30 วัน</div></div><div class="item-badges"><span class="p2">P2</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p><strong>Full backup</strong> คือ snapshot ทั้ง database ณ เวลาหนึ่ง <strong>Incremental backup</strong> คือ backup เฉพาะ changes หลัง backup ครั้งล่าสุด <strong>PITR (Point-in-Time Recovery)</strong> คือความสามารถ restore DB ไปยังช่วงเวลาใดก็ได้ในอดีต</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า DB crash, hardware failure, หรือ ransomware — ถ้าไม่มี backup ข้อมูลการเงินทั้งหมดหาย PITR ช่วยให้ restore ได้ถึง 1 นาทีก่อนเกิดปัญหา แทนที่จะต้องย้อนไปถึง full backup ล่าสุด</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ข้อมูลหลัก (<code>erp_transactions</code>, <code>master_*</code>) มาจาก ERP system ซึ่งเป็น source of truth — หาก local DB หายสามารถ re-import ได้ · <code>finance_coordinator</code> เป็นข้อมูลเล็กน้อย (user-managed) · ความเสี่ยงต่ำกว่า use case ทั่วไปที่ DB คือแหล่งข้อมูลเดียว — ทบทวนเมื่อมีข้อมูลที่ไม่ได้มาจาก ERP เพิ่มขึ้น หรือเมื่อ RTO/RPO requirement ถูกกำหนด</p></div>
-    <div class="block block-todo"><h4>เมื่อถึงเวลา (trigger: มีข้อมูลนอก ERP / กำหนด RTO-RPO)</h4><ul>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4><p>ข้อมูลหลัก (<code>erp_transactions</code>, <code>master_*</code>) มาจาก ERP system ซึ่งเป็น source of truth — หาก local DB หายสามารถ re-import ได้ · <code>finance_coordinator</code> เป็นข้อมูลเล็กน้อย (user-managed) · ความเสี่ยงต่ำกว่า use case ทั่วไปที่ DB คือแหล่งข้อมูลเดียว — ทบทวนเมื่อมีข้อมูลที่ไม่ได้มาจาก ERP เพิ่มขึ้น หรือเมื่อ RTO/RPO requirement ถูกกำหนด</p></div>
+    <div class="block block-defer"><h4>เมื่อถึงเวลา (trigger: มีข้อมูลนอก ERP / กำหนด RTO-RPO)</h4><ul>
       <li>ตั้ง <code>pg_dump</code> cron job: full backup รายวัน (เก็บ 30 วัน), incremental ด้วย WAL archiving รายชั่วโมง</li>
       <li>เก็บ backup ใน object storage แยก server (S3, Azure Blob) ไม่เก็บบน DB server เดียวกัน</li>
       <li>Enable PostgreSQL WAL archiving สำหรับ PITR</li>
@@ -304,17 +313,17 @@ curl -s -X PATCH "http://localhost:8000/api/v1/admin/coordinators/$COORD_ID" \
     </ul></div>
   </div></div>
 
-  <div class="item" id="data-retention"><div class="item-head"><div><div class="item-title">10. Data Retention Policy</div><div class="item-sub">กำหนด policy ว่าข้อมูลแต่ละประเภทเก็บนานเท่าไร ก่อน archive หรือ purge</div></div><div class="item-badges"><span class="p3">P3</span><span class="partial">Defer</span></div></div>
+  <div class="item" id="data-retention"><div class="item-head"><div><div class="item-title">10. Data Retention Policy</div><div class="item-sub">กำหนด policy ว่าข้อมูลแต่ละประเภทเก็บนานเท่าไร ก่อน archive หรือ purge</div></div><div class="item-badges"><span class="p3">P3</span><span class="defer">Defer</span></div></div>
   <div class="item-body">
     <div class="block"><h4>คืออะไร</h4><p>Data retention policy คือ rule ที่กำหนดว่าข้อมูลแต่ละประเภทต้องเก็บอย่างน้อยกี่ปี และเมื่อครบกำหนดต้องทำอะไร (archive ลง cold storage, anonymize, หรือ delete) เพื่อสมดุลระหว่าง compliance requirement และ storage cost</p></div>
     <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ข้อมูลการเงินในไทยต้องเก็บตามกฎหมายบัญชีอย่างน้อย 5 ปี ถ้าเก็บมากเกินไปก็เปลืองพื้นที่และเพิ่มความเสี่ยง ถ้าเก็บน้อยเกินไปก็ผิด compliance</p></div>
-    <div class="block block-todo"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4>
+    <div class="block block-defer"><h4>สถานะในโปรเจกต์ — เลื่อนไปก่อน (Intentional Defer)</h4>
       <p><strong>ERP data</strong> (<code>erp_transactions</code>): compliance retention จัดการโดย ERP upstream · local DB เป็น read mirror · ปัจจุบันมีเฉพาะ fiscal_year 2025 — ตารางโตขึ้นทุกปีที่ import แต่ยังไม่ถึงขนาดที่ต้อง archive · multi-year strategy ตัดสินใจแล้วผ่าน migration 005 (<code>erp_transactions</code>) · ถ้า ERP purge ข้อมูลเก่า local DB จะยังคงข้อมูลนั้นไว้ — ถือว่า acceptable สำหรับ financial data ที่ compliance กำหนด minimum retention ไม่ใช่ maximum</p>
       <p><strong>Master tables</strong> (<code>master_*</code>): reference data ที่ overwrite จาก ERP ทุกครั้งที่ import — ไม่มี retention concern</p>
       <p><strong>Coordinator data</strong> (<code>finance_coordinator</code>): มี <code>updated_at</code> column ที่ track เวลา deactivate · dataset เล็กในปัจจุบัน · <strong>หมายเหตุ PDPA</strong>: username เป็น personal data — inactive records ควรมีกำหนด purge ชัดเจน แม้ยังไม่ urgent ในขนาดปัจจุบัน</p>
       <p>ทบทวนเมื่อ: มี compliance audit · <code>erp_transactions</code> โตเกิน storage budget · มี PDPA audit</p>
     </div>
-    <div class="block block-todo"><h4>เมื่อถึงเวลา (trigger: compliance audit / PDPA audit / data growth)</h4><ul>
+    <div class="block block-defer"><h4>เมื่อถึงเวลา (trigger: compliance audit / PDPA audit / data growth)</h4><ul>
       <li>กำหนด retention period อย่างเป็นทางการ: ERP data 5–7 ปี (กฎหมายบัญชี) · coordinator records 2 ปีหลัง <code>active = FALSE</code></li>
       <li>Archive <code>erp_transactions</code> แยก fiscal_year ที่เกิน retention → cold storage แล้ว DELETE ออกจาก DB<br><code style="font-size:11px">DELETE FROM erp_transactions WHERE fiscal_year &lt; EXTRACT(YEAR FROM NOW()) - 7;</code></li>
       <li>Purge coordinator records ที่ inactive เกินกำหนด (PDPA)<br><code style="font-size:11px">DELETE FROM finance_coordinator WHERE active = FALSE AND updated_at &lt; NOW() - INTERVAL '2 years';</code></li>

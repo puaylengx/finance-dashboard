@@ -7,6 +7,8 @@
     :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
     html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
     html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
     .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
     .theme-btn:hover{color:var(--text);border-color:var(--accent);}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -60,6 +62,9 @@
     .toc a:hover, .toc a.active { color: var(--text); font-weight: 600; }
     .toc a::before { content: "•"; color: var(--accent); font-weight: bold; }
     .toc a.active::before { color: var(--accent2); }
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
 </head>
@@ -91,9 +96,11 @@
 </nav>
 <main>
   <div class="nav-btn"><a href="checklist-documentation.html">← Documentation Checklist</a><a href="checklist.html">กลับ Index →</a></div>
-  <h2>Operations Runbook <small>— Seamless Dashboard API</small></h2>
-  <p style="color:var(--muted);font-size:13px;margin:8px 0 8px">คู่มือสำหรับ ops team: วิธีจัดการ incident และ routine tasks</p>
-  <p style="color:var(--muted);font-size:12px;margin-bottom:28px">อัปเดต 2026-06-19 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ติดต่อ developer ถ้า action ไม่ได้ผลหลังรอ 5 นาที</strong></p>
+  <div style="margin-bottom:36px">
+    <h1 style="font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">Operations Runbook</h1>
+    <p style="color:var(--muted);font-size:14px">Seamless Dashboard API &nbsp;·&nbsp; คู่มือสำหรับ ops team: วิธีจัดการ incident และ routine tasks</p>
+    <p style="color:var(--muted);font-size:12px;margin-top:4px">อัปเดต 2026-06-19 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ติดต่อ developer ถ้า action ไม่ได้ผลหลังรอ 5 นาที</strong></p>
+  </div>
 
   <!-- Quick Reference -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:28px;">
@@ -353,6 +360,7 @@ function toggleTheme(){
   localStorage.setItem('theme',t);
   document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
 }
+(function(){var t=document.documentElement.getAttribute('data-theme');document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';})();
 </script>
 </body>
 </html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance — Frontend Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}html[data-theme="light"] main{background:var(--surface);}html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}.block li{margin-bottom:5px;}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}.block-pass h4{color:var(--green);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}.block-todo h4{color:var(--yellow);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}.block-warn h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    .p4{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,146,176,.18);color:var(--muted);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Frontend Docs &amp; Checklists</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
+  <a href="frontend.html">Frontend Guide</a>
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html" class="active">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html">Accessibility <span class="cnt">2</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-fe-ux.html">← UX/UI</a>
+    <a href="checklist-fe-architecture.html">Architecture →</a>
+  </div>
+  <h2>Performance <small>— 5 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความเร็วและประสิทธิภาพในการโหลดและแสดงผล ครอบคลุม bundle size, runtime performance, และ network optimization</p>
+
+  <!-- 1. Code Splitting -->
+  <div class="item" id="code-splitting">
+    <div class="item-head">
+      <div><div class="item-title">1. Code Splitting</div><div class="item-sub">ใช้ Vue lazy loading + dynamic import แยก chunk ตาม route ลด initial bundle size</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Code splitting คือการแบ่ง JavaScript bundle ออกเป็นหลาย chunk แทนที่จะส่ง code ทั้งหมดในครั้งเดียว browser จะโหลดเฉพาะ chunk ที่ต้องการตอนนี้ — code ของ route อื่นโหลดเมื่อ navigate ไป</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Initial bundle ที่ใหญ่ทำให้ LCP (Largest Contentful Paint) สูง user รอนาน financial dashboard มักมี code เยอะ (charts, tables, filters) code splitting แก้ปัญหานี้โดยตรง</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li>Vue Router ใช้ dynamic import สำหรับทุก page component</li>
+          <li>Heavy components (chart, PDF export) ใช้ <code>defineAsyncComponent</code></li>
+          <li>Vite แยก chunk อัตโนมัติตาม dynamic import — vendor chunk แยกต่างหาก</li>
+        </ul>
+        <pre>// router/index.ts — lazy loading per route
+const routes = [
+  {
+    path: '/dashboard',
+    component: () => import('@/pages/DashboardPage.vue')  // separate chunk
+  },
+  {
+    path: '/budget',
+    component: () => import('@/pages/BudgetPage.vue')
+  }
+]</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre>npm run build
+# ดู dist/ folder — ต้องมีหลาย JS chunks
+ls dist/assets/*.js | wc -l  # ควรมากกว่า 3 files
+
+# ตรวจสอบ Network tab ใน Chrome DevTools
+# เมื่อ navigate ไป /budget ครั้งแรก ต้องเห็น chunk ใหม่โหลดมา</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. CDN -->
+  <div class="item" id="cdn">
+    <div class="item-head">
+      <div><div class="item-title">2. CDN</div><div class="item-sub">ส่ง static asset ผ่าน CDN ที่ใกล้ผู้ใช้ที่สุด ลด latency</div></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>CDN (Content Delivery Network) คือเครือข่าย server ที่กระจายอยู่ทั่วโลก เมื่อ user โหลด JS/CSS/image ระบบส่งจาก server ที่ใกล้ที่สุด แทนที่จะส่งจาก origin server ลด latency ได้มาก</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า origin server อยู่สิงคโปร์ แต่ user อยู่เชียงใหม่ ทุก asset ต้องเดินทาง 2,000+ km ทำให้ LCP สูง CDN ทำให้ static asset มาจาก edge node ใกล้ๆ แทน</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li>Deploy pipeline อัปโหลด <code>dist/</code> ไปยัง cloud CDN (Cloudfront / Azure CDN)</li>
+          <li>Asset files มี content hash ใน filename (<code>index.a3f4b2c1.js</code>) — cache-busting อัตโนมัติ</li>
+          <li>Cache-Control header: <code>max-age=31536000, immutable</code> สำหรับ hashed assets</li>
+        </ul>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>ใน Chrome DevTools → Network → โหลดหน้า — ดูที่ Response Headers ของ JS/CSS files ต้องเห็น <code>x-cache: Hit from cloudfront</code> หรือ equivalent CDN header</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Core Web Vitals -->
+  <div class="item" id="core-web-vitals">
+    <div class="item-head">
+      <div><div class="item-title">3. Core Web Vitals</div><div class="item-sub">LCP &lt; 2.5s, FID &lt; 100ms, CLS &lt; 0.1 วัดด้วย Lighthouse CI ใน pipeline</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Core Web Vitals คือ 3 metrics ที่ Google กำหนดวัด user experience: <strong>LCP</strong> (Largest Contentful Paint — ความเร็วโหลด), <strong>FID</strong> (First Input Delay — ความตอบสนอง), <strong>CLS</strong> (Cumulative Layout Shift — ความเสถียรของ layout)</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Core Web Vitals วัด experience จริงของ user — ไม่ใช่แค่ network speed LCP สูงทำให้รู้สึกว่าระบบช้า CLS สูงทำให้ปุ่มกระโดดขณะกำลังจะกด ซึ่งเป็นอันตรายสำหรับ financial action</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li>LCP: ตัวเลข hero ใช้ skeleton loader — ไม่มี layout shift เมื่อโหลดเสร็จ</li>
+          <li>CLS: กำหนด explicit width/height บน image และ chart container ป้องกัน layout shift</li>
+          <li>FID: ไม่มี long JS task บน main thread ระหว่าง initial load</li>
+          <li>Lighthouse score: Performance ≥ 90 ใน CI pipeline</li>
+        </ul>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre># รัน Lighthouse ใน terminal
+npx lighthouse http://localhost:5173 --output=json --quiet \
+  | python3 -c "import sys,json; r=json.load(sys.stdin)['categories']['performance']; print(f'Score: {r[\"score\"]*100:.0f}')"
+
+# หรือใน Chrome DevTools → Lighthouse tab → Generate report</pre>
+        <p style="margin-top:6px"><strong>Thresholds:</strong> LCP &lt; 2.5s · FID &lt; 100ms · CLS &lt; 0.1 · Performance score ≥ 90</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Virtual Scrolling -->
+  <div class="item" id="virtual-scroll">
+    <div class="item-head">
+      <div><div class="item-title">4. Virtual Scrolling</div><div class="item-sub">ใช้ virtual scroll บนตารางที่มีข้อมูลเป็นหมื่นแถว ไม่ render DOM ทั้งหมด</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Virtual scrolling คือเทคนิคที่ render เฉพาะแถวที่อยู่ใน viewport ณ ขณะนั้น แม้ข้อมูลมี 50,000 แถว แต่ DOM มีแค่ ~30 node เสมอ โดยคำนวณ offset ตาม scroll position</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ตาราง ERP transaction อาจมีหลายหมื่นแถวต่อปี ถ้า render ทั้งหมด browser จะสร้าง DOM nodes หลายหมื่น node ทำให้ scroll ติดขัด, layout recalculation ช้า, และอาจ crash บน mobile device ที่ RAM น้อย</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ปัจจุบัน DataTable render แถวทั้งหมดใน DOM ยังไม่มี virtualization</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <p><strong>Option 1 (แนะนำ): <code>@tanstack/vue-virtual</code></strong></p>
+        <pre>npm install @tanstack/vue-virtual
+
+# VirtualDataTable.vue
+import { useVirtualizer } from '@tanstack/vue-virtual'
+
+const parentRef = ref&lt;HTMLDivElement | null&gt;(null)
+const rowVirtualizer = useVirtualizer({
+  count: rows.value.length,
+  getScrollElement: () => parentRef.value,
+  estimateSize: () => 44,  // row height px
+  overscan: 5,
+})
+
+// template: render rowVirtualizer.getVirtualItems() เท่านั้น
+// ตั้ง paddingTop/paddingBottom เพื่อ simulate scroll height</pre>
+        <p style="margin-top:8px"><strong>Option 2: <code>vue-virtual-scroller</code></strong> (ง่ายกว่าแต่ bundle ใหญ่กว่า)</p>
+        <pre>npm install vue-virtual-scroller
+# ใช้ &lt;RecycleScroller :items="rows" :item-size="44"&gt; wrapper</pre>
+        <p style="margin-top:8px"><strong>เมื่อใช้งาน:</strong> ตาราง ERP transactions และทุก list ที่อาจมีข้อมูลเกิน 500 แถว</p>
+        <p style="margin-top:4px;color:var(--yellow);font-size:12px">⚠ Virtual scroll ใช้ไม่ได้กับ CSS <code>position: sticky</code> header แบบปกติ ต้องออกแบบ sticky header แยก</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Image Optimization -->
+  <div class="item" id="image-optimization">
+    <div class="item-head">
+      <div><div class="item-title">5. Image Optimization</div><div class="item-sub">ใช้ WebP format, lazy loading, และ srcset สำหรับ responsive images</div></div>
+      <div class="item-badges"><span class="p4">P4</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Image optimization ครอบคลุม: (1) <strong>WebP format</strong> — ขนาดเล็กกว่า JPEG 25–34%, (2) <strong>Lazy loading</strong> — โหลดรูปเมื่อเลื่อนมาถึง viewport, (3) <strong>srcset</strong> — ส่งรูปขนาดต่างกันตาม screen resolution</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Images คิดเป็น ~50-70% ของน้ำหนักหน้าเว็บโดยเฉลี่ย ถึงแม้ financial dashboard จะไม่มีรูปเยอะ แต่ logo, avatar, และ icon sprites ก็ควร optimize ไว้ก่อน</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>รูปภาพใช้ PNG/JPG ธรรมดา ไม่มี lazy loading attribute ไม่มี srcset</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <ul>
+          <li>เพิ่ม <code>vite-plugin-imagemin</code> ใน <code>vite.config.ts</code> — auto-convert PNG→WebP ตอน build</li>
+          <li>เพิ่ม <code>loading="lazy"</code> ทุก <code>&lt;img&gt;</code> ที่ไม่อยู่ above the fold</li>
+          <li>เพิ่ม <code>srcset</code> สำหรับรูปที่ขนาดต่างกันตาม viewport</li>
+          <li>ใช้ <code>&lt;picture&gt;</code> element เพื่อ fallback จาก WebP → PNG บน browser เก่า</li>
+        </ul>
+        <pre>// vite.config.ts
+import viteImagemin from 'vite-plugin-imagemin'
+plugins: [
+  vue(),
+  viteImagemin({ webp: { quality: 80 }, png: { quality: 80 } })
+]
+
+// template
+&lt;picture&gt;
+  &lt;source srcset="logo.webp" type="image/webp" /&gt;
+  &lt;img src="logo.png" alt="Logo" loading="lazy" width="120" height="40" /&gt;
+&lt;/picture&gt;</pre>
+        <p style="margin-top:6px">เนื่องจาก financial dashboard ไม่ heavy on images ข้อนี้จึง P4 (Low) — ทำหลังจาก P1/P2/P3 เสร็จ</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    อัปเดต 2026-06-20 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-architecture.html" style="color:var(--accent)">Architecture →</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';}
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
+</script>
+</body>
+</html>

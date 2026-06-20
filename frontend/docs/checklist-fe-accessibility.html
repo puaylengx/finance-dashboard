@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accessibility — Frontend Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}html[data-theme="light"] main{background:var(--surface);}html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}.block li{margin-bottom:5px;}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}.block-pass h4{color:var(--green);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Frontend Docs &amp; Checklists</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
+  <a href="frontend.html">Frontend Guide</a>
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html" class="active">Accessibility <span class="cnt">2</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-fe-cicd.html">← CI/CD</a>
+    <a href="checklist-frontend.html">↑ Index</a>
+  </div>
+  <h2>Accessibility <small>— 2 requirements &nbsp; Pass 2 / Partial 0 / Defer 0 / Fail 0</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การรองรับผู้ใช้ทุกกลุ่ม ครอบคลุม WCAG 2.1 AA standard และ screen reader compatibility</p>
+
+  <!-- 1. WCAG 2.1 AA -->
+  <div class="item" id="wcag">
+    <div class="item-head">
+      <div><div class="item-title">1. WCAG 2.1 AA</div><div class="item-sub">ใช้ color contrast ratio ≥ 4.5:1, ARIA labels ครบ, keyboard navigation ทุก interactive element</div></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>WCAG 2.1 AA (Web Content Accessibility Guidelines) คือมาตรฐานระดับ AA ที่กำหนดว่า web content ต้อง perceivable, operable, understandable, และ robust สำหรับผู้ใช้ทุกกลุ่ม รวมถึงผู้พิการทางสายตาและการเคลื่อนไหว</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ระบบ internal ของหน่วยงานรัฐหรือองค์กรขนาดใหญ่หลายแห่งกำหนดให้ต้องผ่าน WCAG AA นอกจากนี้ design ที่ accessible มักเป็น design ที่ดีและใช้งานง่ายสำหรับทุกคนด้วย</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li><strong>Color contrast</strong>: Tailwind color palette ที่เลือกผ่าน contrast ratio ≥ 4.5:1 — ตรวจยืนยันด้วย axe DevTools</li>
+          <li><strong>ARIA labels</strong>: ทุก icon button มี <code>aria-label</code>, ทุก form input มี <code>&lt;label&gt;</code> หรือ <code>aria-labelledby</code></li>
+          <li><strong>Keyboard navigation</strong>: ทุก interactive element (button, link, select, modal) navigable ด้วย <code>Tab</code> และ <code>Enter</code>/<code>Space</code></li>
+          <li><strong>Focus indicator</strong>: visible focus ring บนทุก focused element — ไม่มี <code>outline: none</code> โดยไม่มี custom focus style แทน</li>
+          <li><strong>Semantic HTML</strong>: ใช้ <code>&lt;button&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;table&gt;</code> ถูกประเภท</li>
+        </ul>
+        <pre>&lt;!-- ตัวอย่าง accessible table --&gt;
+&lt;table role="table" aria-label="งบประมาณประจำปี 2568"&gt;
+  &lt;caption class="sr-only"&gt;ตารางงบประมาณแสดงยอดคงเหลือรายแผนก&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;แผนก&lt;/th&gt;
+      &lt;th scope="col"&gt;งบประมาณ&lt;/th&gt;
+      &lt;th scope="col"&gt;ใช้ไปแล้ว&lt;/th&gt;
+      &lt;th scope="col"&gt;คงเหลือ&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+&lt;/table&gt;</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ul>
+          <li>ติดตั้ง <strong>axe DevTools</strong> browser extension → Run full page scan → ต้องไม่มี violation ระดับ critical/serious</li>
+          <li>ทดสอบ keyboard-only navigation: ปิด mouse แล้วนำทางทั้งหน้าด้วย <code>Tab</code> เท่านั้น</li>
+          <li>ตรวจ contrast: เปิด Chrome DevTools → Rendering → Emulate vision deficiencies</li>
+        </ul>
+        <pre># ทดสอบ WCAG อัตโนมัติใน Playwright
+import { checkA11y } from 'axe-playwright'
+test('dashboard passes WCAG 2.1 AA', async ({ page }) => {
+  await page.goto('/dashboard')
+  await checkA11y(page, null, {
+    runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] }
+  })
+})</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Screen Reader Support -->
+  <div class="item" id="screen-reader">
+    <div class="item-head">
+      <div><div class="item-title">2. Screen Reader Support</div><div class="item-sub">ทดสอบกับ NVDA / VoiceOver ตาราง chart และ form ต้องอ่านได้ถูกต้อง</div></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Screen reader คือ assistive technology ที่อ่าน UI ออกเสียงสำหรับผู้พิการทางสายตา NVDA (Windows) และ VoiceOver (macOS/iOS) เป็น screen reader ที่พบบ่อยที่สุด การทดสอบกับเครื่องมือเหล่านี้ยืนยันว่า ARIA markup ทำงานได้จริง ไม่ใช่แค่ผ่าน automated scan</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Financial data ที่อ่านไม่ออกสำหรับผู้ใช้ screen reader หมายความว่าผู้พิการทางสายตาไม่สามารถทำหน้าที่ FA หรือ Coordinator ได้ เป็นทั้ง accessibility issue และ legal issue ในบางประเทศ</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li><strong>ตาราง</strong>: <code>&lt;th scope="col/row"&gt;</code> ถูกต้อง screen reader อ่าน header ก่อน cell value อัตโนมัติ</li>
+          <li><strong>Chart</strong>: แต่ละ chart มี <code>aria-label</code> สรุปข้อมูล + <code>role="img"</code> และมี data table hidden (<code>.sr-only</code>) เป็น alternative</li>
+          <li><strong>Form</strong>: ทุก input มี <code>&lt;label for&gt;</code> หรือ <code>aria-label</code> error message เชื่อมด้วย <code>aria-describedby</code></li>
+          <li><strong>Modal/Dialog</strong>: ใช้ <code>role="dialog"</code> + <code>aria-modal="true"</code> + focus trap ภายใน modal</li>
+          <li><strong>Live region</strong>: notification toast ใช้ <code>aria-live="polite"</code> — screen reader อ่านเมื่อปรากฏ</li>
+        </ul>
+        <pre>&lt;!-- Chart accessible pattern --&gt;
+&lt;figure role="img" aria-labelledby="chart-title" aria-describedby="chart-desc"&gt;
+  &lt;figcaption id="chart-title"&gt;งบประมาณปี 2568 รายแผนก&lt;/figcaption&gt;
+  &lt;p id="chart-desc" class="sr-only"&gt;
+    กราฟแท่งแสดงงบประมาณ 8 แผนก สูงสุด: IT 12.5 ล้านบาท
+    ต่ำสุด: Admin 2.1 ล้านบาท
+  &lt;/p&gt;
+  &lt;canvas ...&gt;&lt;/canvas&gt;
+&lt;/figure&gt;
+
+&lt;!-- sr-only utility class --&gt;
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p><strong>macOS VoiceOver (ฟรี, built-in)</strong></p>
+        <ul>
+          <li>เปิด: <code>Cmd + F5</code> หรือ System Settings → Accessibility → VoiceOver</li>
+          <li>นำทางด้วย <code>Tab</code> — VoiceOver ต้องอ่าน label ของ element ที่ focus อยู่</li>
+          <li>บนตาราง: ใช้ <code>Control + Option + Arrow</code> นำทาง — ต้องได้ยิน header และ cell value</li>
+          <li>บน chart: VoiceOver ต้องอ่าน aria-label ที่สรุปข้อมูล</li>
+        </ul>
+        <p style="margin-top:8px"><strong>ผลที่คาดหวัง:</strong> ทุก interactive element อ่านออกว่าคืออะไรและทำอะไรได้ ตัวเลขในตารางอ่านถูกต้องพร้อม header context</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary banner -->
+  <div style="background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:var(--radius);padding:16px 20px;margin-top:8px;margin-bottom:20px">
+    <p style="font-size:13.5px;color:var(--green);font-weight:700;margin-bottom:6px">Accessibility — ครบทุกข้อ ✓</p>
+    <p style="font-size:13px;color:var(--text)">Accessibility เป็น หมวดที่ผ่านครบ 2/2 ข้อ ความท้าทายต่อไปคือรักษา standard นี้ไว้เมื่อเพิ่ม feature ใหม่ โดยเฉพาะ component ใหม่ที่จะเพิ่มใน roadmap เช่น virtual scroll table (ต้องการ ARIA grid pattern) และ dark mode (ต้องผ่าน contrast check ทั้ง 2 theme)</p>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted)">
+    อัปเดต 2026-06-20 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-cicd.html" style="color:var(--accent)">← CI/CD</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';}
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
+</script>
+</body>
+</html>

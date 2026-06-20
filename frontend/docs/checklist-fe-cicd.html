@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CI/CD — Frontend Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}html[data-theme="light"] main{background:var(--surface);}html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}.block li{margin-bottom:5px;}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}.block-pass h4{color:var(--green);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}.block-todo h4{color:var(--yellow);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}.block-warn h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(96,165,250,.18);color:var(--blue);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Frontend Docs &amp; Checklists</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
+  <a href="frontend.html">Frontend Guide</a>
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html" class="active">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html">Accessibility <span class="cnt">2</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-fe-testing.html">← Testing</a>
+    <a href="checklist-fe-accessibility.html">Accessibility →</a>
+  </div>
+  <h2>CI/CD <small>— 3 requirements &nbsp; Pass 1 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">Automated build, deploy pipeline, และ quality gates ที่ป้องกัน performance regression ก่อนถึง production</p>
+
+  <!-- 1. Automated Build & Deploy -->
+  <div class="item" id="auto-deploy">
+    <div class="item-head">
+      <div><div class="item-title">1. Automated Build &amp; Deploy</div><div class="item-sub">push to main → build → test → deploy to CDN โดยอัตโนมัติ ไม่หยุด service</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>CI/CD pipeline คือ automation ที่รัน build, test, และ deploy ทุกครั้งที่ push code เข้า branch หลัก โดยไม่ต้องทำ manual deploy ลด human error และทำให้ทุก deploy มี quality gate เดียวกัน</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Manual deploy มีโอกาสลืมขั้นตอน เช่น ลืมรัน build ก่อน หรือ deploy file เก่า automated pipeline บังคับให้ทุกอย่างเกิดตามลำดับที่ถูกต้องเสมอ</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <pre># .github/workflows/frontend-ci.yml
+name: Frontend CI/CD
+on:
+  push:
+    branches: [main]
+    paths: ['frontend/**']
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run test:unit
+      - run: npm run build
+      - name: Deploy to CDN
+        run: aws s3 sync dist/ s3://seamless-frontend/ --delete</pre>
+        <p style="margin-top:6px">Pipeline รัน type check → unit test → build → deploy ตามลำดับ ถ้า step ใด fail ก็หยุดทันที</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>Push commit ที่มี type error เข้า main — CI ต้อง fail ที่ step type-check และไม่ deploy ดู GitHub Actions tab เพื่อยืนยัน</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Bundle Size Budget -->
+  <div class="item" id="bundle-size">
+    <div class="item-head">
+      <div><div class="item-title">2. Bundle Size Budget</div><div class="item-sub">กำหนด max bundle size ใน CI ถ้า exceed ให้ fail build ป้องกัน performance regression</div></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Bundle size budget คือ limit ที่กำหนดว่า JavaScript bundle ต้องไม่เกิน X KB ถ้าเกิน CI จะ fail ทำให้นักพัฒนารู้ทันทีว่า dependency ใหม่ที่เพิ่มเข้าไปทำให้ bundle ใหญ่เกินไป</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี budget check library ขนาดใหญ่สามารถแอบเข้ามาใน bundle โดยไม่มีใครสังเกต ทำให้ LCP เพิ่มขึ้นเรื่อยๆ โดยไม่รู้สาเหตุ bundle size budget เป็น guard ที่ทำงานโดยอัตโนมัติ</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ยังไม่มีการกำหนด bundle size limit — dependency ใหม่เพิ่มได้โดยไม่มีการแจ้งเตือน</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <p><strong>Option 1: Vite built-in chunk size warning</strong></p>
+        <pre>// vite.config.ts
+build: {
+  chunkSizeWarningLimit: 500,  // warn เมื่อ chunk &gt; 500KB
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        vendor: ['vue', 'vue-router', 'pinia'],
+        charts: ['chart.js', 'vue-chartjs'],
+      }
+    }
+  }
+}</pre>
+        <p style="margin-top:8px"><strong>Option 2: bundlesize package (fail CI จริง)</strong></p>
+        <pre>npm install -D bundlesize
+
+# package.json
+"bundlesize": [
+  { "path": "dist/assets/index-*.js", "maxSize": "200 kB" },
+  { "path": "dist/assets/vendor-*.js", "maxSize": "300 kB" }
+],
+"scripts": {
+  "bundlesize": "bundlesize"
+}
+
+# เพิ่มใน CI workflow หลัง build
+- run: npm run bundlesize</pre>
+        <p style="margin-top:8px"><strong>Option 3: Vite Bundle Analyzer</strong> — ดู visual treemap ของ bundle</p>
+        <pre>npm install -D rollup-plugin-visualizer
+# หลัง build รัน: npx vite-bundle-visualizer
+# เปิด stats.html เพื่อดู bundle composition</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Lighthouse CI -->
+  <div class="item" id="lighthouse-ci">
+    <div class="item-head">
+      <div><div class="item-title">3. Lighthouse CI</div><div class="item-sub">วัด Core Web Vitals ทุก deploy ถ้าคะแนนต่ำกว่า threshold ให้ fail</div></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Lighthouse CI (LHCI) คือ automated tool ที่รัน Google Lighthouse ใน CI pipeline วัด Performance, Accessibility, Best Practices, SEO score และ Core Web Vitals ทุก deploy ถ้าคะแนนต่ำกว่า threshold ที่กำหนด CI จะ fail</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Core Web Vitals อาจ degrade ทีละนิดโดยไม่มีใครสังเกต LHCI จับการ degrade ระหว่าง deploy ทำให้ทีมรู้ทันทีว่า PR ใดทำให้ performance แย่ลง แทนที่จะรู้ทีหลังเมื่อ user report</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ยังไม่มีการรัน Lighthouse ใน CI pipeline — performance regression จะถูกจับได้ก็ต่อเมื่อ user report หรือ manual audit</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <p><strong>1. ติดตั้ง @lhci/cli</strong></p>
+        <pre>npm install -D @lhci/cli</pre>
+        <p style="margin-top:8px"><strong>2. สร้าง lighthouserc.json</strong></p>
+        <pre>{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:4173"],
+      "startServerCommand": "npm run preview",
+      "numberOfRuns": 3
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.85 }],
+        "categories:accessibility": ["error", { "minScore": 0.90 }],
+        "first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }]
+      }
+    },
+    "upload": { "target": "temporary-public-storage" }
+  }
+}</pre>
+        <p style="margin-top:8px"><strong>3. เพิ่มใน GitHub Actions</strong></p>
+        <pre># .github/workflows/frontend-ci.yml — เพิ่ม step หลัง build
+- name: Run Lighthouse CI
+  run: |
+    npm run build
+    npx lhci autorun
+  env:
+    LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}</pre>
+        <p style="margin-top:6px">Lighthouse CI จะ post comment บน PR แสดงคะแนนก่อน/หลัง ช่วยให้ review ง่ายขึ้น</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    อัปเดต 2026-06-20 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-accessibility.html" style="color:var(--accent)">Accessibility →</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';}
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
+</script>
+</body>
+</html>

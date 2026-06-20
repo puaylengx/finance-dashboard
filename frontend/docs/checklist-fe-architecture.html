@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture — Frontend Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}html[data-theme="light"] main{background:var(--surface);}html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}.block li{margin-bottom:5px;}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}.block-pass h4{color:var(--green);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}.block-todo h4{color:var(--yellow);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}.block-warn h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Frontend Docs &amp; Checklists</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
+  <a href="frontend.html">Frontend Guide</a>
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html" class="active">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html">Accessibility <span class="cnt">2</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-fe-performance.html">← Performance</a>
+    <a href="checklist-fe-api.html">API Integration →</a>
+  </div>
+  <h2>Architecture <small>— 5 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">โครงสร้าง codebase, state management, type safety, และ security ระดับ routing</p>
+
+  <!-- 1. Component-Based -->
+  <div class="item" id="component-based">
+    <div class="item-head">
+      <div><div class="item-title">1. Component-Based Architecture</div><div class="item-sub">แยก UI เป็น atomic components: atom → molecule → organism → page</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Atomic Design คือ methodology แบ่ง UI ออกเป็น 4 ระดับ: <strong>Atom</strong> (Button, Input, Badge), <strong>Molecule</strong> (SearchBar = Input + Button), <strong>Organism</strong> (DataTable = ตาราง + Pagination + Filter), <strong>Page</strong> (ประกอบ organisms เป็นหน้าจริง)</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Component hierarchy ชัดเจนทำให้นักพัฒนารู้ว่าจะหา component ที่ไหน ลด code duplication และง่ายต่อการ test แต่ละ layer แยกกัน</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <pre>src/components/
+├── atoms/       Button, Badge, Input, Spinner, EmptyState*
+├── molecules/   FilterBar, StatCard, DateRangePicker
+├── organisms/   DataTable, DashboardHeader, Sidebar
+└── templates/   DefaultLayout, AuthLayout</pre>
+        <p style="margin-top:6px">* EmptyState อยู่ในแผน (ดู UX/UI checklist)</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>ตรวจสอบว่า atom ไม่ import organism และ molecule ไม่ import page component:</p>
+        <pre>grep -rn "import.*organisms" src/components/atoms/    # ต้องไม่พบ
+grep -rn "import.*pages"    src/components/molecules/  # ต้องไม่พบ</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Pinia -->
+  <div class="item" id="pinia">
+    <div class="item-head">
+      <div><div class="item-title">2. Pinia State Management</div><div class="item-sub">จัดการ global state ด้วย Pinia แยก store ตาม domain เช่น auth, budget, filter</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Pinia คือ official state management library สำหรับ Vue 3 แทน Vuex ใช้ Composition API style, TypeScript-first, และ Devtools support ที่ดีกว่า แยก store ตาม domain ทำให้แต่ละ concern อยู่ใน store ของตัวเอง</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Global state ที่ไม่ structured ทำให้ bug ยากหา — ไม่รู้ว่า state เปลี่ยนจากที่ไหน Pinia แก้ด้วย centralized store + devtools ที่ track ทุก mutation</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <pre>src/stores/
+├── auth.ts      # user, role, token expiry, logout action
+├── budget.ts    # selected year, department, budget data
+├── filter.ts    # active filters, sort order, pagination
+└── ui.ts        # sidebar open/close, modal state</pre>
+        <p style="margin-top:6px">ใช้ <code>defineStore</code> + Composition API style ทุก store typed ด้วย TypeScript</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>เปิด Vue DevTools → Pinia tab — ดู state ของแต่ละ store แบบ real-time และ time-travel debugging</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. TypeScript Strict -->
+  <div class="item" id="typescript">
+    <div class="item-head">
+      <div><div class="item-title">3. TypeScript (Strict Mode)</div><div class="item-sub">ใช้ TypeScript strict mode ทั้งโปรเจกต์ กำหนด type สำหรับ API response ทุก endpoint</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>TypeScript strict mode เปิดใช้ <code>strictNullChecks</code>, <code>noImplicitAny</code>, <code>strictFunctionTypes</code> และอื่นๆ ทำให้ type system ตรวจสอบเข้มงวดขึ้น ลด runtime error จาก <code>undefined</code> access หรือ type mismatch</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Financial calculation ที่ operate บน <code>number | undefined</code> โดยไม่ check จะ produce NaN โดยไม่มี error ใดๆ strict mode จับปัญหานี้ตั้งแต่ compile time</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <pre>// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,       // เปิด strict mode ทั้งชุด
+    "noUncheckedIndexedAccess": true
+  }
+}
+
+// src/types/api.ts — typed API responses
+export interface BudgetSummaryResponse {
+  success: boolean
+  data: {
+    year: number
+    total_budget: number
+    used_amount: number
+    remaining: number
+    departments: DepartmentBudget[]
+  }
+}</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <pre>npm run type-check
+# หรือ
+npx tsc --noEmit
+# ต้องผ่านโดยไม่มี error</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Route Guard -->
+  <div class="item" id="route-guard">
+    <div class="item-head">
+      <div><div class="item-title">4. Route Guard</div><div class="item-sub">ตรวจสิทธิ์ก่อน render ทุก route ด้วย Vue Router navigation guard redirect ไปหน้า login หากไม่มีสิทธิ์</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Navigation guard คือ hook ที่ Vue Router เรียกก่อน render page ใช้ตรวจสอบว่า user มีสิทธิ์เข้า route นั้นหรือไม่ ถ้าไม่มีสิทธิ์ให้ redirect ไปหน้า login หรือหน้า 403 แทน</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี route guard user ที่ไม่ได้ login สามารถพิมพ์ URL ตรงๆ แล้วเข้าหน้า financial data ได้ browser render component ก่อน API call fail — ข้อมูลที่โหลดมาแล้วอาจ show ก่อน 401 redirect</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ปัจจุบัน router ไม่มี <code>beforeEach</code> guard — ทุก route เข้าได้โดยไม่ตรวจ auth</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <p><strong>1. เพิ่ม meta ใน route definitions</strong></p>
+        <pre>// router/index.ts
+const routes = [
+  {
+    path: '/login',
+    component: () => import('@/pages/LoginPage.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/dashboard',
+    component: () => import('@/pages/DashboardPage.vue'),
+    meta: { requiresAuth: true, roles: ['fa', 'coordinator'] }
+  },
+  {
+    path: '/admin',
+    component: () => import('@/pages/AdminPage.vue'),
+    meta: { requiresAuth: true, roles: ['fa'] }
+  }
+]</pre>
+        <p style="margin-top:8px"><strong>2. เพิ่ม beforeEach guard</strong></p>
+        <pre>// router/guards.ts
+import { useAuthStore } from '@/stores/auth'
+
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+
+  if (!to.meta.requiresAuth) return true
+
+  if (!auth.isAuthenticated) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+
+  const requiredRoles = to.meta.roles as string[] | undefined
+  if (requiredRoles && !requiredRoles.includes(auth.role)) {
+    return { path: '/403' }
+  }
+
+  return true
+})</pre>
+        <p style="margin-top:8px"><strong>3. สร้างหน้า 401 และ 403</strong> สำหรับ redirect ที่ชัดเจน</p>
+        <p style="margin-top:4px;color:var(--red);font-size:12px">⚠ P1 Critical — ต้องทำก่อน production เพราะ financial data เปิด public ถ้าไม่มี guard</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Environment Configuration -->
+  <div class="item" id="env-config">
+    <div class="item-head">
+      <div><div class="item-title">5. Environment Configuration</div><div class="item-sub">แยก config ตาม environment ด้วย .env files ไม่ hardcode URL หรือ key ใน code</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Environment configuration คือการเก็บค่าที่เปลี่ยนแปลงตาม environment (dev/staging/prod) ไว้ใน <code>.env</code> files แทนการ hardcode ใน source code Vite ใช้ <code>VITE_</code> prefix สำหรับ env vars ที่ expose ให้ browser ได้</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า hardcode <code>http://localhost:8000</code> ใน API calls — production build จะ call localhost ซึ่งไม่มี server ทำให้ทุก API fail นอกจากนี้ hardcoded staging URL ที่หลุดไปใน production code เป็น security risk</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ยังไม่มี <code>.env</code> files — API base URL อาจถูก hardcode อยู่ใน Axios config หรือ store</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <p><strong>1. สร้าง .env files</strong></p>
+        <pre># .env.development
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_APP_TITLE=Seamless Dashboard (Dev)
+
+# .env.production
+VITE_API_BASE_URL=https://api.seamless.example.com/api/v1
+VITE_APP_TITLE=Seamless Dashboard
+
+# .env.example (commit เข้า repo — ไม่ใส่ value จริง)
+VITE_API_BASE_URL=
+VITE_APP_TITLE=</pre>
+        <p style="margin-top:8px"><strong>2. ใช้ใน Axios config</strong></p>
+        <pre>// src/api/client.ts
+export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,  // ส่ง HTTP-only cookie
+})
+
+// TypeScript: declare ใน vite-env.d.ts
+interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL: string
+  readonly VITE_APP_TITLE: string
+}</pre>
+        <p style="margin-top:8px"><strong>3. เพิ่ม .env.* ใน .gitignore</strong> (ยกเว้น .env.example)</p>
+        <pre># .gitignore
+.env
+.env.development
+.env.production
+.env.local
+# แต่ commit .env.example ได้</pre>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    อัปเดต 2026-06-20 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-api.html" style="color:var(--accent)">API Integration →</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';}
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
+</script>
+</body>
+</html>

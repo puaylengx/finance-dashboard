@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Integration — Frontend Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}html[data-theme="light"] main{background:var(--surface);}html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}.block li{margin-bottom:5px;}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}.block-pass h4{color:var(--green);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}.block-todo h4{color:var(--yellow);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}.block-warn h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    .p4{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,146,176,.18);color:var(--muted);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Frontend Docs &amp; Checklists</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
+  <a href="frontend.html">Frontend Guide</a>
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html" class="active">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html">Accessibility <span class="cnt">2</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-fe-architecture.html">← Architecture</a>
+    <a href="checklist-fe-security.html">Security →</a>
+  </div>
+  <h2>API Integration <small>— 5 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การเชื่อมต่อ backend API อย่างมีประสิทธิภาพ ครอบคลุม caching, error handling, loading state, และ auth flow</p>
+
+  <!-- 1. Axios + TanStack Query -->
+  <div class="item" id="axios-tanstack">
+    <div class="item-head">
+      <div><div class="item-title">1. Axios + TanStack Query</div><div class="item-sub">จัดการ API call ด้วย Axios interceptor + TanStack Query สำหรับ caching และ background refetch</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p><strong>Axios</strong> คือ HTTP client ที่รองรับ interceptor (middleware สำหรับ request/response) <strong>TanStack Query</strong> (Vue Query) จัดการ server state: caching, background refetch, stale-while-revalidate, loading/error state โดยอัตโนมัติ</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>TanStack Query ทำให้ component ไม่ต้องเขียน <code>isLoading</code>, <code>error</code>, <code>data</code> เอง และ cache ผลลัพธ์ทำให้ navigation กลับไปหน้าที่เคยโหลดแล้วไม่ต้อง fetch ใหม่ — UX ลื่นกว่ามาก</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <pre>// src/api/budget.ts
+export const useBudgetSummary = (year: Ref&lt;number&gt;) =>
+  useQuery({
+    queryKey: ['budget', 'summary', year],
+    queryFn: () => apiClient.get&lt;BudgetSummaryResponse&gt;(`/finance/summary?year=${year.value}`),
+    staleTime: 5 * 60 * 1000,  // cache 5 นาที
+    retry: 2,
+  })
+
+// component
+const { data, isPending, isError, refetch } = useBudgetSummary(selectedYear)</pre>
+        <p style="margin-top:6px">QueryClient config ตั้งใน <code>main.ts</code> · staleTime และ gcTime กำหนด per-query</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>เปิด Vue DevTools → TanStack Query tab — ดู cache entries, status, และ stale time ของแต่ละ query navigate ไปหน้าอื่นแล้วกลับมา — data ต้องโหลดจาก cache ทันที ไม่มี loading flicker</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Error UI -->
+  <div class="item" id="error-ui">
+    <div class="item-head">
+      <div><div class="item-title">2. Error UI</div><div class="item-sub">แสดง error message ที่เข้าใจง่าย พร้อมปุ่ม Retry สำหรับทุก error state</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Error UI คือสิ่งที่แสดงเมื่อ API call ล้มเหลว แทนที่จะแสดง raw error หรือไม่แสดงอะไรเลย ต้องมี: (1) message ที่ user เข้าใจได้, (2) ปุ่ม Retry, (3) error type ที่ต่างกัน (network error vs. server error vs. permission error)</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>User ที่เห็น blank screen หรือ raw JSON error จะ panic และไม่รู้จะทำอะไรต่อ ปุ่ม Retry ให้ user ลองใหม่โดยไม่ต้อง refresh ทั้งหน้า</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li><code>ErrorState.vue</code> component แสดง icon + message + Retry button</li>
+          <li>Global toast สำหรับ error ที่ไม่ block UI (เช่น background refetch fail)</li>
+          <li>Error message map: <code>400</code> → "ข้อมูลไม่ถูกต้อง" · <code>403</code> → "ไม่มีสิทธิ์" · <code>500</code> → "เซิร์ฟเวอร์ขัดข้อง ลองใหม่ภายหลัง"</li>
+          <li>TanStack Query <code>isError</code> + <code>refetch</code> ส่งต่อให้ ErrorState component</li>
+        </ul>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>ใน Chrome DevTools → Network → ขวาคลิก request → Block request domain แล้ว reload — ต้องเห็น ErrorState component พร้อมปุ่ม Retry กด Retry ต้องเรียก API ใหม่</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Skeleton / Spinner -->
+  <div class="item" id="skeleton">
+    <div class="item-head">
+      <div><div class="item-title">3. Skeleton / Spinner</div><div class="item-sub">แสดง Skeleton Screen ระหว่างโหลดแต่ละ widget อิสระจากกัน ไม่ block UI ทั้งหน้า</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Skeleton screen คือ placeholder ที่มีรูปร่างเหมือน content จริง แต่แสดง animation ขณะโหลด ต่างจาก spinner ที่บอกแค่ว่า "กำลังโหลด" skeleton บอก layout ล่วงหน้า ลด perceived loading time</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Dashboard ที่มีหลาย widget แต่ละ widget โหลดข้อมูลต่างกัน ถ้าใช้ global spinner หน้าจะ block จนทุก widget โหลดเสร็จ skeleton ทำให้ widget ที่โหลดเสร็จแล้วแสดงได้ทันที ไม่รอกัน</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li><code>SkeletonCard.vue</code>, <code>SkeletonTable.vue</code>, <code>SkeletonChart.vue</code> แต่ละ widget ใช้ skeleton ของตัวเอง</li>
+          <li>TanStack Query <code>isPending</code> → show skeleton, <code>data</code> → show content</li>
+          <li>Animation ใช้ Tailwind <code>animate-pulse</code> บน skeleton blocks</li>
+          <li>Widget แต่ละตัวโหลดอิสระ — ไม่มี global loading state ที่ block ทั้งหน้า</li>
+        </ul>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>ใน Chrome DevTools → Network → Throttle เป็น "Slow 3G" แล้ว reload — ต้องเห็น skeleton ของแต่ละ widget แยกกัน และ widget ที่โหลดเสร็จก่อนแสดงได้ทันทีโดยไม่รอตัวอื่น</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Axios Interceptor Auth -->
+  <div class="item" id="axios-auth">
+    <div class="item-head">
+      <div><div class="item-title">4. Axios Interceptor (Auth)</div><div class="item-sub">แนบ JWT token อัตโนมัติทุก request, handle 401 → refresh token → retry request</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Axios interceptor คือ middleware ที่รันก่อนทุก request (request interceptor) หรือหลังทุก response (response interceptor) Auth interceptor ทำ 2 หน้าที่: (1) แนบ auth credentials ทุก request, (2) จัดการ 401 Unauthorized โดย redirect ไป login หรือ refresh token</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี interceptor ทุก API call ต้องเขียน auth header เอง และ 401 จะเป็น unhandled error ที่ user เห็นเป็น blank screen session หมดอายุกลางคันโดยไม่มีการแจ้งเตือน</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>Axios instance ยังไม่มี interceptor — ไม่มีการจัดการ 401 และ session expiry</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <p>เนื่องจากใช้ HTTP-only cookie token ไม่อ่านจาก JS โดยตรง request interceptor จึงเน้นที่การ set headers อื่นๆ ส่วน response interceptor จัดการ 401:</p>
+        <pre>// src/api/client.ts
+import { useAuthStore } from '@/stores/auth'
+import router from '@/router'
+
+export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,  // ส่ง HTTP-only cookie อัตโนมัติ
+})
+
+// Request interceptor — เพิ่ม headers ที่จำเป็น
+apiClient.interceptors.request.use((config) => {
+  config.headers['X-Requested-With'] = 'XMLHttpRequest'
+  return config
+})
+
+// Response interceptor — จัดการ 401
+let isRedirecting = false
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    if (error.response?.status === 401 && !isRedirecting) {
+      isRedirecting = true
+      const auth = useAuthStore()
+      auth.clearSession()
+      await router.push({ path: '/login', query: { reason: 'session_expired' } })
+      isRedirecting = false
+    }
+    return Promise.reject(error)
+  }
+)</pre>
+        <p style="margin-top:8px"><strong>หน้า Login</strong> ควรแสดง banner เมื่อ <code>?reason=session_expired</code> เพื่อแจ้ง user ว่า session หมดอายุ</p>
+        <p style="margin-top:4px;color:var(--red);font-size:12px">⚠ P1 Critical — ไม่มี interceptor นี้ทำให้ 401 กลายเป็น uncaught error และ user ไม่รู้ว่า session หมด</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Optimistic Updates -->
+  <div class="item" id="optimistic-updates">
+    <div class="item-head">
+      <div><div class="item-title">5. Optimistic Updates</div><div class="item-sub">Update UI ทันทีก่อน server ตอบกลับ แล้ว rollback หาก error เพื่อ UX ที่ลื่นไหล</div></div>
+      <div class="item-badges"><span class="p4">P4</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Optimistic update คือ pattern ที่ update UI ทันทีเมื่อ user ทำ action โดยไม่รอ server ตอบกลับ ถ้า server ตอบ success ก็ดำเนินต่อ ถ้า error ให้ rollback กลับค่าเดิมและแสดง error message</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>บน network ที่ช้า การรอ server response ก่อน update UI ทำให้รู้สึกว่า app ช้าและไม่ responsive optimistic update ทำให้ UX ลื่นกว่าบน high-latency network โดยเฉพาะ mobile</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>Write operations รอ server response ก่อนแสดงผลเสมอ ยังไม่มี optimistic pattern</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ (เมื่อพร้อม)</h4>
+        <p>ใช้ TanStack Query <code>useMutation</code> พร้อม <code>onMutate</code> + <code>onError</code> rollback:</p>
+        <pre>// ตัวอย่าง: toggle coordinator active status
+const { mutate } = useMutation({
+  mutationFn: (id: number) => apiClient.patch(`/admin/coordinators/${id}/toggle`),
+
+  onMutate: async (id) => {
+    await queryClient.cancelQueries({ queryKey: ['coordinators'] })
+    const previous = queryClient.getQueryData(['coordinators'])
+
+    // อัปเดต cache ทันที (ก่อน server ตอบ)
+    queryClient.setQueryData(['coordinators'], (old: Coordinator[]) =>
+      old.map(c => c.id === id ? { ...c, active: !c.active } : c)
+    )
+    return { previous }
+  },
+
+  onError: (_err, _id, context) => {
+    // rollback ถ้า server ตอบ error
+    queryClient.setQueryData(['coordinators'], context?.previous)
+    toast.error('ไม่สามารถบันทึกได้ กรุณาลองใหม่')
+  },
+
+  onSettled: () => queryClient.invalidateQueries({ queryKey: ['coordinators'] })
+})</pre>
+        <p style="margin-top:6px">P4 Low — ทำหลังจาก P1/P2/P3 เสร็จ และเฉพาะ action ที่ user ทำบ่อยและ network อาจช้า</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    อัปเดต 2026-06-20 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-security.html" style="color:var(--accent)">Security →</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';}
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
+</script>
+</body>
+</html>

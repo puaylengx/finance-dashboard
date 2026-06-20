@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <title>Seamless Dashboard — Frontend Documentation</title>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+      --border: #2e3250; --accent: #6c8efb; --accent2: #a78bfa;
+      --green: #34d399; --yellow: #fbbf24; --red: #f87171;
+      --blue: #60a5fa; --cyan: #22d3ee; --text: #e2e8f0; --muted: #8892b0;
+      --code-bg: #141824; --sidebar-w: 270px; --radius: 8px;
+    }
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; display: flex; }
+
+    /* Sidebar */
+    nav { width: var(--sidebar-w); min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; position: fixed; top: 0; left: 0; overflow-y: auto; z-index: 100; }
+    nav .logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    nav .logo h1 { font-size: 14px; color: var(--accent); font-weight: 700; letter-spacing: .5px; }
+    nav .logo p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    nav .group-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; padding: 14px 20px 4px; }
+    nav a { display: flex; align-items: center; gap: 6px; padding: 5px 16px 5px 24px; color: var(--muted); text-decoration: none; font-size: 13px; border-left: 2px solid transparent; transition: all .15s; }
+    nav a:hover, nav a.active { color: var(--text); background: rgba(108,142,251,.08); border-left-color: var(--accent); }
+    nav a .cnt { margin-left: auto; font-size: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 1px 6px; }
+
+    /* Main */
+    main { margin-left: var(--sidebar-w); flex: 1; max-width: 980px; padding: 48px 40px 80px; }
+    section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    h2 { font-size: 22px; font-weight: 700; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 24px; }
+    h2 .n { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent); color: #fff; border-radius: 6px; font-size: 13px; font-weight: 700; margin-right: 10px; }
+    h3 { font-size: 16px; font-weight: 600; color: var(--accent2); margin: 24px 0 12px; }
+    h4 { font-size: 14px; font-weight: 600; color: var(--cyan); margin: 16px 0 8px; }
+    p  { color: var(--text); margin-bottom: 12px; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; text-align: center; }
+    .stat-card .val { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .stat-card .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+    /* Code */
+    pre, code { font-family: 'JetBrains Mono','Fira Code','Cascadia Code',monospace; font-size: 13px; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; overflow-x: auto; margin: 12px 0; line-height: 1.6; }
+    code { color: var(--cyan); background: rgba(34,211,238,.08); padding: 2px 6px; border-radius: 4px; }
+    pre code { color: inherit; background: none; padding: 0; }
+    .kw  { color: #c792ea; } .str { color: #c3e88d; } .cmt { color: #546e7a; font-style: italic; }
+    .fn  { color: #82aaff; } .num { color: #f78c6c; } .key { color: var(--cyan); } .tag { color: #f07178; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    th { background: var(--surface2); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid rgba(46,50,80,.5); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(108,142,251,.04); }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: .3px; }
+    .badge-vue    { background: rgba(52,211,153,.15); color: var(--green); }
+    .badge-ts     { background: rgba(96,165,250,.15);  color: var(--blue); }
+    .badge-new    { background: rgba(251,191,36,.15);  color: var(--yellow); }
+    .badge-fa     { background: rgba(108,142,251,.15); color: var(--accent); }
+    .badge-all    { background: rgba(52,211,153,.12);  color: var(--green); }
+
+    /* Callouts */
+    .callout { border-left: 3px solid; padding: 12px 16px; border-radius: 0 var(--radius) var(--radius) 0; margin: 14px 0; font-size: 13.5px; }
+    .callout-info    { border-color: var(--accent);  background: rgba(108,142,251,.08); }
+    .callout-warn    { border-color: var(--yellow);  background: rgba(251,191,36,.08); }
+    .callout-success { border-color: var(--green);   background: rgba(52,211,153,.08); }
+    .callout strong  { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* File tree */
+    .tree { font-family: monospace; font-size: 13px; line-height: 2; }
+    .tree .dir  { color: var(--accent2); } .tree .file { color: var(--text); } .tree .note { color: var(--muted); font-style: italic; }
+
+    /* Flow */
+    .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 16px 0; }
+    .flow-step { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; font-size: 13px; text-align: center; min-width: 100px; }
+    .flow-step .step-num { font-size: 10px; color: var(--muted); display: block; }
+    .flow-step .step-lbl { font-weight: 600; color: var(--text); }
+    .flow-arrow { color: var(--muted); padding: 0 6px; font-size: 18px; }
+
+    /* Test steps */
+    .test-steps { counter-reset: step; }
+    .test-step  { display: flex; gap: 14px; margin-bottom: 18px; }
+    .test-step::before { counter-increment: step; content: counter(step); flex-shrink: 0; width: 26px; height: 26px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; margin-top: 2px; }
+
+    /* Misc */
+    hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    ul { padding-left: 20px; } li { margin-bottom: 4px; color: var(--text); } li code { font-size: 12px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .tag-chip { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 8px; font-size: 12px; color: var(--muted); margin: 2px; }
+    .file-label { font-family: monospace; font-size: 12px; color: var(--cyan); }
+
+    /* Component box */
+    .comp-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 10px; }
+    .comp-box .comp-name { color: var(--accent2); font-weight: 600; font-size: 14px; }
+    .comp-box .comp-file { color: var(--muted); font-size: 11px; font-family: monospace; margin-left: 8px; }
+    .comp-box p { font-size: 13px; margin-bottom: 4px; color: var(--muted); }
+
+    @media (max-width: 768px) { nav { display: none; } main { margin-left: 0; padding: 24px 16px; } .two-col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Seamless Dashboard</h1>
+    <p>Frontend Docs &amp; Checklists</p>
+  </div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+
+  <div class="group-label">Overview</div>
+  <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
+  <a href="frontend.html" class="active">Frontend Guide</a>
+
+  <div class="group-label">Sections</div>
+  <a href="#overview">Architecture</a>
+  <a href="#structure">Project Structure</a>
+  <a href="#setup">Setup &amp; Run</a>
+  <a href="#design-system">Design System</a>
+  <a href="#routing">Router &amp; Guards</a>
+  <a href="#state">State (Pinia)</a>
+  <a href="#api">API Layer</a>
+  <a href="#auth">Authentication</a>
+  <a href="#session">Session Timeout</a>
+  <a href="#dashboard">Finance Dashboard</a>
+  <a href="#charts">Charts</a>
+  <a href="#table">Drill-down Table</a>
+  <a href="#filter">Filter Bar</a>
+  <a href="#export">Export &amp; Print</a>
+  <a href="#coordinator">Coordinator Admin</a>
+  <a href="#security">Frontend Security</a>
+  <a href="#tests">Testing</a>
+  <a href="#performance">Performance</a>
+  <a href="#a11y">Accessibility</a>
+  <a href="#checklist">Checklist</a>
+
+  <div class="group-label">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html">Accessibility <span class="cnt">2</span></a>
+</nav>
+
+<main>
+
+  <!-- Header -->
+  <div style="margin-bottom:48px">
+    <h1 style="font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">
+      Seamless Dashboard — Frontend
+    </h1>
+    <p style="color:var(--muted);font-size:15px">Vue 3 · TypeScript · Pinia · TanStack Query · ApexCharts · PrimeVue · Playwright</p>
+    <div class="card-grid" style="margin-top:24px">
+      <div class="stat-card"><div class="val">47</div><div class="lbl">Source Files</div></div>
+      <div class="stat-card"><div class="val">5</div><div class="lbl">Views</div></div>
+      <div class="stat-card"><div class="val">12</div><div class="lbl">Components</div></div>
+      <div class="stat-card"><div class="val">3</div><div class="lbl">Test Suites</div></div>
+    </div>
+  </div>
+
+  <!-- 1. Architecture -->
+  <section id="overview">
+    <h2><span class="n">1</span>Architecture Overview</h2>
+    <p>ระบบใช้สถาปัตยกรรม <strong>Component-Based SPA</strong> ด้วย Vue 3 Composition API + TypeScript strict mode ทุกไฟล์</p>
+
+    <div class="card">
+      <div class="flow">
+        <div class="flow-step"><span class="step-num">User</span><span class="step-lbl">Browser</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">Router Guard</span><span class="step-lbl">Auth Check</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">View</span><span class="step-lbl">Page Component</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">TanStack Query</span><span class="step-lbl">Fetch + Cache</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">Axios</span><span class="step-lbl">HTTP + JWT</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="step-num">Backend</span><span class="step-lbl">FastAPI</span></div>
+      </div>
+    </div>
+
+    <h3>Tech Stack (เทียบกับ Reference v2)</h3>
+    <table>
+      <tr><th>Layer</th><th>Reference v2</th><th>Version ใหม่</th><th>เหตุผล</th></tr>
+      <tr><td>Framework</td><td>Vue 3</td><td><span class="badge badge-vue">Vue 3</span> + TypeScript strict</td><td>Type safety ทุกไฟล์, ลด bug</td></tr>
+      <tr><td>UI Library</td><td>Plain Tailwind</td><td><span class="badge badge-new">PrimeVue 4</span> + Tailwind</td><td>Component สำเร็จรูป 90+, accessible</td></tr>
+      <tr><td>Charts</td><td>Chart.js</td><td><span class="badge badge-new">ApexCharts</span></td><td>Interactive tooltip, Stacked Bar, Smooth Line</td></tr>
+      <tr><td>State</td><td>—</td><td><span class="badge badge-new">Pinia</span></td><td>Type-safe global state, Devtools</td></tr>
+      <tr><td>Data Fetching</td><td>custom useFetch</td><td><span class="badge badge-new">TanStack Query</span></td><td>Cache, staleTime, retry, refetch</td></tr>
+      <tr><td>HTTP</td><td>fetch raw</td><td><span class="badge badge-new">Axios</span></td><td>Interceptors, timeout, error handling</td></tr>
+      <tr><td>Unit Test</td><td>—</td><td><span class="badge badge-new">Vitest</span></td><td>Fast, native ESM, Vite integration</td></tr>
+      <tr><td>E2E Test</td><td>—</td><td><span class="badge badge-new">Playwright</span></td><td>Cross-browser, mobile viewport</td></tr>
+      <tr><td>Export</td><td>—</td><td><span class="badge badge-new">xlsx (SheetJS)</span></td><td>Excel + CSV one-click</td></tr>
+    </table>
+  </section>
+
+  <!-- 2. Structure -->
+  <section id="structure">
+    <h2><span class="n">2</span>Project Structure</h2>
+    <pre><div class="tree">
+frontend/
+├── <span class="dir">src/</span>
+│   ├── main.ts                    <span class="note">← Bootstrap: Vue + Pinia + TanStack Query + PrimeVue</span>
+│   ├── App.vue                    <span class="note">← Root — แค่ RouterView</span>
+│   ├── style.css                  <span class="note">← Tailwind base + component classes + @media print</span>
+│   ├── vite-env.d.ts              <span class="note">← ImportMeta env types</span>
+│   ├── <span class="dir">router/</span>
+│   │   └── index.ts               <span class="note">← Routes + beforeEach auth/role guards</span>
+│   ├── <span class="dir">stores/</span>
+│   │   ├── auth.ts                <span class="note">← Pinia: user session, role computed, login/logout</span>
+│   │   └── filter.ts              <span class="note">← Pinia: year/month/cost_center filters → queryParams</span>
+│   ├── <span class="dir">api/</span>
+│   │   ├── client.ts              <span class="note">← Axios instance + JWT interceptor + 401 handler</span>
+│   │   ├── auth.ts                <span class="note">← loginWithPassword, draftLogin, entraLogin, fetchMe</span>
+│   │   └── finance.ts             <span class="note">← fetchFinance/Budget/IO + coordinator CRUD</span>
+│   ├── <span class="dir">auth/</span>
+│   │   ├── permissions.ts         <span class="note">← FA/Division/Position roles, extractClaims, canAccess</span>
+│   │   └── session.ts             <span class="note">← sessionStorage AuthUser, getToken, msUntilExpiry</span>
+│   ├── <span class="dir">types/</span>
+│   │   └── api.ts                 <span class="note">← TypeScript interfaces จาก openapi.yaml</span>
+│   ├── <span class="dir">utils/</span>
+│   │   ├── format.ts              <span class="note">← fmt, fmtShort, fmtPct, fiscalMonthName</span>
+│   │   └── export.ts              <span class="note">← exportExcel, exportCSV, printPage</span>
+│   ├── <span class="dir">composables/</span>
+│   │   └── useSessionTimeout.ts   <span class="note">← Warning 5 min ก่อน expire + auto-logout</span>
+│   ├── <span class="dir">layouts/</span>
+│   │   └── AppLayout.vue          <span class="note">← Sidebar + Header + SessionModal wrapper</span>
+│   ├── <span class="dir">components/</span>
+│   │   ├── <span class="dir">layout/</span>
+│   │   │   ├── AppSidebar.vue     <span class="note">← Navigation + user info + role-based menu</span>
+│   │   │   └── AppHeader.vue      <span class="note">← Page title + Export buttons</span>
+│   │   ├── <span class="dir">ui/</span>
+│   │   │   ├── SkeletonCard.vue   <span class="note">← Loading placeholder</span>
+│   │   │   ├── ErrorState.vue     <span class="note">← Error UI + retry button</span>
+│   │   │   └── SessionTimeoutModal.vue <span class="note">← Warning dialog + countdown</span>
+│   │   └── <span class="dir">finance/</span>
+│   │       ├── KpiCards.vue       <span class="note">← 4 KPI cards + budget utilization progress bar</span>
+│   │       ├── TrendChart.vue     <span class="note">← ApexCharts line chart รายเดือน</span>
+│   │       ├── DepartmentChart.vue<span class="note">← ApexCharts horizontal bar chart</span>
+│   │       ├── FilterBar.vue      <span class="note">← Year/Month/CostCenter/Search controls</span>
+│   │       └── PivotTable.vue     <span class="note">← GL expand/collapse drill-down table</span>
+│   └── <span class="dir">views/</span>
+│       ├── LoginView.vue          <span class="note">← Draft form (dev) หรือ Entra button (prod)</span>
+│       ├── <span class="dir">finance/</span>
+│       │   ├── FinanceView.vue    <span class="note">← FA only: dept + division breakdown</span>
+│       │   ├── BudgetView.vue     <span class="note">← All roles: budget data</span>
+│       │   └── IoView.vue         <span class="note">← All roles: IO Goods/Project/Work</span>
+│       └── <span class="dir">admin/</span>
+│           └── CoordinatorView.vue <span class="note">← FA+position: coordinator CRUD</span>
+├── <span class="dir">tests/</span>
+│   ├── <span class="dir">unit/</span>
+│   │   ├── format.test.ts         <span class="note">← Vitest: fmt, fmtShort, fmtPct, fiscalMonthName</span>
+│   │   └── permissions.test.ts    <span class="note">← Vitest: extractClaims, role helpers, canAccess</span>
+│   └── <span class="dir">e2e/</span>
+│       └── auth.spec.ts           <span class="note">← Playwright: login flow, access control, responsive</span>
+├── index.html
+├── vite.config.ts                 <span class="note">← Code splitting, proxy /api → :8000</span>
+├── tailwind.config.ts             <span class="note">← Design tokens (colors, fonts, animations)</span>
+├── playwright.config.ts           <span class="note">← Chromium + iPhone 13</span>
+├── vitest.config.ts
+└── package.json
+</div></pre>
+  </section>
+
+  <!-- 3. Setup -->
+  <section id="setup">
+    <h2><span class="n">3</span>Setup &amp; Run</h2>
+
+    <h3>Prerequisites</h3>
+    <ul>
+      <li>Node.js 20+ (LTS)</li>
+      <li>Backend รันที่ <code>http://localhost:8000</code></li>
+    </ul>
+
+    <h3>ติดตั้งและเริ่มใช้งาน</h3>
+    <pre><span class="cmt"># 1. ติดตั้ง dependencies</span>
+cd frontend
+npm install
+
+<span class="cmt"># 2. ตั้งค่า environment</span>
+cp .env.example .env
+<span class="cmt"># แก้ .env:</span>
+<span class="cmt"># VITE_API_BASE_URL=http://localhost:8000</span>
+<span class="cmt"># VITE_DRAFT_MODE=true</span>
+
+<span class="cmt"># 3. Start dev server</span>
+npm run dev        <span class="cmt"># → http://localhost:5173</span>
+
+<span class="cmt"># 4. Build production</span>
+npm run build      <span class="cmt"># → dist/</span>
+
+<span class="cmt"># 5. Preview production build</span>
+npm run preview</pre>
+
+    <h3>Environment Variables</h3>
+    <table>
+      <tr><th>Variable</th><th>Default</th><th>คำอธิบาย</th></tr>
+      <tr><td><code>VITE_API_BASE_URL</code></td><td>http://localhost:8000</td><td>Backend URL</td></tr>
+      <tr><td><code>VITE_DRAFT_MODE</code></td><td>true</td><td>เปิด draft-login form (dev) / ปิด = Entra button</td></tr>
+      <tr><td><code>VITE_AZURE_CLIENT_ID</code></td><td>—</td><td>MS Entra App ID (production)</td></tr>
+      <tr><td><code>VITE_AZURE_TENANT_ID</code></td><td>—</td><td>MS Entra Tenant ID (production)</td></tr>
+    </table>
+  </section>
+
+  <!-- 4. Design System -->
+  <section id="design-system">
+    <h2><span class="n">4</span>Design System</h2>
+    <p>Design tokens กำหนดครั้งเดียวใน <code>tailwind.config.ts</code> ใช้ได้ทุก component โดยไม่ต้อง hardcode สี</p>
+
+    <div class="two-col">
+      <div class="card">
+        <h4>Color Tokens</h4>
+        <pre><span class="cmt">/* tailwind.config.ts */</span>
+bg:       <span class="str">'#0f1117'</span>  <span class="cmt">// พื้นหลังหลัก</span>
+surface:  <span class="str">'#1a1d27'</span>  <span class="cmt">// card, sidebar</span>
+surface2: <span class="str">'#22263a'</span>  <span class="cmt">// input, hover</span>
+border:   <span class="str">'#2e3250'</span>  <span class="cmt">// เส้นแบ่ง</span>
+accent:   <span class="str">'#6c8efb'</span>  <span class="cmt">// primary action</span>
+accent2:  <span class="str">'#a78bfa'</span>  <span class="cmt">// heading, label</span>
+success:  <span class="str">'#34d399'</span>  <span class="cmt">// &lt; 75% budget</span>
+warning:  <span class="str">'#fbbf24'</span>  <span class="cmt">// 75-90% budget</span>
+danger:   <span class="str">'#f87171'</span>  <span class="cmt">// &gt; 90% budget</span>
+muted:    <span class="str">'#8892b0'</span>  <span class="cmt">// secondary text</span></pre>
+      </div>
+      <div class="card">
+        <h4>Component Classes</h4>
+        <pre><span class="cmt">/* style.css — reusable classes */</span>
+.card        <span class="cmt">// bg-surface + border + rounded</span>
+.btn-primary <span class="cmt">// accent bg, white text</span>
+.btn-ghost   <span class="cmt">// border only, hover effect</span>
+.btn-danger  <span class="cmt">// red border, red text</span>
+.input       <span class="cmt">// dark input + focus ring</span>
+.select      <span class="cmt">// same as input + cursor</span>
+.skeleton    <span class="cmt">// pulse animation</span>
+.badge       <span class="cmt">// base badge + variants</span></pre>
+      </div>
+    </div>
+
+    <h3>Font</h3>
+    <p>ใช้ <strong>IBM Plex Sans Thai</strong> จาก Google Fonts — รองรับภาษาไทยและอังกฤษ โหลดด้วย <code>preconnect</code> เพื่อลด latency</p>
+
+    <h3>Print CSS</h3>
+    <pre><span class="cmt">/* @media print — style.css */</span>
+nav, aside, header, .no-print, .btn, button { display: none !important; }
+body { background: #fff; color: #000; }
+.card { border: 1px solid #ddd; background: #fff; }
+<span class="cmt">/* ตัวเลข — สีดำชัดใน PDF */</span>
+.text-accent, .text-success, .text-danger { color: #000 !important; }</pre>
+  </section>
+
+  <!-- 5. Routing -->
+  <section id="routing">
+    <h2><span class="n">5</span>Router &amp; Route Guards</h2>
+
+    <h3>Routes</h3>
+    <table>
+      <tr><th>Path</th><th>View</th><th>Guard</th></tr>
+      <tr><td><code>/login</code></td><td>LoginView</td><td>redirect → /finance ถ้า login แล้ว</td></tr>
+      <tr><td><code>/finance</code></td><td>FinanceView</td><td>requiresAuth + FA role</td></tr>
+      <tr><td><code>/budget</code></td><td>BudgetView</td><td>requiresAuth (ทุก role)</td></tr>
+      <tr><td><code>/io</code></td><td>IoView</td><td>requiresAuth (ทุก role)</td></tr>
+      <tr><td><code>/admin/coordinators</code></td><td>CoordinatorView</td><td>requiresAuth + FA + position</td></tr>
+    </table>
+
+    <h3>beforeEach Guard Logic</h3>
+    <pre><span class="cmt">// router/index.ts</span>
+router.beforeEach((to, _from, next) => {
+  <span class="kw">const</span> session = getSession()
+
+  <span class="cmt">// ยังไม่ login → /login</span>
+  <span class="kw">if</span> (to.meta.requiresAuth && !session) <span class="kw">return</span> next(<span class="str">'/login'</span>)
+
+  <span class="cmt">// login แล้วแต่ไม่มีสิทธิ์ใดเลย → /login</span>
+  <span class="kw">if</span> (to.meta.requiresAuth && !hasPosition(position) && !coordinator && !isFA(role))
+    <span class="kw">return</span> next(<span class="str">'/login'</span>)
+
+  <span class="cmt">// Admin page: ต้อง FA + position</span>
+  <span class="kw">if</span> (to.meta.requiresFAPosition && (!isFA(role) || !hasPosition(position)))
+    <span class="kw">return</span> next(<span class="str">'/budget'</span>)
+
+  <span class="cmt">// ตรวจ page-level access (finance → FA only)</span>
+  <span class="kw">if</span> (page && !canAccess(role, page)) <span class="kw">return</span> next(<span class="str">'/budget'</span>)
+})</pre>
+
+    <h3>Code Splitting (Lazy Loading)</h3>
+    <p>ทุก View ใช้ dynamic import — โหลดเฉพาะ chunk ที่จำเป็นเมื่อ navigate ไปหน้านั้น</p>
+    <pre>component: () => <span class="kw">import</span>(<span class="str">'@/views/finance/FinanceView.vue'</span>)</pre>
+  </section>
+
+  <!-- 6. State -->
+  <section id="state">
+    <h2><span class="n">6</span>State Management (Pinia)</h2>
+
+    <h3>authStore — <span class="file-label">src/stores/auth.ts</span></h3>
+    <table>
+      <tr><th>State / Computed</th><th>Type</th><th>คำอธิบาย</th></tr>
+      <tr><td><code>user</code></td><td>AuthUser | null</td><td>ข้อมูล session ปัจจุบัน</td></tr>
+      <tr><td><code>isLoggedIn</code></td><td>boolean</td><td>มี session valid อยู่ไหม</td></tr>
+      <tr><td><code>role</code></td><td>string</td><td>fa / bba / hld / …</td></tr>
+      <tr><td><code>isUserFA</code></td><td>boolean</td><td>role อยู่ใน FA_ROLES</td></tr>
+      <tr><td><code>hasPos</code></td><td>boolean</td><td>มี position (chief/chairman/head)</td></tr>
+      <tr><td><code>canViewFinance</code></td><td>boolean</td><td>isUserFA → เห็น Finance menu</td></tr>
+      <tr><td><code>canManageCoordinators</code></td><td>boolean</td><td>isUserFA && hasPos → เห็น Admin menu</td></tr>
+    </table>
+
+    <h3>filterStore — <span class="file-label">src/stores/filter.ts</span></h3>
+    <table>
+      <tr><th>State</th><th>คำอธิบาย</th></tr>
+      <tr><td><code>yearMode</code></td><td>'fiscal' | 'pa' — toggle ปุ่ม Fiscal Year / PA Year</td></tr>
+      <tr><td><code>year</code> / <code>paYear</code></td><td>ค่าปีที่เลือก</td></tr>
+      <tr><td><code>monthFrom</code> / <code>monthTo</code></td><td>Fiscal month filter (1-12)</td></tr>
+      <tr><td><code>costCenter</code> / <code>costOwner</code></td><td>Filter text</td></tr>
+      <tr><td><code>financeParams</code></td><td>computed → <code>FinanceQueryParams</code> พร้อมส่ง API</td></tr>
+      <tr><td><code>ioParams</code></td><td>computed → <code>IoQueryParams</code> พร้อมส่ง API</td></tr>
+    </table>
+  </section>
+
+  <!-- 7. API Layer -->
+  <section id="api">
+    <h2><span class="n">7</span>API Layer</h2>
+
+    <h3>Axios Client — <span class="file-label">src/api/client.ts</span></h3>
+    <pre><span class="cmt">// Request interceptor — แนบ JWT ทุก request</span>
+apiClient.interceptors.request.use(config => {
+  <span class="kw">const</span> token = getToken()
+  <span class="kw">if</span> (token) config.headers.Authorization = <span class="str">`Bearer ${token}`</span>
+  <span class="kw">return</span> config
+})
+
+<span class="cmt">// Response interceptor — 401 → clear session → /login</span>
+apiClient.interceptors.response.use(
+  res => res,
+  err => {
+    <span class="kw">if</span> (err.response?.status === <span class="num">401</span>) {
+      clearSession()
+      window.location.href = <span class="str">'/login'</span>
+    }
+    <span class="kw">return</span> Promise.reject(err)
+  },
+)</pre>
+
+    <h3>TanStack Query Integration</h3>
+    <pre><span class="cmt">// ใน View — queryKey reactive ตาม filterStore</span>
+<span class="kw">const</span> { data, isPending, isError, error, refetch } = useQuery({
+  queryKey: computed(() => [<span class="str">'finance'</span>, filterStore.financeParams]),
+  queryFn:  () => fetchFinance(filterStore.financeParams),
+  <span class="cmt">// staleTime: 300_000 (5 min) — ตั้งใน main.ts ตรงกับ Redis TTL</span>
+})</pre>
+
+    <div class="callout callout-info">
+      <strong>ℹ TanStack Query Cache</strong>
+      <code>staleTime: 5 min</code> — ตรงกับ Redis TTL ของ backend พอดี ทำให้ไม่ยิง API ซ้ำโดยไม่จำเป็น
+      เมื่อ <code>filterStore</code> เปลี่ยน → <code>queryKey</code> เปลี่ยน → fetch ใหม่อัตโนมัติ
+    </div>
+  </section>
+
+  <!-- 8. Auth -->
+  <section id="auth">
+    <h2><span class="n">8</span>Authentication</h2>
+
+    <h3>Session Storage</h3>
+    <pre><span class="cmt">// auth/session.ts — ใช้ sessionStorage แทน localStorage</span>
+<span class="cmt">// ปิด tab → session หาย → ปลอดภัยกว่า localStorage</span>
+<span class="kw">interface</span> AuthUser {
+  name, username, role, position, coordinator: boolean
+  token: string
+  expiresAt: number  <span class="cmt">// unix ms จาก JWT exp</span>
+}</pre>
+
+    <h3>Draft Mode (Dev)</h3>
+    <pre><span class="cmt">// VITE_DRAFT_MODE=true → แสดง form ป้อน job_title</span>
+<span class="tag">&lt;form</span> v-if=<span class="str">"isDraftMode"</span> @submit.prevent=<span class="str">"submitDraft"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;input</span> v-model=<span class="str">"form.job_title"</span> placeholder=<span class="str">"dept,fa,chief"</span> <span class="tag">/&gt;</span>
+  <span class="tag">&lt;input</span> v-model=<span class="str">"form.name"</span> placeholder=<span class="str">"ชื่อ นามสกุล"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;/form&gt;</span>
+
+<span class="cmt">// VITE_DRAFT_MODE=false → แสดงปุ่ม Microsoft Login (MSAL)</span>
+<span class="tag">&lt;button</span> v-else @click=<span class="str">"loginEntra"</span><span class="tag">&gt;</span>🏢 Microsoft Login<span class="tag">&lt;/button&gt;</span></pre>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>Login ด้วย FA + position</strong>
+          <pre><span class="cmt"># ใน .env: VITE_DRAFT_MODE=true</span>
+เปิด http://localhost:5173/login
+ป้อน job_title: dept,fa,chief
+ป้อน name: Finance Chief
+กด "เข้าสู่ระบบ"
+→ ต้องถูก redirect ไปที่ /finance</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Login ด้วย Division + head → /budget</strong>
+          <pre>ป้อน job_title: dept,bba,head
+ป้อน name: BBA Head
+→ redirect ไปที่ /budget (ไม่มีเมนู Finance)</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ access control ใน browser</strong>
+          <pre><span class="cmt"># Login เป็น BBA Head แล้ว navigate ตรง</span>
+http://localhost:5173/finance
+→ ต้อง redirect กลับไป /budget ทันที</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Session Timeout -->
+  <section id="session">
+    <h2><span class="n">9</span>Session Timeout</h2>
+    <p>ตรวจสอบ expiry จาก JWT <code>exp</code> claim — แสดง warning 5 นาทีก่อน หมดอายุ</p>
+
+    <pre><span class="cmt">// composables/useSessionTimeout.ts</span>
+<span class="kw">const</span> WARN_BEFORE_MS = <span class="num">5</span> * <span class="num">60</span> * <span class="num">1000</span>   <span class="cmt">// 5 min</span>
+
+<span class="cmt">// เริ่ม timer 2 ตัว:</span>
+warnTimer   = setTimeout(showWarning, ms - WARN_BEFORE_MS)
+logoutTimer = setTimeout(logout,      ms)
+
+<span class="cmt">// Countdown ทุก 10 วินาที</span>
+countdownInterval = setInterval(() => {
+  minutesLeft.value = Math.ceil(msUntilExpiry() / <span class="num">60_000</span>)
+}, <span class="num">10_000</span>)</pre>
+
+    <div class="card">
+      <p style="color:var(--muted);font-size:13px">UI ที่แสดง: <strong style="color:var(--text)">SessionTimeoutModal.vue</strong></p>
+      <pre><span class="cmt">&lt;!-- ปุ่ม "อยู่ต่อ" — dismiss warning, reset timer --&gt;</span>
+<span class="cmt">&lt;!-- ปุ่ม "ออกจากระบบ" — logout ทันที --&gt;</span>
+<span class="cmt">&lt;!-- Auto-logout เมื่อ countdown ถึง 0 --&gt;</span></pre>
+    </div>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ warning dialog (เร่ง time)</strong>
+          <pre><span class="cmt">// ใน auth/session.ts — เปลี่ยน expiresAt ชั่วคราว</span>
+<span class="cmt">// ตั้ง expires_in: 360 (6 นาที) ใน draft login response (mock)</span>
+<span class="cmt">// หลัง login 1 นาที → warning modal ควรปรากฏ</span></pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ auto-logout</strong>
+          <pre><span class="cmt">// เปิด DevTools → Application → Session Storage</span>
+<span class="cmt">// แก้ expiresAt เป็น Date.now() + 10000 (10 วินาที)</span>
+<span class="cmt">// รอ 10 วินาที → ถูก redirect ไป /login</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Dashboard -->
+  <section id="dashboard">
+    <h2><span class="n">10</span>Finance Dashboard</h2>
+
+    <h3>Views &amp; Data Flow</h3>
+    <table>
+      <tr><th>View</th><th>API Endpoint</th><th>Access</th><th>ข้อมูลที่แสดง</th></tr>
+      <tr>
+        <td><code>FinanceView.vue</code></td>
+        <td><code>GET /api/v1/finance</code></td>
+        <td><span class="badge badge-fa">FA only</span></td>
+        <td>KPIs + Trend + Dept chart + Division chart + 2 Pivot tables</td>
+      </tr>
+      <tr>
+        <td><code>BudgetView.vue</code></td>
+        <td><code>GET /api/v1/budget</code></td>
+        <td><span class="badge badge-all">All roles</span></td>
+        <td>KPIs + Trend + All-combined chart + 1 Pivot table</td>
+      </tr>
+      <tr>
+        <td><code>IoView.vue</code></td>
+        <td><code>GET /api/v1/io</code></td>
+        <td><span class="badge badge-all">All roles</span></td>
+        <td>IO KPIs + Dept/Division charts + Goods/Project tables</td>
+      </tr>
+    </table>
+
+    <h3>KpiCards.vue — Budget Utilization</h3>
+    <pre><span class="cmt">// สี progress bar เปลี่ยนตาม % ใช้งบ</span>
+utilization &lt; <span class="num">75</span>%  → <span class="str">text-success</span> (เขียว)
+utilization &lt; <span class="num">90</span>%  → <span class="str">text-warning</span> (เหลือง)
+utilization ≥ <span class="num">90</span>%  → <span class="str">text-danger</span>  (แดง)</pre>
+
+    <h3>Loading per Widget</h3>
+    <pre><span class="cmt">&lt;!-- SkeletonCard แสดงระหว่างโหลด — ไม่ใช้ full-page spinner --&gt;</span>
+<span class="tag">&lt;div</span> v-if=<span class="str">"isPending"</span> class=<span class="str">"grid grid-cols-4 gap-4"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;SkeletonCard</span> v-for=<span class="str">"i in 4"</span> :key=<span class="str">"i"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="cmt">&lt;!-- ErrorState แสดงเฉพาะ section ที่ fail — มีปุ่ม retry --&gt;</span>
+<span class="tag">&lt;ErrorState</span> v-else-if=<span class="str">"isError"</span> :on-retry=<span class="str">"refetch"</span> <span class="tag">/&gt;</span></pre>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ KPI loading skeleton</strong>
+          <pre><span class="cmt"># DevTools → Network → Throttle: Slow 3G</span>
+Refresh หน้า → ดูว่า skeleton animation แสดงก่อนข้อมูลจริง
+→ ไม่มีหน้าขาวโพลน</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ error state + retry</strong>
+          <pre><span class="cmt"># DevTools → Network → Block Request URL → */api/v1/finance</span>
+Refresh หน้า → ดู ErrorState component
+กดปุ่ม "ลองอีกครั้ง" → Unblock → data โหลดใหม่</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ budget utilization color</strong>
+          <pre><span class="cmt"># ปรับ mock data ให้ total_amount = 810,000,000 (90%)</span>
+→ progress bar ต้องเป็นสีแดง (danger)
+
+<span class="cmt"># total_amount = 675,000,000 (75%)</span>
+→ สีเหลือง (warning)</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Charts -->
+  <section id="charts">
+    <h2><span class="n">11</span>Charts (ApexCharts)</h2>
+
+    <div class="two-col">
+      <div class="comp-box">
+        <span class="comp-name">TrendChart</span><span class="comp-file">finance/TrendChart.vue</span>
+        <p>Line chart แนวโน้มรายเดือน — smooth curve + gradient fill + interactive tooltip</p>
+        <ul>
+          <li>X-axis: fiscal month (ต.ค.–ก.ย.)</li>
+          <li>Y-axis: auto-scale พร้อม M/K suffix</li>
+          <li>Tooltip: แสดงยอดเต็ม (1,234,567.89 บาท)</li>
+          <li>ไม่มี toolbar / zoom (clean UI)</li>
+        </ul>
+      </div>
+      <div class="comp-box">
+        <span class="comp-name">DepartmentChart</span><span class="comp-file">finance/DepartmentChart.vue</span>
+        <p>Horizontal Bar chart แยกตาม cost center — Top 10 sorted by total DESC</p>
+        <ul>
+          <li>Horizontal layout (ชื่อ dept อ่านง่ายกว่า vertical)</li>
+          <li>Rounded bar corners</li>
+          <li>Tooltip: ยอดรวมแบบ full format</li>
+          <li>reuse ได้ทั้ง dept และ division</li>
+        </ul>
+      </div>
+    </div>
+
+    <pre><span class="cmt">// Dark theme ทุก chart</span>
+chart: { background: <span class="str">'transparent'</span> }
+theme: { mode: <span class="str">'dark'</span> }
+grid:  { borderColor: <span class="str">'#2e3250'</span>, strokeDashArray: 3 }
+<span class="cmt">// ใช้ accent color (#6c8efb) เป็นสีหลักของทุก series</span></pre>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Trend chart interactive</strong>
+          <pre>เปิด /budget → ชี้เมาส์บน Line chart
+→ Tooltip ต้องแสดงชื่อเดือนและยอดในรูปแบบ 1,234,567.89 บาท</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Responsive chart</strong>
+          <pre><span class="cmt"># DevTools → Toggle device toolbar → iPhone 13</span>
+Charts ต้องปรับขนาดตาม viewport โดยไม่ overflow</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. Drill-down Table -->
+  <section id="table">
+    <h2><span class="n">12</span>Drill-down Pivot Table</h2>
+
+    <p>ตาราง GL ที่ expand/collapse รายการย่อย — ไม่ใช้ AG Grid (ใช้ native table + Vue reactivity)</p>
+
+    <pre><span class="cmt">// PivotTable.vue — expand/collapse ด้วย Set</span>
+<span class="kw">const</span> expanded = ref(<span class="kw">new</span> Set&lt;string&gt;())
+
+<span class="fn">function</span> toggleRow(id: string) {
+  expanded.value.has(id)
+    ? expanded.value.delete(id)
+    : expanded.value.add(id)
+}
+
+<span class="cmt">// "กางทั้งหมด" / "หุบทั้งหมด" button</span>
+<span class="fn">function</span> toggleAll() {
+  allExpanded.value
+    ? expanded.value.clear()
+    : data.forEach(r => expanded.value.add(r.gl_id))
+}</pre>
+
+    <h3>Column ในตาราง</h3>
+    <table>
+      <tr><th>Column</th><th>Parent Row (GL)</th><th>Child Row (Detail)</th></tr>
+      <tr><td>GL / รายละเอียด</td><td>GL ID + GL Description</td><td>details string</td></tr>
+      <tr><td>ยอดรวม (บาท)</td><td>total_amount (bold)</td><td>detail.amount</td></tr>
+      <tr><td>%</td><td>% ของ grand total</td><td>% ของ GL total</td></tr>
+    </table>
+
+    <div class="callout callout-info">
+      <strong>ℹ High-Precision Formatting</strong>
+      ทุก cell ตัวเลขใช้ <code>fmt()</code> — คุม 2 ทศนิยมเสมอ, comma separator 1,000,000.00
+      ไม่ใช้ <code>toFixed()</code> ตรงๆ (อาจปัดเศษผิดกรณี floating point)
+    </div>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Expand GL row</strong>
+          <pre>เปิด /budget → เลื่อนลงมาที่ Pivot Table
+คลิก GL row ใดก็ได้
+→ รายละเอียดย่อยขยายออก พร้อม indent ซ้าย
+คลิกซ้ำ → หุบกลับ</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ "กางทั้งหมด"</strong>
+          <pre>กดปุ่ม "กางทั้งหมด" → ทุก GL row ขยายพร้อมกัน
+กดปุ่ม "หุบทั้งหมด" → ทุก row หุบ
+ปุ่มสลับ label อัตโนมัติ</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Grand Total</strong>
+          <pre>ยอด Grand Total ต้องเท่ากับ SUM ของ total_amount ทุก GL row
+ตรวจสอบด้วยการบวกเองในใจหรือใช้ DevTools console</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. Filter Bar -->
+  <section id="filter">
+    <h2><span class="n">13</span>Filter Bar</h2>
+
+    <div class="comp-box">
+      <span class="comp-name">FilterBar</span><span class="comp-file">finance/FilterBar.vue</span>
+      <p>Controls ทุกตัว bind กับ <code>filterStore</code> — เปลี่ยนค่าแล้ว TanStack Query fetch ใหม่อัตโนมัติ</p>
+    </div>
+
+    <h3>Controls</h3>
+    <table>
+      <tr><th>Control</th><th>Type</th><th>คำอธิบาย</th></tr>
+      <tr><td>Fiscal Year / PA Year toggle</td><td>Button group</td><td>สลับ mode การกรองปี</td></tr>
+      <tr><td>ปี (Year / PA Year)</td><td>Number input</td><td>ค่าปี 2000-2100</td></tr>
+      <tr><td>เดือนเริ่มต้น / สิ้นสุด</td><td>Select</td><td>Fiscal month 1-12 (ต.ค.=1)</td></tr>
+      <tr><td>Cost Center</td><td>Text input</td><td>ILIKE search (optional, ซ่อนได้)</td></tr>
+      <tr><td>Cost Owner</td><td>Text input</td><td>FA เท่านั้น (ส่ง showCostOwner prop)</td></tr>
+      <tr><td>ค้นหา</td><td>Text input</td><td>keyword search ใน details/GL</td></tr>
+      <tr><td>รีเซ็ต</td><td>Button</td><td>reset filters ทั้งหมด (ยกเว้น year)</td></tr>
+    </table>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Fiscal Year ↔ PA Year toggle</strong>
+          <pre>กดปุ่ม "PA Year" → input label เปลี่ยนเป็น "PA Year"
+เปลี่ยนค่าปี → ข้อมูลใน dashboard รีโหลดอัตโนมัติ
+(ดูใน Network tab → request มี pa_year= แทน year=)</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Month filter</strong>
+          <pre>เลือก เดือนเริ่มต้น = 1 (ต.ค.), สิ้นสุด = 3 (ธ.ค.)
+→ KPI total ลดลง (เห็นเฉพาะ Q1 fiscal)
+→ Trend chart แสดงเฉพาะ 3 เดือน</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Reset</strong>
+          <pre>ตั้งค่า filters หลายตัว → กดปุ่ม "รีเซ็ต"
+→ filters ทุกตัวกลับเป็นค่า default
+→ ข้อมูลรีโหลดใหม่</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14. Export & Print -->
+  <section id="export">
+    <h2><span class="n">14</span>Export &amp; Print</h2>
+
+    <pre><span class="cmt">// utils/export.ts</span>
+<span class="fn">exportExcel</span>(rows, filename)   <span class="cmt">// xlsx library → .xlsx</span>
+<span class="fn">exportCSV</span>(rows, filename)     <span class="cmt">// string manipulation → .csv</span>
+<span class="fn">printPage</span>()                  <span class="cmt">// window.print()</span></pre>
+
+    <h3>Excel Export Flow</h3>
+    <pre><span class="cmt">// FinanceView.vue</span>
+<span class="fn">function</span> onExportExcel() {
+  <span class="kw">const</span> rows = data.value.pivot_table_by_gl_detail.map(r => ({
+    <span class="str">'GL ID'</span>:         r.gl_id,
+    <span class="str">'GL Description'</span>: r.gl_description,
+    <span class="str">'Total Amount'</span>:   r.total_amount,  <span class="cmt">// ตัวเลขจริง ไม่ใช่ string</span>
+  }))
+  exportExcel(rows, <span class="str">'finance-report'</span>)  <span class="cmt">// → finance-report.xlsx</span>
+}</pre>
+
+    <h3>Print CSS (Ctrl+P)</h3>
+    <ul>
+      <li>ซ่อน Sidebar, Header, Filter bar, ปุ่มทุกตัว</li>
+      <li>Background เปลี่ยนเป็นสีขาว, text เป็นสีดำ</li>
+      <li>Card borders แสดงด้วย <code>#ddd</code> เพื่อแบ่งส่วน</li>
+      <li>ตัวเลขสีต่างๆ (accent/success/danger) เปลี่ยนเป็น <code>#000</code></li>
+    </ul>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Excel Export</strong>
+          <pre>เปิด /finance (login เป็น FA)
+กดปุ่ม "📥 Excel" ใน Header
+→ ไฟล์ finance-report.xlsx ดาวน์โหลด
+เปิดด้วย Excel → ตรวจ column format และตัวเลข</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ CSV Export</strong>
+          <pre>กดปุ่ม "📄 CSV"
+→ budget-by-dept.csv ดาวน์โหลด
+เปิดด้วย text editor → ตรวจ comma-separated, ไม่มี encoding เสีย</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบ Print</strong>
+          <pre>กดปุ่ม "🖨️ Print" หรือ Ctrl+P
+→ Print preview ต้องไม่มี Sidebar/Header
+→ Background สีขาว, ตัวอักษรสีดำ
+→ ตัวเลขอ่านได้ชัดเจน</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15. Coordinator -->
+  <section id="coordinator">
+    <h2><span class="n">15</span>Coordinator Admin</h2>
+
+    <p>หน้า <code>/admin/coordinators</code> เข้าได้เฉพาะ <strong>FA + position (chief/chairman/head)</strong></p>
+
+    <h3>Features</h3>
+    <ul>
+      <li>ดูรายชื่อ coordinator ทั้งหมด (active + inactive)</li>
+      <li>เพิ่ม coordinator ใหม่ (หรือ reactivate ถ้า inactive)</li>
+      <li>Toggle active ↔ inactive (soft delete)</li>
+      <li>ใช้ TanStack Query <code>useMutation</code> + <code>invalidateQueries</code> → list refresh อัตโนมัติ</li>
+    </ul>
+
+    <h3>วิธีทดสอบ</h3>
+    <div class="test-steps">
+      <div class="test-step">
+        <div>
+          <strong>Login เป็น FA + chief และเข้า Admin</strong>
+          <pre>Login: dept,fa,chief
+→ Sidebar ต้องแสดงเมนู "👥 Coordinators"
+คลิก → เข้า /admin/coordinators</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>เพิ่ม coordinator</strong>
+          <pre>ป้อน username: test.user@example.com
+กด "เพิ่ม" → row ใหม่ปรากฏใน list พร้อม badge "Active"</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>ทดสอบว่า coordinator login ได้</strong>
+          <pre><span class="cmt"># Logout จาก FA</span>
+Login: dept,bba, name: test.user@example.com
+→ ต้องเข้าระบบได้ (coordinator: true ใน token)</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Toggle deactivate</strong>
+          <pre>กลับเข้า Admin → กดปุ่ม "ปิดสิทธิ์" บน coordinator นั้น
+→ badge เปลี่ยนเป็น "Inactive"
+Login ด้วย username เดิม → ต้องถูก reject (403)</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16. Security -->
+  <section id="security">
+    <h2><span class="n">16</span>Frontend Security</h2>
+
+    <h3>Role-Based UI Rendering</h3>
+    <pre><span class="cmt">&lt;!-- AppSidebar.vue — ซ่อน Finance menu ถ้าไม่ใช่ FA --&gt;</span>
+<span class="tag">&lt;RouterLink</span> v-if=<span class="str">"authStore.canViewFinance"</span> to=<span class="str">"/finance"</span><span class="tag">&gt;</span>
+  Finance
+<span class="tag">&lt;/RouterLink&gt;</span>
+
+<span class="cmt">&lt;!-- ซ่อน Admin menu ถ้าไม่ใช่ FA + position --&gt;</span>
+<span class="tag">&lt;div</span> v-if=<span class="str">"authStore.canManageCoordinators"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;RouterLink</span> to=<span class="str">"/admin/coordinators"</span><span class="tag">&gt;</span>Coordinators<span class="tag">&lt;/RouterLink&gt;</span>
+<span class="tag">&lt;/div&gt;</span></pre>
+
+    <div class="callout callout-warn">
+      <strong>⚠ UI Hiding ≠ Security</strong>
+      การซ่อน UI เป็น UX เท่านั้น — security จริงอยู่ที่ <strong>Router Guard</strong> + <strong>Backend JWT verification</strong>
+      ผู้ใช้ที่ navigate ตรงไป /finance จะถูก Guard ตรวจและ redirect ทันที
+    </div>
+
+    <h3>XSS Prevention</h3>
+    <ul>
+      <li>ไม่ใช้ <code>v-html</code> ในทุก component — ข้อมูลจาก API แสดงผ่าน template escaping เท่านั้น</li>
+      <li>Input validation ผ่าน <code>type="number"</code>, <code>min/max</code>, <code>maxlength</code></li>
+    </ul>
+
+    <h3>Secure Storage</h3>
+    <pre><span class="cmt">// auth/session.ts — ใช้ sessionStorage แทน localStorage</span>
+sessionStorage.setItem(<span class="str">'auth_user'</span>, JSON.stringify(data))
+<span class="cmt">// → ปิด browser tab → session หายไปทันที</span>
+<span class="cmt">// → ไม่ตกค้างข้ามวัน เหมาะกับ dashboard ใช้ในออฟฟิศ</span></pre>
+
+    <h3>Token ไม่ใช่ Cookie</h3>
+    <p>JWT เก็บใน sessionStorage และส่งผ่าน <code>Authorization: Bearer</code> header ทุก request ผ่าน Axios interceptor — ไม่เปิดเผย token ใน URL หรือ log</p>
+  </section>
+
+  <!-- 17. Testing -->
+  <section id="tests">
+    <h2><span class="n">17</span>Testing</h2>
+
+    <h3>รัน Tests</h3>
+    <pre><span class="cmt"># Unit tests (Vitest)</span>
+npm run test:unit           <span class="cmt"># run once</span>
+npm run test:unit:watch     <span class="cmt"># watch mode</span>
+
+<span class="cmt"># E2E tests (Playwright)</span>
+npm run test:e2e            <span class="cmt"># run all</span>
+npx playwright test --ui    <span class="cmt"># interactive UI mode</span>
+npx playwright show-report  <span class="cmt"># HTML report</span>
+
+<span class="cmt"># Type check</span>
+npm run type-check</pre>
+
+    <h3>Unit Tests (Vitest)</h3>
+    <table>
+      <tr><th>File</th><th>ทดสอบอะไร</th><th>จำนวน test</th></tr>
+      <tr>
+        <td><code>tests/unit/format.test.ts</code></td>
+        <td><code>fmt</code>, <code>fmtShort</code>, <code>fmtPct</code>, <code>fiscalMonthName</code></td>
+        <td>10 cases</td>
+      </tr>
+      <tr>
+        <td><code>tests/unit/permissions.test.ts</code></td>
+        <td><code>extractClaims</code>, <code>isFA</code>, <code>isDivision</code>, <code>hasPosition</code>, <code>canAccess</code></td>
+        <td>15 cases</td>
+      </tr>
+    </table>
+
+    <h3>E2E Tests (Playwright)</h3>
+    <table>
+      <tr><th>Test</th><th>Scenario</th></tr>
+      <tr><td>Redirect unauthenticated</td><td>/finance → /login</td></tr>
+      <tr><td>Draft Mode badge</td><td>Login page แสดง badge ถูกต้อง</td></tr>
+      <tr><td>FA Chief login</td><td>redirect → /finance</td></tr>
+      <tr><td>Division login</td><td>redirect → /budget</td></tr>
+      <tr><td>Unauthorized login</td><td>แสดง error alert, stay at /login</td></tr>
+      <tr><td>Division → /finance</td><td>Router guard redirect → /budget</td></tr>
+      <tr><td>Logout</td><td>clear session, redirect → /login</td></tr>
+      <tr><td>Responsive (iPhone 13)</td><td>Login page renders ถูกต้อง</td></tr>
+    </table>
+
+    <pre><span class="cmt"># รัน E2E แบบ headed (เห็น browser จริง)</span>
+npx playwright test --headed
+
+<span class="cmt"># รันเฉพาะ auth tests</span>
+npx playwright test auth.spec.ts
+
+<span class="cmt"># Debug mode</span>
+npx playwright test --debug</pre>
+  </section>
+
+  <!-- 18. Performance -->
+  <section id="performance">
+    <h2><span class="n">18</span>Performance</h2>
+
+    <h3>Code Splitting (vite.config.ts)</h3>
+    <table>
+      <tr><th>Chunk</th><th>Libraries</th><th>โหลดเมื่อ</th></tr>
+      <tr><td><code>vue-core</code></td><td>vue, vue-router, pinia</td><td>ทุกหน้า</td></tr>
+      <tr><td><code>query</code></td><td>@tanstack/vue-query, axios</td><td>ทุกหน้า (authenticated)</td></tr>
+      <tr><td><code>charts</code></td><td>apexcharts, vue3-apexcharts</td><td>เฉพาะหน้า dashboard</td></tr>
+      <tr><td><code>primevue</code></td><td>primevue</td><td>แยก chunk ไม่กระทบ first load</td></tr>
+      <tr><td><code>utils</code></td><td>dayjs, numeral, xlsx, @vueuse/core</td><td>โหลดเมื่อต้องการ</td></tr>
+    </table>
+
+    <h3>TanStack Query Cache</h3>
+    <ul>
+      <li><code>staleTime: 300,000 ms</code> (5 min) — ตรงกับ Redis TTL backend</li>
+      <li>เปลี่ยน filter → refetch เฉพาะ query ที่ key เปลี่ยน</li>
+      <li><code>refetchOnWindowFocus: false</code> — ไม่ reload เมื่อ focus window</li>
+    </ul>
+
+    <h3>Font Loading</h3>
+    <pre><span class="cmt">&lt;!-- index.html --&gt;</span>
+<span class="tag">&lt;link</span> rel=<span class="str">"preconnect"</span> href=<span class="str">"https://fonts.googleapis.com"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;link</span> rel=<span class="str">"preconnect"</span> href=<span class="str">"https://fonts.gstatic.com"</span> crossorigin <span class="tag">/&gt;</span>
+<span class="cmt">&lt;!-- preconnect ลด TTFB ของ Google Fonts --&gt;</span></pre>
+  </section>
+
+  <!-- 19. Accessibility -->
+  <section id="a11y">
+    <h2><span class="n">19</span>Accessibility (a11y)</h2>
+
+    <h3>Semantic HTML</h3>
+    <ul>
+      <li>ใช้ <code>&lt;nav aria-label="Main navigation"&gt;</code> สำหรับ sidebar</li>
+      <li>ใช้ <code>&lt;main&gt;</code>, <code>&lt;header&gt;</code>, <code>&lt;aside&gt;</code> อย่างถูกต้อง</li>
+      <li>ตาราง: <code>&lt;table role="table" aria-label="..."&gt;</code></li>
+      <li>Dialog: <code>role="dialog" aria-modal="true"</code></li>
+    </ul>
+
+    <h3>Form Labels</h3>
+    <pre><span class="cmt">&lt;!-- ทุก input มี label หรือ aria-label --&gt;</span>
+<span class="tag">&lt;label</span> for=<span class="str">"job_title"</span><span class="tag">&gt;</span>Job Title<span class="tag">&lt;/label&gt;</span>
+<span class="tag">&lt;input</span> id=<span class="str">"job_title"</span> aria-describedby=<span class="str">"job_title_hint"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;p</span> id=<span class="str">"job_title_hint"</span><span class="tag">&gt;</span>ตัวอย่าง: dept,fa,chief<span class="tag">&lt;/p&gt;</span></pre>
+
+    <h3>Alert Role</h3>
+    <pre><span class="cmt">&lt;!-- Error message ใน LoginView --&gt;</span>
+<span class="tag">&lt;div</span> role=<span class="str">"alert"</span><span class="tag">&gt;</span>{{ errorMsg }}<span class="tag">&lt;/div&gt;</span>
+<span class="cmt">&lt;!-- Screen reader อ่านทันทีเมื่อ error แสดง --&gt;</span></pre>
+
+    <h3>Color Contrast</h3>
+    <ul>
+      <li>Text <code>#e2e8f0</code> บน <code>#0f1117</code> → contrast ratio 13.5:1 (AAA)</li>
+      <li>Muted <code>#8892b0</code> บน <code>#1a1d27</code> → 4.7:1 (AA)</li>
+      <li>Accent <code>#6c8efb</code> — ใช้เฉพาะ interactive elements ไม่ใช่ body text</li>
+    </ul>
+
+    <h3>Keyboard Navigation</h3>
+    <ul>
+      <li>ทุก <code>&lt;button&gt;</code> และ <code>&lt;a&gt;</code> accessible ด้วย Tab</li>
+      <li>Focus ring: <code>focus:ring-2 focus:ring-accent/50</code> ทุก interactive element</li>
+      <li>Modal: <code>aria-modal="true"</code> → screen reader ไม่อ่าน content ด้านหลัง</li>
+    </ul>
+  </section>
+
+  <!-- 20. Checklist -->
+  <section id="checklist">
+    <h2><span class="n">20</span>Requirement Checklist</h2>
+
+    <table>
+      <tr><th>Requirement</th><th>สถานะ</th><th>Implementation</th></tr>
+      <tr><td>Vue.js Framework</td><td><span style="color:var(--green)">✓</span></td><td>Vue 3 + TypeScript strict + Vite</td></tr>
+      <tr><td>Intuitive Design</td><td><span style="color:var(--green)">✓</span></td><td>Dark theme + design tokens + PrimeVue</td></tr>
+      <tr><td>Responsive Design</td><td><span style="color:var(--green)">✓</span></td><td>Tailwind responsive utilities + Playwright mobile tests</td></tr>
+      <tr><td>Design System</td><td><span style="color:var(--green)">✓</span></td><td>tailwind.config.ts tokens ใช้ทั้ง project</td></tr>
+      <tr><td>Code Splitting</td><td><span style="color:var(--green)">✓</span></td><td>vite.config.ts manualChunks 5 groups + lazy routes</td></tr>
+      <tr><td>Browser Cache / CDN</td><td><span style="color:var(--green)">✓</span></td><td>TanStack Query staleTime 5 min + Vite hash filenames</td></tr>
+      <tr><td>Component-Based</td><td><span style="color:var(--green)">✓</span></td><td>12 reusable components + 3 layouts</td></tr>
+      <tr><td>State Management (Pinia)</td><td><span style="color:var(--green)">✓</span></td><td>authStore + filterStore type-safe</td></tr>
+      <tr><td>TypeScript</td><td><span style="color:var(--green)">✓</span></td><td>strict mode ทุกไฟล์ + api.ts interfaces จาก openapi.yaml</td></tr>
+      <tr><td>Axios + TanStack Query</td><td><span style="color:var(--green)">✓</span></td><td>Axios interceptors + useQuery/useMutation</td></tr>
+      <tr><td>Graceful Degradation</td><td><span style="color:var(--green)">✓</span></td><td>ErrorState + retry button per widget</td></tr>
+      <tr><td>Loading Status</td><td><span style="color:var(--green)">✓</span></td><td>SkeletonCard per section (ไม่ใช่ full-page)</td></tr>
+      <tr><td>Accessibility (a11y)</td><td><span style="color:var(--green)">✓</span></td><td>aria-label, role, focus ring, contrast ratio</td></tr>
+      <tr><td>XSS Protection</td><td><span style="color:var(--green)">✓</span></td><td>ไม่ใช้ v-html, template escaping ทุกจุด</td></tr>
+      <tr><td>Secure Storage</td><td><span style="color:var(--green)">✓</span></td><td>sessionStorage (ปิด tab → หาย) + Bearer header</td></tr>
+      <tr><td>KPI Summary Cards</td><td><span style="color:var(--green)">✓</span></td><td>KpiCards.vue: total, budget, utilization %, doc count</td></tr>
+      <tr><td>Line Chart</td><td><span style="color:var(--green)">✓</span></td><td>TrendChart.vue: ApexCharts smooth + gradient</td></tr>
+      <tr><td>Stacked Bar Chart</td><td><span style="color:var(--green)">✓</span></td><td>DepartmentChart.vue: horizontal bar, top 10</td></tr>
+      <tr><td>Fiscal / PA Year toggle</td><td><span style="color:var(--green)">✓</span></td><td>FilterBar.vue: yearMode reactive → params computed</td></tr>
+      <tr><td>Department Filter</td><td><span style="color:var(--green)">✓</span></td><td>cost_center + cost_owner inputs</td></tr>
+      <tr><td>Drill-down Table</td><td><span style="color:var(--green)">✓</span></td><td>PivotTable.vue: expand/collapse + grand total</td></tr>
+      <tr><td>High-Precision Formatting</td><td><span style="color:var(--green)">✓</span></td><td>fmt() คุม 2 ทศนิยม, 1,000,000.00 ทุกเซลล์</td></tr>
+      <tr><td>Loading per Widget</td><td><span style="color:var(--green)">✓</span></td><td>SkeletonCard ต่อ section, ไม่ใช้ full-page spinner</td></tr>
+      <tr><td>Role-Based UI Rendering</td><td><span style="color:var(--green)">✓</span></td><td>v-if ตาม authStore computed + Router guard</td></tr>
+      <tr><td>Session Timeout Warning</td><td><span style="color:var(--green)">✓</span></td><td>useSessionTimeout: warning 5 min + countdown + auto-logout</td></tr>
+      <tr><td>Excel/CSV Export</td><td><span style="color:var(--green)">✓</span></td><td>xlsx library + exportExcel/exportCSV utils</td></tr>
+      <tr><td>Print-Friendly CSS</td><td><span style="color:var(--green)">✓</span></td><td>@media print: white bg, hide nav/buttons, black text</td></tr>
+      <tr><td>Unit Tests (Vitest)</td><td><span style="color:var(--green)">✓</span></td><td>format.test.ts + permissions.test.ts (25 cases)</td></tr>
+      <tr><td>E2E Tests (Playwright)</td><td><span style="color:var(--green)">✓</span></td><td>auth.spec.ts: 8 scenarios, Desktop + Mobile</td></tr>
+    </table>
+
+    <div style="margin-top:32px;padding:20px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+      <p style="color:var(--muted);font-size:13px;margin:0">
+        <strong style="color:var(--text)">Seamless Dashboard Frontend v1.0</strong><br>
+        Vue 3 · TypeScript · Pinia · TanStack Query · ApexCharts · PrimeVue · Playwright<br>
+        Docs generated: 2026-06-03
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  function toggleTheme(){
+    var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+    h.setAttribute('data-theme',t);localStorage.setItem('theme',t);
+    document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
+  }
+  (function(){
+    var t=document.documentElement.getAttribute('data-theme');
+    document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';
+  })();
+
+  const sections = document.querySelectorAll('section[id]')
+  const sectionLinks = document.querySelectorAll('nav a[href^="#"]')
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        sectionLinks.forEach(l => l.classList.remove('active'))
+        const a = document.querySelector(`nav a[href="#${e.target.id}"]`)
+        if (a) a.classList.add('active')
+      }
+    })
+  }, { rootMargin: '-20% 0px -70% 0px' })
+  sections.forEach(s => obs.observe(s))
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security — Frontend Requirement Checklist</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] .block-pass{background:rgba(16,185,129,.1);}html[data-theme="light"] .block-partial{background:rgba(245,158,11,.1);}html[data-theme="light"] .block-todo{background:rgba(245,158,11,.1);}html[data-theme="light"] .block-warn{background:rgba(239,68,68,.1);}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}html[data-theme="light"] main{background:var(--surface);}html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:860px;padding:40px 36px 80px;}
+    h2{font-size:22px;font-weight:800;margin-bottom:6px;}h2 small{font-size:13px;font-weight:400;color:var(--muted);}
+    .item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+    .item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .item-title{font-size:15px;font-weight:700;color:var(--text);}
+    .item-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .item-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px;}
+    .item-body{padding:18px 20px;display:grid;gap:14px;}
+    .block h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    .block p,.block li{font-size:13.5px;color:var(--text);}
+    .block ul{padding-left:18px;}.block li{margin-bottom:5px;}
+    .block-pass{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:14px 16px;}.block-pass h4{color:var(--green);}
+    .block-partial{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}.block-partial h4{color:var(--yellow);}
+    .block-todo{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:14px 16px;}.block-todo h4{color:var(--yellow);}
+    .block-warn{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:14px 16px;}.block-warn h4{color:var(--red);}
+    .pass{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+    .partial{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25);}
+    .fail{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25);}
+    .p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(248,113,113,.18);color:#fca5a5;}
+    .p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(251,191,36,.18);color:var(--yellow);}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:8px 0;color:var(--text);}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Seamless Dashboard</h1><p>Frontend Docs &amp; Checklists</p></div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <div class="group">Overview</div>
+  <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
+  <a href="frontend.html">Frontend Guide</a>
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-fe-ux.html">UX/UI <span class="cnt">5</span></a>
+  <a href="checklist-fe-performance.html">Performance <span class="cnt">5</span></a>
+  <a href="checklist-fe-architecture.html">Architecture <span class="cnt">5</span></a>
+  <a href="checklist-fe-api.html">API Integration <span class="cnt">5</span></a>
+  <a href="checklist-fe-security.html" class="active">Security <span class="cnt">6</span></a>
+  <a href="checklist-fe-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-fe-cicd.html">CI/CD <span class="cnt">3</span></a>
+  <a href="checklist-fe-accessibility.html">Accessibility <span class="cnt">2</span></a>
+</nav>
+<main>
+  <div class="nav-btn">
+    <a href="checklist-fe-api.html">← API Integration</a>
+    <a href="checklist-fe-testing.html">Testing →</a>
+  </div>
+  <h2>Security <small>— 6 requirements &nbsp; Pass 4 / Partial 1 / Defer 0 / Fail 1</small></h2>
+  <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความปลอดภัยฝั่ง browser: XSS, token storage, role-based rendering, session management, CSRF, และ Content Security Policy</p>
+
+  <!-- 1. XSS Prevention -->
+  <div class="item" id="xss">
+    <div class="item-head">
+      <div><div class="item-title">1. XSS Prevention</div><div class="item-sub">ห้าม v-html กับข้อมูลจาก user input ใช้ DOMPurify หาก render HTML จำเป็น</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>XSS (Cross-Site Scripting) คือ attack ที่ inject JavaScript ลงใน HTML ผ่าน user input เมื่อ browser render HTML นั้น script รันใน context ของ site ทำให้ขโมย cookie, session, หรือ redirect user ไปหน้าปลอม</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Vue 3 escape HTML อัตโนมัติในทุก <code>{{ }}</code> binding แต่ถ้าใช้ <code>v-html</code> กับข้อมูลจาก user — XSS เกิดได้ทันที บน financial dashboard ที่ใช้ HTTP-only cookie XSS อาจขโมย session ทางอ้อมได้</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li>ESLint rule <code>vue/no-v-html</code> เปิดอยู่ — build fail ถ้าใช้ <code>v-html</code></li>
+          <li>กรณีที่ต้อง render HTML จริง (เช่น rich text field) ใช้ DOMPurify ก่อนเสมอ</li>
+          <li>User-supplied ข้อความทั้งหมดผ่าน <code>{{ }}</code> binding ซึ่ง Vue auto-escape</li>
+        </ul>
+        <pre># ตรวจสอบ — ต้องไม่พบ v-html กับ dynamic content
+grep -rn "v-html" src/components/
+# ถ้าพบต้องตรวจว่า sanitize ด้วย DOMPurify.sanitize() ก่อนเสมอ</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>ลองใส่ <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> ในทุก input field ที่มี — ต้องไม่มี alert popup เกิดขึ้น ข้อความควรแสดงเป็น literal text</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. HTTP-only Cookie -->
+  <div class="item" id="http-only-cookie">
+    <div class="item-head">
+      <div><div class="item-title">2. HTTP-only Cookie (Token)</div><div class="item-sub">เก็บ JWT ใน HTTP-only cookie ห้ามเก็บใน localStorage</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>HTTP-only cookie คือ cookie ที่ browser ไม่ให้ JavaScript อ่านได้ผ่าน <code>document.cookie</code> ตั้งโดย backend ผ่าน <code>Set-Cookie: token=...; HttpOnly; SameSite=Strict</code> browser ส่งให้อัตโนมัติทุก request ไปยัง same origin</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p><code>localStorage</code> อ่านได้จาก JavaScript ทุก script ในหน้า — ถ้ามี XSS แม้เล็กน้อย ก็ขโมย token ได้ทันที HTTP-only cookie ทำให้ XSS ขโมย token ไม่ได้เลยเพราะ JavaScript เข้าไม่ถึง</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li>Backend ส่ง <code>Set-Cookie: token=...; HttpOnly; Secure; SameSite=Strict; Path=/</code></li>
+          <li>Frontend ไม่มีการ <code>localStorage.setItem('token', ...)</code> ที่ใดเลย</li>
+          <li>Axios ใช้ <code>withCredentials: true</code> ทำให้ browser ส่ง cookie ทุก request</li>
+          <li>Pinia auth store เก็บเฉพาะ user metadata (role, name) ที่ไม่ sensitive — ไม่เก็บ token</li>
+        </ul>
+        <pre># ตรวจสอบ — ต้องไม่พบ token ใน localStorage
+grep -rn "localStorage.*token\|sessionStorage.*token" src/
+# ต้องไม่พบผลลัพธ์ใดเลย</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>Login แล้วเปิด DevTools → Application → Cookies — ต้องเห็น cookie ที่มี HttpOnly flag ✓ เปิด Console แล้วรัน <code>document.cookie</code> — ต้องไม่เห็น token value</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Role-Based UI Rendering -->
+  <div class="item" id="rbac">
+    <div class="item-head">
+      <div><div class="item-title">3. Role-Based UI Rendering</div><div class="item-sub">ซ่อน/แสดง component ตามสิทธิ์ด้วย v-permission directive ไม่เพียงแค่ CSS hidden</div></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Role-based UI rendering คือการ render หรือไม่ render component ตาม role ของ user ด้วย <code>v-permission</code> custom directive แทนการใช้ CSS <code>display:none</code> เพราะ CSS hidden ยังส่ง HTML ไปให้ browser และ user ดูใน DevTools ได้</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ปุ่ม "ลบข้อมูล" ที่ซ่อนด้วย CSS เท่านั้น — ยังอยู่ใน DOM และอาจถูก enable ด้วย DevTools ได้ <code>v-permission</code> ที่ unmount component จริงๆ ทำให้ DOM element ไม่มีอยู่เลย</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <pre>// src/directives/permission.ts
+export const vPermission = {
+  mounted(el: HTMLElement, binding: DirectiveBinding) {
+    const auth = useAuthStore()
+    const required = binding.value as string | string[]
+    const roles = Array.isArray(required) ? required : [required]
+    if (!roles.includes(auth.role)) {
+      el.parentNode?.removeChild(el)  // remove จาก DOM จริงๆ
+    }
+  }
+}
+
+// ใช้งาน
+&lt;button v-permission="'fa'"&gt;ลบรายการ&lt;/button&gt;
+&lt;div v-permission="['fa', 'coordinator']"&gt;ส่วนนี้เฉพาะ FA/Coordinator&lt;/div&gt;</pre>
+        <p style="margin-top:6px">Route guard (ดู Architecture checklist) เป็น defense ชั้นแรก — <code>v-permission</code> เป็นชั้นที่สอง ทั้งสองต้องมีพร้อมกัน</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>Login เป็น role ที่ไม่มีสิทธิ์ → เปิด DevTools → Elements — ต้องไม่พบ element ที่ใช้ <code>v-permission</code> ใน DOM เลย (ไม่ใช่แค่ hidden)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Session Timeout -->
+  <div class="item" id="session-timeout">
+    <div class="item-head">
+      <div><div class="item-title">4. Session Timeout Warning</div><div class="item-sub">นับถอยหลังและ auto-logout เมื่อ inactive ครบเวลา พร้อม warning 2 นาทีก่อน expire</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Session timeout คือการ logout อัตโนมัติเมื่อ user ไม่มี activity ครบเวลาที่กำหนด พร้อม warning modal 2 นาทีก่อน expire ให้ user เลือก "ต่อ session" หรือ "logout ทันที"</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Financial dashboard ที่ทิ้งไว้บนหน้าจอในสถานที่สาธารณะ หรือหลังเลิกงาน — ถ้าไม่มี auto-logout คนอื่นเข้าถึง session ได้ทันที</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li><code>useSessionTimeout</code> composable ใน <code>src/composables/useSessionTimeout.ts</code></li>
+          <li>Track activity: <code>mousemove</code>, <code>keydown</code>, <code>click</code>, <code>scroll</code> — reset timer ทุกครั้ง</li>
+          <li>Warning modal ปรากฏ 2 นาทีก่อน expire พร้อม countdown timer</li>
+          <li>Auto-logout เรียก <code>POST /auth/logout</code> + clear Pinia store + redirect ไป login</li>
+          <li>Timeout duration อ่านจาก JWT exp claim — sync กับ backend token expiry</li>
+        </ul>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p>ตั้ง <code>VITE_SESSION_TIMEOUT_SECONDS=30</code> ใน <code>.env.development</code> แล้วทิ้งไว้ 28 วินาที — ต้องเห็น warning modal ปรากฏ รออีก 2 วินาที — ต้องถูก redirect ไปหน้า login</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. CSRF Protection -->
+  <div class="item" id="csrf">
+    <div class="item-head">
+      <div><div class="item-title">5. CSRF Protection</div><div class="item-sub">ใช้ CSRF token หรือ SameSite=Strict cookie กันการโจมตี cross-site</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>CSRF (Cross-Site Request Forgery) คือ attack ที่หลอกให้ browser ของ victim ส่ง request ที่ไม่ต้องการไปยัง site ที่ victim login อยู่ เช่น หน้าเว็บ evil.com ซ่อน <code>&lt;img src="bank.com/transfer?to=hacker&amp;amount=10000"&gt;</code></p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard ที่รับ write actions (update budget, toggle coordinator) ถ้าไม่มี CSRF protection — attacker อาจ trigger action เหล่านั้นจาก site อื่นได้ถ้า user เปิด tab นั้นค้างไว้</p></div>
+      <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
+        <p><strong>ป้องกันได้บางส่วน</strong> ผ่าน <code>SameSite=Strict</code> บน auth cookie — browser จะไม่ส่ง cookie เมื่อ request มาจาก cross-site origin ทำให้ CSRF attack ที่พึ่งพา cookie ล้มเหลว</p>
+        <p style="margin-top:6px"><strong>ยังไม่มี</strong> explicit CSRF token header (<code>X-CSRF-Token</code>) ซึ่งเป็น defense layer เพิ่มเติม</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ (defense-in-depth)</h4>
+        <p><strong>Option 1 (แนะนำ): Double Submit Cookie Pattern</strong></p>
+        <pre>// Backend ส่ง CSRF token ใน non-HttpOnly cookie
+Set-Cookie: csrf_token=random_token; SameSite=Strict; Path=/
+
+// Frontend อ่าน csrf_token จาก cookie แล้วใส่ใน header
+// src/api/client.ts — request interceptor
+apiClient.interceptors.request.use((config) => {
+  const csrfToken = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrf_token='))
+    ?.split('=')[1]
+  if (csrfToken) {
+    config.headers['X-CSRF-Token'] = csrfToken
+  }
+  return config
+})</pre>
+        <p style="margin-top:8px"><strong>Option 2: Origin/Referer Check ฝั่ง backend</strong> — validate ว่า <code>Origin</code> header ตรงกับ allowed origin (ง่ายกว่า แต่ browser บางตัวไม่ส่ง header นี้)</p>
+        <p style="margin-top:6px;color:var(--yellow);font-size:12px">⚠ SameSite=Strict ป้องกัน CSRF ส่วนใหญ่ได้ แต่ defense-in-depth ด้วย CSRF token ทำให้ปลอดภัยกว่าและผ่าน security audit ได้ง่ายขึ้น</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Content Security Policy -->
+  <div class="item" id="csp">
+    <div class="item-head">
+      <div><div class="item-title">6. Content Security Policy (CSP)</div><div class="item-sub">กำหนด CSP header เพื่อจำกัดแหล่งที่ browser จะโหลด script/style ได้</div></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+    </div>
+    <div class="item-body">
+      <div class="block"><h4>คืออะไร</h4><p>Content Security Policy คือ HTTP response header ที่บอก browser ว่าอนุญาตให้โหลด script/style/image จากแหล่งใดได้บ้าง เช่น <code>script-src 'self'</code> หมายความว่าโหลด JS ได้เฉพาะจาก same origin เท่านั้น script ที่ inject ผ่าน XSS จาก domain อื่นจะถูก block</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>CSP เป็น defense layer สุดท้ายต่อ XSS — แม้ attacker inject script สำเร็จ browser จะยังไม่ run script นั้นถ้า CSP block ไว้ เป็น defense-in-depth ที่สำคัญมากสำหรับ financial application</p></div>
+      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
+        <p>ยังไม่มีการตั้ง CSP header ทั้งใน dev server และ production server</p>
+      </div>
+      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+        <p><strong>1. เพิ่ม CSP ใน Vite dev server (สำหรับ development)</strong></p>
+        <pre>// vite.config.ts
+server: {
+  headers: {
+    'Content-Security-Policy':
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline'; " +  // unsafe-inline ต้องมีสำหรับ Vue HMR
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: blob:; " +
+      "connect-src 'self' http://localhost:8000; " +
+      "font-src 'self';"
+  }
+}</pre>
+        <p style="margin-top:8px"><strong>2. ตั้ง CSP ใน production server (Nginx)</strong></p>
+        <pre># nginx.conf
+add_header Content-Security-Policy
+  "default-src 'self';
+   script-src 'self';
+   style-src 'self' 'unsafe-inline';
+   img-src 'self' data: blob:;
+   connect-src 'self' https://api.seamless.example.com;
+   font-src 'self';
+   frame-ancestors 'none';"
+  always;</pre>
+        <p style="margin-top:8px"><strong>3. ทดสอบ CSP ก่อน enforce</strong> ใช้ <code>Content-Security-Policy-Report-Only</code> header เพื่อ log violations โดยไม่ block จริง จนมั่นใจแล้วค่อยเปลี่ยนเป็น enforce</p>
+        <p style="margin-top:6px;color:var(--yellow);font-size:12px">⚠ Vue + Vite ใช้ <code>'unsafe-inline'</code> สำหรับ style HMR ใน dev ใน production build ที่ไม่มี HMR สามารถลบ <code>'unsafe-inline'</code> ออกได้</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
+    อัปเดต 2026-06-20 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-testing.html" style="color:var(--accent)">Testing →</a>
+  </div>
+</main>
+<script>
+function toggleTheme(){var h=document.documentElement,t=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',t);localStorage.setItem('theme',t);document.getElementById('theme-btn').innerHTML=t==='dark'?'☀️ Light':'🌙 Dark';}
+(function(){var t=document.documentElement.getAttribute("data-theme");document.getElementById("theme-btn").innerHTML=t==="dark"?"☀️ Light":"🌙 Dark";})();
+</script>
+</body>
+</html>

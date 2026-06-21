@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <div class="flex flex-col gap-6 animate-fade-in">
-      <FilterBar />
+      <FilterBar :locked-cost-owner="lockedOwner" />
 
       <template v-if="isPending">
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -88,6 +88,7 @@
 import { ref, computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useFilterStore } from '@/stores/filter'
+import { useAuthStore } from '@/stores/auth'
 import { fetchIO } from '@/api/budget'
 import { fmt } from '@/utils/format'
 import { exportCSV } from '@/utils/export'
@@ -97,7 +98,9 @@ import KpiCard      from '@/components/ui/KpiCard.vue'
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
 import DonutChart   from '@/components/budget/DonutChart.vue'
 
-const filter = useFilterStore()
+const filter      = useFilterStore()
+const auth        = useAuthStore()
+const lockedOwner = computed(() => auth.isUserFA ? undefined : auth.role)
 const { data, isPending, isError, error } = useQuery({
   queryKey: computed(() => ['io', filter.ioParams]),
   queryFn: () => fetchIO(filter.ioParams),

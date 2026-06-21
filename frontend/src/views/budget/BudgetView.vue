@@ -1,7 +1,7 @@
 <template>
   <AppLayout title="Budget" show-export @export-excel="onExportExcel" @export-csv="onExportCsv" @print="printPage">
     <div class="space-y-4">
-      <FilterBar show-cost-center />
+      <FilterBar show-cost-center :locked-cost-owner="lockedOwner" />
 
       <!-- Loading -->
       <template v-if="isPending">
@@ -87,6 +87,7 @@
 import { computed, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useFilterStore } from '@/stores/filter'
+import { useAuthStore } from '@/stores/auth'
 import { fetchBudget } from '@/api/budget'
 import { exportExcel, exportCSV, printPage } from '@/utils/export'
 import { DIVISION_COLORS, DEPT_COLORS } from '@/utils/constants'
@@ -104,6 +105,9 @@ import PivotTable         from '@/components/budget/PivotTable.vue'
 import SectionHeader      from '@/components/ui/SectionHeader.vue'
 
 const filterStore = useFilterStore()
+const auth        = useAuthStore()
+
+const lockedOwner = computed(() => auth.isUserFA ? undefined : auth.role)
 
 const { data, isPending, isError, error } = useQuery({
   queryKey: computed(() => ['budget', filterStore.budgetParams]),

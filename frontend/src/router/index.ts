@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getSession } from '@/auth/session'
-import { isFA, canAccess, hasPosition } from '@/auth/permissions'
+import { isFA, isDivision, canAccess, hasPosition } from '@/auth/permissions'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,7 +22,7 @@ router.beforeEach((to, _from, next) => {
   const coord    = session?.coordinator ?? false
 
   if (to.meta.requiresAuth && !auth)                                   return next('/login')
-  if (to.meta.requiresAuth && auth && !hasPosition(position) && !coord && !isFA(role)) return next('/login')
+  if (to.meta.requiresAuth && auth && !hasPosition(position) && !coord && !isFA(role) && !isDivision(role)) return next('/login')
   if (to.meta.requiresFAPosition && (!isFA(role) || !hasPosition(position)))           return next('/io')
   if (to.path === '/login' && auth)                                    return next(isFA(role) ? '/budget' : '/io')
 

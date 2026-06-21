@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isUserFA              = computed(() => isFA(role.value))
   const isUserDiv             = computed(() => isDivision(role.value))
   const hasPos                = computed(() => hasPosition(position.value))
-  const canViewFinance        = computed(() => isUserFA.value)
+  const canViewBudget         = computed(() => isUserFA.value)
   const canManageCoordinators = computed(() => isUserFA.value && hasPos.value)
 
   function setUser(token: string, tokenResponse: {
@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user, isLoggedIn, role, position, isCoordinator,
-    isUserFA, isUserDiv, hasPos, canViewFinance, canManageCoordinators,
+    isUserFA, isUserDiv, hasPos, canViewBudget, canManageCoordinators,
     setUser, logout,
   }
 })

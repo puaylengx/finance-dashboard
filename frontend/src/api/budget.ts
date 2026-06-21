@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { ApiResponse, ApiPageResponse, FinancePayload, IoPayload, FinanceQueryParams, IoQueryParams, CoordinatorResponse } from '@/types/api'
+import type { ApiResponse, ApiPageResponse, BudgetPayload, IoPayload, BudgetQueryParams, IoQueryParams, CoordinatorResponse } from '@/types/api'
 
 const BASE = '/api/v1'
 
@@ -11,13 +11,8 @@ function toParams(p: Record<string, unknown>): Record<string, string> {
   )
 }
 
-export async function fetchFinance(params: FinanceQueryParams): Promise<FinancePayload> {
-  const { data } = await apiClient.get<ApiResponse<FinancePayload>>(`${BASE}/finance`, { params: toParams(params as Record<string, unknown>) })
-  return data.data
-}
-
-export async function fetchBudget(params: FinanceQueryParams): Promise<FinancePayload> {
-  const { data } = await apiClient.get<ApiResponse<FinancePayload>>(`${BASE}/budget`, { params: toParams(params as Record<string, unknown>) })
+export async function fetchBudget(params: BudgetQueryParams): Promise<BudgetPayload> {
+  const { data } = await apiClient.get<ApiResponse<BudgetPayload>>(`${BASE}/finance`, { params: toParams(params as Record<string, unknown>) })
   return data.data
 }
 

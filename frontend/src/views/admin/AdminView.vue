@@ -55,7 +55,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import { fetchCoordinators, addCoordinator, toggleCoordinator } from '@/api/finance'
+import { fetchCoordinators, addCoordinator, toggleCoordinator } from '@/api/budget'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const qc = useQueryClient()

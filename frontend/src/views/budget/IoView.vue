@@ -88,14 +88,14 @@
 import { ref, computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useFilterStore } from '@/stores/filter'
-import { fetchIO } from '@/api/finance'
+import { fetchIO } from '@/api/budget'
 import { fmt } from '@/utils/format'
 import { exportCSV } from '@/utils/export'
 import AppLayout    from '@/layouts/AppLayout.vue'
-import FilterBar    from '@/components/finance/FilterBar.vue'
+import FilterBar    from '@/components/budget/FilterBar.vue'
 import KpiCard      from '@/components/ui/KpiCard.vue'
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
-import DonutChart   from '@/components/finance/DonutChart.vue'
+import DonutChart   from '@/components/budget/DonutChart.vue'
 
 const filter = useFilterStore()
 const { data, isPending, isError, error } = useQuery({

@@ -57,25 +57,16 @@
           </div>
         </div>
 
-        <!-- Spending donuts: FA sees dept+division, non-FA sees combined -->
+        <!-- Spending bar charts: FA sees dept+division, non-FA sees combined -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <template v-if="auth.isUserFA">
-            <DonutChart
-              :labels="data.spending_by_dept.slice(0,8).map(r => r.cost_center_description)"
-              :values="data.spending_by_dept.slice(0,8).map(r => r.total)"
-              title="สัดส่วน (Dept)"
-            />
-            <DonutChart
-              :labels="data.spending_by_division.slice(0,8).map(r => r.cost_center_description)"
-              :values="data.spending_by_division.slice(0,8).map(r => r.total)"
-              title="สัดส่วน (Division)"
-            />
+            <CostOwnerBarChart :rows="data.spending_by_dept"     title="Top Cost Centers (Dept)"     />
+            <CostOwnerBarChart :rows="data.spending_by_division" title="Top Cost Centers (Division)" />
           </template>
-          <DonutChart
+          <CostOwnerBarChart
             v-else
-            :labels="data.spending_by_all.slice(0,8).map(r => r.cost_center_description)"
-            :values="data.spending_by_all.slice(0,8).map(r => r.total)"
-            title="สัดส่วน (Cost Center)"
+            :rows="data.spending_by_all"
+            title="Top Cost Centers"
             class="col-span-1 lg:col-span-2"
           />
         </div>
@@ -133,8 +124,8 @@ import FilterBar    from '@/components/budget/FilterBar.vue'
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
 import KpiCards     from '@/components/budget/KpiCards.vue'
 import StatCard     from '@/components/budget/StatCard.vue'
-import DonutChart   from '@/components/budget/DonutChart.vue'
-import IoPivotTable from '@/components/budget/IoPivotTable.vue'
+import CostOwnerBarChart from '@/components/budget/CostOwnerBarChart.vue'
+import IoPivotTable      from '@/components/budget/IoPivotTable.vue'
 
 const filter      = useFilterStore()
 const auth        = useAuthStore()

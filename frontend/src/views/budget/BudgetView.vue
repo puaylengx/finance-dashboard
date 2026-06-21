@@ -31,7 +31,8 @@
         <!-- Row 2: Monthly Trend -->
         <TrendChart :items="data.trend_month ?? []" :year-type="filterStore.yearMode" />
 
-        <!-- Division section -->
+        <!-- Division section — FA or division roles only -->
+        <template v-if="auth.isUserFA || auth.isUserDiv">
         <SectionHeader label="Division" />
         <div class="grid grid-cols-3 gap-4">
           <GlDonutChart
@@ -53,31 +54,34 @@
           class="border-t-4 border-t-indigo-600"
           @export="exportDivision"
         />
+        </template>
 
-        <!-- Department section -->
-        <SectionHeader label="Department" color="violet" top-padding="pt-3" />
-        <div class="grid grid-cols-3 gap-4">
-          <GlDonutChart
-            :rows="data.table_by_gl ?? []"
-            :chart-colors="DEPT_COLORS"
+        <!-- Department section — FA or non-division roles -->
+        <template v-if="auth.isUserFA || !auth.isUserDiv">
+          <SectionHeader label="Department" color="violet" top-padding="pt-3" />
+          <div class="grid grid-cols-3 gap-4">
+            <GlDonutChart
+              :rows="data.table_by_gl ?? []"
+              :chart-colors="DEPT_COLORS"
+              class="border-t-4 border-t-violet-600"
+            />
+            <CostOwnerBarChart
+              :rows="data.table_by_cost_center ?? []"
+              bar-color="rgba(147, 51, 234, 0.85)"
+              hover-color="rgba(147, 51, 234, 1)"
+              class="border-t-4 border-t-violet-600"
+            />
+            <TableByCostOwner
+              :rows="data.table_by_cost_center ?? []"
+              class="border-t-4 border-t-violet-600"
+            />
+          </div>
+          <PivotTable
+            :items="data.pivot_table_by_gl_detail ?? []"
             class="border-t-4 border-t-violet-600"
+            @export="exportDept"
           />
-          <CostOwnerBarChart
-            :rows="data.table_by_cost_center ?? []"
-            bar-color="rgba(147, 51, 234, 0.85)"
-            hover-color="rgba(147, 51, 234, 1)"
-            class="border-t-4 border-t-violet-600"
-          />
-          <TableByCostOwner
-            :rows="data.table_by_cost_center ?? []"
-            class="border-t-4 border-t-violet-600"
-          />
-        </div>
-        <PivotTable
-          :items="data.pivot_table_by_gl_detail ?? []"
-          class="border-t-4 border-t-violet-600"
-          @export="exportDept"
-        />
+        </template>
       </template>
     </div>
   </AppLayout>

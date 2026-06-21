@@ -16,8 +16,8 @@ export interface UserInfo {
 }
 export interface DraftLoginRequest { job_title: string; name: string }
 
-// ── Finance ───────────────────────────────────────────────────────────────────
-export interface FinanceKpis {
+// ── Budget ────────────────────────────────────────────────────────────────────
+export interface BudgetKpis {
   total_amount: number; total_budget: number
   doc_count: number; avg_amount_per_doc: number
 }
@@ -34,8 +34,8 @@ export interface PivotGlItem {
   gl_id: string; gl_description: string
   total_amount: number; details_breakdown: DetailsBreakdownItem[]
 }
-export interface FinancePayload {
-  kpis: FinanceKpis; trend_month: TrendMonthItem[]
+export interface BudgetPayload {
+  kpis: BudgetKpis; trend_month: TrendMonthItem[]
   table_by_gl: GlItem[]; table_by_cost_center: CostCenterItem[]
   pivot_table_by_gl_detail: PivotGlItem[]
   table_by_gl_division: GlItem[]; table_by_cost_center_division: CostCenterItem[]
@@ -75,7 +75,7 @@ export interface IoPayload {
 }
 
 // ── Query Params ─────────────────────────────────────────────────────────────
-export interface FinanceQueryParams {
+export interface BudgetQueryParams {
   year?: number; pa_year?: number; month_from?: number; month_to?: number
   gl_group?: string; cost_center?: string; cost_owner?: string; q?: string
 }

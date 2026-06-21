@@ -177,7 +177,7 @@ async function handleLogin() {
   try {
     const res = await draftLogin({ job_title: jobTitlePreview.value, name: name.value.trim() })
     auth.setUser(res.token, res, jobTitlePreview.value)
-    router.push(isFA(res.role) ? '/finance' : '/io')
+    router.push(isFA(res.role) ? '/budget' : '/io')
   } catch (e: unknown) {
     const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
     error.value = msg ?? 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่'

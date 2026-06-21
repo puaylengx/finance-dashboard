@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { FinanceQueryParams, IoQueryParams } from '@/types/api'
+import type { BudgetQueryParams, IoQueryParams } from '@/types/api'
 
 const currentYear = new Date().getFullYear()
 
@@ -14,7 +14,7 @@ export const useFilterStore = defineStore('filter', () => {
   const costOwner  = ref('')
   const q          = ref('')
 
-  const financeParams = computed((): FinanceQueryParams => ({
+  const budgetParams = computed((): BudgetQueryParams => ({
     year:        yearMode.value === 'fiscal' ? year.value : undefined,
     pa_year:     yearMode.value === 'pa'     ? paYear.value : undefined,
     month_from:  monthFrom.value,
@@ -43,6 +43,6 @@ export const useFilterStore = defineStore('filter', () => {
 
   return {
     yearMode, year, paYear, monthFrom, monthTo, costCenter, costOwner, q,
-    financeParams, ioParams, resetFilters,
+    budgetParams, ioParams, resetFilters,
   }
 })

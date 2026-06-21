@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="Finance" show-export @export-excel="onExportExcel" @export-csv="onExportCsv" @print="printPage">
+  <AppLayout title="Budget" show-export @export-excel="onExportExcel" @export-csv="onExportCsv" @print="printPage">
     <div class="space-y-4">
       <FilterBar show-cost-center />
 
@@ -87,27 +87,27 @@
 import { computed, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useFilterStore } from '@/stores/filter'
-import { fetchFinance } from '@/api/finance'
+import { fetchBudget } from '@/api/budget'
 import { exportExcel, exportCSV, printPage } from '@/utils/export'
 import { DIVISION_COLORS, DEPT_COLORS } from '@/utils/constants'
 
 import AppLayout          from '@/layouts/AppLayout.vue'
-import FilterBar          from '@/components/finance/FilterBar.vue'
+import FilterBar          from '@/components/budget/FilterBar.vue'
 import SkeletonCard       from '@/components/ui/SkeletonCard.vue'
-import KpiCards           from '@/components/finance/KpiCards.vue'
-import QuarterBarChart    from '@/components/finance/QuarterBarChart.vue'
-import TrendChart         from '@/components/finance/TrendChart.vue'
-import GlDonutChart       from '@/components/finance/GlDonutChart.vue'
-import CostOwnerBarChart  from '@/components/finance/CostOwnerBarChart.vue'
-import TableByCostOwner   from '@/components/finance/TableByCostOwner.vue'
-import PivotTable         from '@/components/finance/PivotTable.vue'
+import KpiCards           from '@/components/budget/KpiCards.vue'
+import QuarterBarChart    from '@/components/budget/QuarterBarChart.vue'
+import TrendChart         from '@/components/budget/TrendChart.vue'
+import GlDonutChart       from '@/components/budget/GlDonutChart.vue'
+import CostOwnerBarChart  from '@/components/budget/CostOwnerBarChart.vue'
+import TableByCostOwner   from '@/components/budget/TableByCostOwner.vue'
+import PivotTable         from '@/components/budget/PivotTable.vue'
 import SectionHeader      from '@/components/ui/SectionHeader.vue'
 
 const filterStore = useFilterStore()
 
 const { data, isPending, isError, error } = useQuery({
-  queryKey: computed(() => ['finance', filterStore.financeParams]),
-  queryFn:  () => fetchFinance(filterStore.financeParams),
+  queryKey: computed(() => ['budget', filterStore.budgetParams]),
+  queryFn:  () => fetchBudget(filterStore.budgetParams),
   staleTime: 5 * 60_000,
 })
 
@@ -122,7 +122,7 @@ function onExportExcel() {
     data.value.pivot_table_by_gl_detail.map(r => ({
       'GL ID': r.gl_id, 'GL Description': r.gl_description, 'Total Amount': r.total_amount,
     })),
-    'finance-report',
+    'budget-report',
   )
 }
 function onExportCsv() {
@@ -131,7 +131,7 @@ function onExportCsv() {
     data.value.pivot_table_by_gl_detail.map(r => ({
       gl_id: r.gl_id, gl_description: r.gl_description, total_amount: r.total_amount,
     })),
-    'finance-report',
+    'budget-report',
   )
 }
 const exportDivision = () => {
@@ -140,7 +140,7 @@ const exportDivision = () => {
     data.value.pivot_table_by_gl_detail_division.map(r => ({
       gl_id: r.gl_id, gl_description: r.gl_description, total_amount: r.total_amount,
     })),
-    'finance-division',
+    'budget-division',
   )
 }
 const exportDept = () => {
@@ -149,7 +149,7 @@ const exportDept = () => {
     data.value.pivot_table_by_gl_detail.map(r => ({
       gl_id: r.gl_id, gl_description: r.gl_description, total_amount: r.total_amount,
     })),
-    'finance-dept',
+    'budget-dept',
   )
 }
 </script>

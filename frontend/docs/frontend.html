@@ -229,7 +229,7 @@ frontend/
 │   ├── <span class="dir">api/</span>
 │   │   ├── client.ts              <span class="note">← Axios instance + JWT interceptor + 401 handler</span>
 │   │   ├── auth.ts                <span class="note">← loginWithPassword, draftLogin, entraLogin, fetchMe</span>
-│   │   └── finance.ts             <span class="note">← fetchFinance/Budget/IO + coordinator CRUD</span>
+│   │   └── budget.ts              <span class="note">← fetchBudget/IO + coordinator CRUD</span>
 │   ├── <span class="dir">auth/</span>
 │   │   ├── permissions.ts         <span class="note">← FA/Division/Position roles, extractClaims, canAccess</span>
 │   │   └── session.ts             <span class="note">← sessionStorage AuthUser, getToken, msUntilExpiry</span>
@@ -250,18 +250,21 @@ frontend/
 │   │   │   ├── SkeletonCard.vue   <span class="note">← Loading placeholder</span>
 │   │   │   ├── ErrorState.vue     <span class="note">← Error UI + retry button</span>
 │   │   │   └── SessionTimeoutModal.vue <span class="note">← Warning dialog + countdown</span>
-│   │   └── <span class="dir">finance/</span>
-│   │       ├── KpiCards.vue       <span class="note">← 4 KPI cards + budget utilization progress bar</span>
-│   │       ├── TrendChart.vue     <span class="note">← ApexCharts line chart รายเดือน</span>
-│   │       ├── DepartmentChart.vue<span class="note">← ApexCharts horizontal bar chart</span>
-│   │       ├── FilterBar.vue      <span class="note">← Year/Month/CostCenter/Search controls</span>
-│   │       └── PivotTable.vue     <span class="note">← GL expand/collapse drill-down table</span>
+│   │   └── <span class="dir">budget/</span>
+│   │       ├── KpiCards.vue           <span class="note">← 4 KPI cards + budget utilization progress bar</span>
+│   │       ├── StatCard.vue           <span class="note">← Generic stat card สำหรับ IO KPIs</span>
+│   │       ├── TrendChart.vue         <span class="note">← ApexCharts line chart รายเดือน</span>
+│   │       ├── DepartmentChart.vue    <span class="note">← ApexCharts horizontal bar chart</span>
+│   │       ├── CostOwnerBarChart.vue  <span class="note">← ApexCharts vertical bar (column) chart — IO spending</span>
+│   │       ├── FilterBar.vue          <span class="note">← Year/Month/CostCenter/Search controls</span>
+│   │       ├── PivotTable.vue         <span class="note">← Budget GL expand/collapse drill-down table</span>
+│   │       ├── IoPivotTable.vue       <span class="note">← IO drilldown table (generic: Goods/Project/Activity/Work)</span>
+│   │       └── SectionHeader.vue      <span class="note">← Section divider header (label + color)</span>
 │   └── <span class="dir">views/</span>
 │       ├── LoginView.vue          <span class="note">← Draft form (dev) หรือ Entra button (prod)</span>
-│       ├── <span class="dir">finance/</span>
-│       │   ├── FinanceView.vue    <span class="note">← FA only: dept + division breakdown</span>
-│       │   ├── BudgetView.vue     <span class="note">← All roles: budget data</span>
-│       │   └── IoView.vue         <span class="note">← All roles: IO Goods/Project/Work</span>
+│       ├── <span class="dir">budget/</span>
+│       │   ├── BudgetView.vue     <span class="note">← All roles: FA เห็น Division+Dept; non-FA เห็น combined</span>
+│       │   └── IoView.vue         <span class="note">← All roles: IO Goods/Project/Activity/Work</span>
 │       └── <span class="dir">admin/</span>
 │           └── CoordinatorView.vue <span class="note">← FA+position: coordinator CRUD</span>
 ├── <span class="dir">tests/</span>
@@ -372,36 +375,42 @@ body { background: #fff; color: #000; }
     <h3>Routes</h3>
     <table>
       <tr><th>Path</th><th>View</th><th>Guard</th></tr>
-      <tr><td><code>/login</code></td><td>LoginView</td><td>redirect → /finance ถ้า login แล้ว</td></tr>
-      <tr><td><code>/finance</code></td><td>FinanceView</td><td>requiresAuth + FA role</td></tr>
-      <tr><td><code>/budget</code></td><td>BudgetView</td><td>requiresAuth (ทุก role)</td></tr>
-      <tr><td><code>/io</code></td><td>IoView</td><td>requiresAuth (ทุก role)</td></tr>
+      <tr><td><code>/login</code></td><td>LoginView</td><td>redirect → /budget ถ้า login แล้ว</td></tr>
+      <tr><td><code>/budget</code></td><td>BudgetView</td><td>requiresAuth (ทุก role ยกเว้น 'user')</td></tr>
+      <tr><td><code>/io</code></td><td>IoView</td><td>requiresAuth (ทุก role ยกเว้น 'user')</td></tr>
       <tr><td><code>/admin/coordinators</code></td><td>CoordinatorView</td><td>requiresAuth + FA + position</td></tr>
     </table>
 
     <h3>beforeEach Guard Logic</h3>
     <pre><span class="cmt">// router/index.ts</span>
 router.beforeEach((to, _from, next) => {
-  <span class="kw">const</span> session = getSession()
+  <span class="kw">const</span> session  = getSession()
+  <span class="kw">const</span> role     = session?.role ?? <span class="str">''</span>
+  <span class="kw">const</span> position = session?.position ?? <span class="kw">null</span>
 
   <span class="cmt">// ยังไม่ login → /login</span>
   <span class="kw">if</span> (to.meta.requiresAuth && !session) <span class="kw">return</span> next(<span class="str">'/login'</span>)
 
-  <span class="cmt">// login แล้วแต่ไม่มีสิทธิ์ใดเลย → /login</span>
-  <span class="kw">if</span> (to.meta.requiresAuth && !hasPosition(position) && !coordinator && !isFA(role))
-    <span class="kw">return</span> next(<span class="str">'/login'</span>)
+  <span class="cmt">// role='user' = ไม่มีสิทธิ์ใดเลย (backend ส่งมาเมื่อไม่รู้จัก job_title)</span>
+  <span class="kw">if</span> (to.meta.requiresAuth && role === <span class="str">'user'</span>) <span class="kw">return</span> next(<span class="str">'/login'</span>)
 
   <span class="cmt">// Admin page: ต้อง FA + position</span>
   <span class="kw">if</span> (to.meta.requiresFAPosition && (!isFA(role) || !hasPosition(position)))
-    <span class="kw">return</span> next(<span class="str">'/budget'</span>)
+    <span class="kw">return</span> next(<span class="str">'/io'</span>)
 
-  <span class="cmt">// ตรวจ page-level access (finance → FA only)</span>
-  <span class="kw">if</span> (page && !canAccess(role, page)) <span class="kw">return</span> next(<span class="str">'/budget'</span>)
+  <span class="cmt">// login แล้วไปหน้า login → redirect /budget</span>
+  <span class="kw">if</span> (to.path === <span class="str">'/login'</span> && session) <span class="kw">return</span> next(<span class="str">'/budget'</span>)
 })</pre>
+
+    <div class="callout callout-info">
+      <strong>ℹ Role-based UI rendering (ไม่ใช่ route guard)</strong>
+      ทุก role เข้าถึง <code>/budget</code> และ <code>/io</code> ได้ — backend enforce ผ่าน cost_owner filtering
+      Frontend ใช้ <code>auth.isUserFA</code> / <code>auth.isUserDiv</code> เพื่อ toggle ส่วนที่แสดงผล (Division+Dept vs combined)
+    </div>
 
     <h3>Code Splitting (Lazy Loading)</h3>
     <p>ทุก View ใช้ dynamic import — โหลดเฉพาะ chunk ที่จำเป็นเมื่อ navigate ไปหน้านั้น</p>
-    <pre>component: () => <span class="kw">import</span>(<span class="str">'@/views/finance/FinanceView.vue'</span>)</pre>
+    <pre>component: () => <span class="kw">import</span>(<span class="str">'@/views/budget/BudgetView.vue'</span>)</pre>
   </section>
 
   <!-- 6. State -->
@@ -413,10 +422,11 @@ router.beforeEach((to, _from, next) => {
       <tr><th>State / Computed</th><th>Type</th><th>คำอธิบาย</th></tr>
       <tr><td><code>user</code></td><td>AuthUser | null</td><td>ข้อมูล session ปัจจุบัน</td></tr>
       <tr><td><code>isLoggedIn</code></td><td>boolean</td><td>มี session valid อยู่ไหม</td></tr>
-      <tr><td><code>role</code></td><td>string</td><td>fa / bba / hld / …</td></tr>
+      <tr><td><code>role</code></td><td>string</td><td>fa / ba / hld / it / …</td></tr>
       <tr><td><code>isUserFA</code></td><td>boolean</td><td>role อยู่ใน FA_ROLES</td></tr>
+      <tr><td><code>isUserDiv</code></td><td>boolean</td><td>role อยู่ใน DIVISION_ROLES (ba/faa/hld/sci/ss/thm) — ใช้ toggle section ใน BudgetView</td></tr>
       <tr><td><code>hasPos</code></td><td>boolean</td><td>มี position (chief/chairman/head)</td></tr>
-      <tr><td><code>canViewFinance</code></td><td>boolean</td><td>isUserFA → เห็น Finance menu</td></tr>
+      <tr><td><code>canViewBudget</code></td><td>boolean</td><td>เสมอ true ถ้า login แล้ว — ทุก role เห็น Budget</td></tr>
       <tr><td><code>canManageCoordinators</code></td><td>boolean</td><td>isUserFA && hasPos → เห็น Admin menu</td></tr>
     </table>
 
@@ -427,7 +437,7 @@ router.beforeEach((to, _from, next) => {
       <tr><td><code>year</code> / <code>paYear</code></td><td>ค่าปีที่เลือก</td></tr>
       <tr><td><code>monthFrom</code> / <code>monthTo</code></td><td>Fiscal month filter (1-12)</td></tr>
       <tr><td><code>costCenter</code> / <code>costOwner</code></td><td>Filter text</td></tr>
-      <tr><td><code>financeParams</code></td><td>computed → <code>FinanceQueryParams</code> พร้อมส่ง API</td></tr>
+      <tr><td><code>budgetParams</code></td><td>computed → <code>BudgetQueryParams</code> พร้อมส่ง API</td></tr>
       <tr><td><code>ioParams</code></td><td>computed → <code>IoQueryParams</code> พร้อมส่ง API</td></tr>
     </table>
   </section>
@@ -459,8 +469,8 @@ apiClient.interceptors.response.use(
     <h3>TanStack Query Integration</h3>
     <pre><span class="cmt">// ใน View — queryKey reactive ตาม filterStore</span>
 <span class="kw">const</span> { data, isPending, isError, error, refetch } = useQuery({
-  queryKey: computed(() => [<span class="str">'finance'</span>, filterStore.financeParams]),
-  queryFn:  () => fetchFinance(filterStore.financeParams),
+  queryKey: computed(() => [<span class="str">'budget'</span>, filterStore.budgetParams]),
+  queryFn:  () => fetchBudget(filterStore.budgetParams),
   <span class="cmt">// staleTime: 300_000 (5 min) — ตั้งใน main.ts ตรงกับ Redis TTL</span>
 })</pre>
 
@@ -484,12 +494,15 @@ apiClient.interceptors.response.use(
   expiresAt: number  <span class="cmt">// unix ms จาก JWT exp</span>
 }</pre>
 
-    <h3>Draft Mode (Dev)</h3>
-    <pre><span class="cmt">// VITE_DRAFT_MODE=true → แสดง form ป้อน job_title</span>
-<span class="tag">&lt;form</span> v-if=<span class="str">"isDraftMode"</span> @submit.prevent=<span class="str">"submitDraft"</span><span class="tag">&gt;</span>
-  <span class="tag">&lt;input</span> v-model=<span class="str">"form.job_title"</span> placeholder=<span class="str">"dept,fa,chief"</span> <span class="tag">/&gt;</span>
-  <span class="tag">&lt;input</span> v-model=<span class="str">"form.name"</span> placeholder=<span class="str">"ชื่อ นามสกุล"</span> <span class="tag">/&gt;</span>
-<span class="tag">&lt;/form&gt;</span>
+    <h3>Draft Mode (Dev) — New Login UI</h3>
+    <p>Draft login redesigned เป็น 3 categories: <strong>FA</strong> (special card), <strong>Division</strong> (grid 6 roles), <strong>Staff</strong> (grid 21 roles + position), <strong>Faculty</strong> (FT/PT/PC sub-type + role + chairman)</p>
+    <pre><span class="cmt">// VITE_DRAFT_MODE=true → แสดง role picker UI</span>
+<span class="cmt">// สร้าง job_title format ถูกต้องตาม category ที่เลือก:</span>
+FA:      <span class="str">"fa"</span>                               <span class="cmt">→ role=fa, position=null</span>
+Division: <span class="str">"staff,{role}"</span>                   <span class="cmt">→ เช่น staff,ba</span>
+Staff:   <span class="str">"staff,{role}"</span>                     <span class="cmt">→ เช่น staff,it</span>
+Staff+pos: <span class="str">"staff,{role},{position}"</span>        <span class="cmt">→ เช่น staff,it,chief</span>
+Faculty: <span class="str">"faculty,{subtype}_lecturers,{role},chairman"</span>
 
 <span class="cmt">// VITE_DRAFT_MODE=false → แสดงปุ่ม Microsoft Login (MSAL)</span>
 <span class="tag">&lt;button</span> v-else @click=<span class="str">"loginEntra"</span><span class="tag">&gt;</span>🏢 Microsoft Login<span class="tag">&lt;/button&gt;</span></pre>
@@ -498,29 +511,40 @@ apiClient.interceptors.response.use(
     <div class="test-steps">
       <div class="test-step">
         <div>
-          <strong>Login ด้วย FA + position</strong>
+          <strong>Login ด้วย FA (FA card)</strong>
           <pre><span class="cmt"># ใน .env: VITE_DRAFT_MODE=true</span>
 เปิด http://localhost:5173/login
-ป้อน job_title: dept,fa,chief
-ป้อน name: Finance Chief
+คลิก "FA" card ด้านบนสุด
 กด "เข้าสู่ระบบ"
-→ ต้องถูก redirect ไปที่ /finance</pre>
+→ redirect ไป /budget (FA เห็น Division + Department sections)</pre>
         </div>
       </div>
       <div class="test-step">
         <div>
-          <strong>Login ด้วย Division + head → /budget</strong>
-          <pre>ป้อน job_title: dept,bba,head
-ป้อน name: BBA Head
-→ redirect ไปที่ /budget (ไม่มีเมนู Finance)</pre>
+          <strong>Login ด้วย Division role (tab Division)</strong>
+          <pre>คลิก tab "Division" → เลือก "BA"
+กด "เข้าสู่ระบบ"
+→ redirect /budget — เห็น combined view (ไม่แยก Division/Dept)</pre>
         </div>
       </div>
       <div class="test-step">
         <div>
-          <strong>ทดสอบ access control ใน browser</strong>
-          <pre><span class="cmt"># Login เป็น BBA Head แล้ว navigate ตรง</span>
-http://localhost:5173/finance
-→ ต้อง redirect กลับไป /budget ทันที</pre>
+          <strong>Login ด้วย Staff + position (tab Staff)</strong>
+          <pre>คลิก tab "Staff" → เลือก "IT"
+คลิก position pill "Chief"
+→ jobTitlePreview แสดง: staff,it,chief
+กด "เข้าสู่ระบบ"
+→ redirect /budget — role=it, position=chief</pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Login ด้วย Faculty Chairman (tab Faculty)</strong>
+          <pre>คลิก tab "Faculty" → เลือก sub-type "FT" → เลือก role "BA"
+(chairman auto-selected — จะถูก force)
+กด "เข้าสู่ระบบ"
+→ job_title: faculty,ft_lecturers,ba,chairman
+→ redirect /budget — role=ba, position=chairman</pre>
         </div>
       </div>
     </div>
@@ -579,24 +603,32 @@ countdownInterval = setInterval(() => {
     <table>
       <tr><th>View</th><th>API Endpoint</th><th>Access</th><th>ข้อมูลที่แสดง</th></tr>
       <tr>
-        <td><code>FinanceView.vue</code></td>
-        <td><code>GET /api/v1/finance</code></td>
-        <td><span class="badge badge-fa">FA only</span></td>
-        <td>KPIs + Trend + Dept chart + Division chart + 2 Pivot tables</td>
-      </tr>
-      <tr>
         <td><code>BudgetView.vue</code></td>
         <td><code>GET /api/v1/budget</code></td>
         <td><span class="badge badge-all">All roles</span></td>
-        <td>KPIs + Trend + All-combined chart + 1 Pivot table</td>
+        <td>KPIs + Trend + <strong>FA:</strong> Division section + Department section; <strong>Non-FA:</strong> combined section เดียว</td>
       </tr>
       <tr>
         <td><code>IoView.vue</code></td>
         <td><code>GET /api/v1/io</code></td>
         <td><span class="badge badge-all">All roles</span></td>
-        <td>IO KPIs + Dept/Division charts + Goods/Project tables</td>
+        <td>IO KPIs (Goods/Project/Activity/Work counts) + <strong>FA:</strong> 2 bar charts (Dept + Division); <strong>Non-FA:</strong> 1 bar chart (combined) + 4 IO drilldown tables</td>
       </tr>
     </table>
+
+    <h3>Role-based Section Logic (BudgetView)</h3>
+    <pre><span class="cmt">&lt;!-- FA: เห็น Division + Department sections แยกกัน --&gt;</span>
+<span class="tag">&lt;template</span> v-if=<span class="str">"auth.isUserFA"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;SectionHeader</span> label=<span class="str">"Division"</span> <span class="tag">/&gt;</span>
+  <span class="cmt">&lt;!-- ใช้ table_by_gl_division, table_by_cost_center_division, pivot_table_by_gl_detail_division --&gt;</span>
+  <span class="tag">&lt;SectionHeader</span> label=<span class="str">"Department"</span> color=<span class="str">"violet"</span> <span class="tag">/&gt;</span>
+  <span class="cmt">&lt;!-- ใช้ table_by_gl, table_by_cost_center, pivot_table_by_gl_detail --&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+
+<span class="cmt">&lt;!-- Non-FA: combined view เดียว --&gt;</span>
+<span class="tag">&lt;template</span> v-else<span class="tag">&gt;</span>
+  <span class="cmt">&lt;!-- ใช้ table_by_gl_all, table_by_cost_center_all, pivot_table_by_gl_detail_all --&gt;</span>
+<span class="tag">&lt;/template&gt;</span></pre>
 
     <h3>KpiCards.vue — Budget Utilization</h3>
     <pre><span class="cmt">// สี progress bar เปลี่ยนตาม % ใช้งบ</span>
@@ -626,7 +658,7 @@ Refresh หน้า → ดูว่า skeleton animation แสดงก่�
       <div class="test-step">
         <div>
           <strong>ทดสอบ error state + retry</strong>
-          <pre><span class="cmt"># DevTools → Network → Block Request URL → */api/v1/finance</span>
+          <pre><span class="cmt"># DevTools → Network → Block Request URL → */api/v1/budget</span>
 Refresh หน้า → ดู ErrorState component
 กดปุ่ม "ลองอีกครั้ง" → Unblock → data โหลดใหม่</pre>
         </div>
@@ -650,7 +682,7 @@ Refresh หน้า → ดู ErrorState component
 
     <div class="two-col">
       <div class="comp-box">
-        <span class="comp-name">TrendChart</span><span class="comp-file">finance/TrendChart.vue</span>
+        <span class="comp-name">TrendChart</span><span class="comp-file">budget/TrendChart.vue</span>
         <p>Line chart แนวโน้มรายเดือน — smooth curve + gradient fill + interactive tooltip</p>
         <ul>
           <li>X-axis: fiscal month (ต.ค.–ก.ย.)</li>
@@ -660,7 +692,7 @@ Refresh หน้า → ดู ErrorState component
         </ul>
       </div>
       <div class="comp-box">
-        <span class="comp-name">DepartmentChart</span><span class="comp-file">finance/DepartmentChart.vue</span>
+        <span class="comp-name">DepartmentChart</span><span class="comp-file">budget/DepartmentChart.vue</span>
         <p>Horizontal Bar chart แยกตาม cost center — Top 10 sorted by total DESC</p>
         <ul>
           <li>Horizontal layout (ชื่อ dept อ่านง่ายกว่า vertical)</li>
@@ -670,12 +702,23 @@ Refresh หน้า → ดู ErrorState component
         </ul>
       </div>
     </div>
+    <div class="comp-box" style="margin-top:12px">
+      <span class="comp-name">CostOwnerBarChart</span><span class="comp-file">budget/CostOwnerBarChart.vue</span>
+      <p>Vertical Bar (column) chart — IO Top Cost Centers แยกตาม spending; support optional <code>title</code> prop</p>
+      <ul>
+        <li>Vertical layout — แกน X = cost center, แกน Y = total amount</li>
+        <li>Data labels แสดง fmtShort บน bar (เช่น 7.2M)</li>
+        <li>Tooltip: ยอดเต็ม (full format) + " THB"</li>
+        <li>FA: render 2 instances (Dept + Division); Non-FA: render 1 instance (combined)</li>
+        <li>Reactive theme: dark/light mode ผ่าน <code>useTheme()</code></li>
+      </ul>
+    </div>
 
-    <pre><span class="cmt">// Dark theme ทุก chart</span>
+    <pre><span class="cmt">// Dark/light theme reactive ทุก chart — ใช้ useTheme composable</span>
 chart: { background: <span class="str">'transparent'</span> }
-theme: { mode: <span class="str">'dark'</span> }
-grid:  { borderColor: <span class="str">'#2e3250'</span>, strokeDashArray: 3 }
-<span class="cmt">// ใช้ accent color (#6c8efb) เป็นสีหลักของทุก series</span></pre>
+theme: { mode: dark ? <span class="str">'dark'</span> : <span class="str">'light'</span> }
+grid:  { borderColor: dark ? <span class="str">'rgba(255,255,255,0.04)'</span> : <span class="str">'rgba(0,0,0,0.03)'</span> }
+<span class="cmt">// chartVersion ref ++ เมื่อ rows หรือ theme เปลี่ยน → force re-render</span></pre>
 
     <h3>วิธีทดสอบ</h3>
     <div class="test-steps">
@@ -766,7 +809,7 @@ Charts ต้องปรับขนาดตาม viewport โดยไม่
     <h2><span class="n">13</span>Filter Bar</h2>
 
     <div class="comp-box">
-      <span class="comp-name">FilterBar</span><span class="comp-file">finance/FilterBar.vue</span>
+      <span class="comp-name">FilterBar</span><span class="comp-file">budget/FilterBar.vue</span>
       <p>Controls ทุกตัว bind กับ <code>filterStore</code> — เปลี่ยนค่าแล้ว TanStack Query fetch ใหม่อัตโนมัติ</p>
     </div>
 
@@ -821,14 +864,14 @@ Charts ต้องปรับขนาดตาม viewport โดยไม่
 <span class="fn">printPage</span>()                  <span class="cmt">// window.print()</span></pre>
 
     <h3>Excel Export Flow</h3>
-    <pre><span class="cmt">// FinanceView.vue</span>
+    <pre><span class="cmt">// BudgetView.vue</span>
 <span class="fn">function</span> onExportExcel() {
-  <span class="kw">const</span> rows = data.value.pivot_table_by_gl_detail.map(r => ({
+  <span class="kw">const</span> rows = data.value.pivot_table_by_gl_detail_all.map(r => ({
     <span class="str">'GL ID'</span>:         r.gl_id,
     <span class="str">'GL Description'</span>: r.gl_description,
     <span class="str">'Total Amount'</span>:   r.total_amount,  <span class="cmt">// ตัวเลขจริง ไม่ใช่ string</span>
   }))
-  exportExcel(rows, <span class="str">'finance-report'</span>)  <span class="cmt">// → finance-report.xlsx</span>
+  exportExcel(rows, <span class="str">'budget-report'</span>)  <span class="cmt">// → budget-report.xlsx</span>
 }</pre>
 
     <h3>Print CSS (Ctrl+P)</h3>
@@ -844,9 +887,9 @@ Charts ต้องปรับขนาดตาม viewport โดยไม่
       <div class="test-step">
         <div>
           <strong>ทดสอบ Excel Export</strong>
-          <pre>เปิด /finance (login เป็น FA)
+          <pre>เปิด /budget (login เป็น FA หรือ role ใดก็ได้)
 กดปุ่ม "📥 Excel" ใน Header
-→ ไฟล์ finance-report.xlsx ดาวน์โหลด
+→ ไฟล์ budget-report.xlsx ดาวน์โหลด
 เปิดด้วย Excel → ตรวจ column format และตัวเลข</pre>
         </div>
       </div>
@@ -925,20 +968,31 @@ Login ด้วย username เดิม → ต้องถูก reject (403)<
     <h2><span class="n">16</span>Frontend Security</h2>
 
     <h3>Role-Based UI Rendering</h3>
-    <pre><span class="cmt">&lt;!-- AppSidebar.vue — ซ่อน Finance menu ถ้าไม่ใช่ FA --&gt;</span>
-<span class="tag">&lt;RouterLink</span> v-if=<span class="str">"authStore.canViewFinance"</span> to=<span class="str">"/finance"</span><span class="tag">&gt;</span>
-  Finance
-<span class="tag">&lt;/RouterLink&gt;</span>
-
-<span class="cmt">&lt;!-- ซ่อน Admin menu ถ้าไม่ใช่ FA + position --&gt;</span>
+    <pre><span class="cmt">&lt;!-- ซ่อน Admin menu ถ้าไม่ใช่ FA + position --&gt;</span>
 <span class="tag">&lt;div</span> v-if=<span class="str">"authStore.canManageCoordinators"</span><span class="tag">&gt;</span>
   <span class="tag">&lt;RouterLink</span> to=<span class="str">"/admin/coordinators"</span><span class="tag">&gt;</span>Coordinators<span class="tag">&lt;/RouterLink&gt;</span>
-<span class="tag">&lt;/div&gt;</span></pre>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="cmt">&lt;!-- BudgetView.vue — FA เห็น 2 sections; non-FA เห็น combined --&gt;</span>
+<span class="tag">&lt;template</span> v-if=<span class="str">"auth.isUserFA"</span><span class="tag">&gt;</span>
+  <span class="cmt">&lt;!-- Division section: ใช้ _division fields --&gt;</span>
+  <span class="cmt">&lt;!-- Department section: ใช้ _dept fields --&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+<span class="tag">&lt;template</span> v-else<span class="tag">&gt;</span>
+  <span class="cmt">&lt;!-- Combined section: ใช้ _all fields --&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+
+<span class="cmt">&lt;!-- IoView.vue — FA เห็น 2 bar charts; non-FA เห็น 1 --&gt;</span>
+<span class="tag">&lt;template</span> v-if=<span class="str">"auth.isUserFA"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;CostOwnerBarChart</span> :rows=<span class="str">"data.spending_by_dept"</span>     title=<span class="str">"Top Cost Centers (Dept)"</span>     <span class="tag">/&gt;</span>
+  <span class="tag">&lt;CostOwnerBarChart</span> :rows=<span class="str">"data.spending_by_division"</span> title=<span class="str">"Top Cost Centers (Division)"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+<span class="tag">&lt;CostOwnerBarChart</span> v-else :rows=<span class="str">"data.spending_by_all"</span> title=<span class="str">"Top Cost Centers"</span> <span class="tag">/&gt;</span></pre>
 
     <div class="callout callout-warn">
       <strong>⚠ UI Hiding ≠ Security</strong>
-      การซ่อน UI เป็น UX เท่านั้น — security จริงอยู่ที่ <strong>Router Guard</strong> + <strong>Backend JWT verification</strong>
-      ผู้ใช้ที่ navigate ตรงไป /finance จะถูก Guard ตรวจและ redirect ทันที
+      การแสดง/ซ่อน section เป็น UX เท่านั้น — security จริงอยู่ที่ <strong>Backend cost_owner forcing</strong>
+      non-FA ที่ส่ง request ด้วย cost_owner อื่นจะถูก backend ignore และ force เป็น role ตัวเอง
     </div>
 
     <h3>XSS Prevention</h3>
@@ -992,12 +1046,13 @@ npm run type-check</pre>
     <h3>E2E Tests (Playwright)</h3>
     <table>
       <tr><th>Test</th><th>Scenario</th></tr>
-      <tr><td>Redirect unauthenticated</td><td>/finance → /login</td></tr>
+      <tr><td>Redirect unauthenticated</td><td>/budget → /login</td></tr>
       <tr><td>Draft Mode badge</td><td>Login page แสดง badge ถูกต้อง</td></tr>
-      <tr><td>FA Chief login</td><td>redirect → /finance</td></tr>
-      <tr><td>Division login</td><td>redirect → /budget</td></tr>
-      <tr><td>Unauthorized login</td><td>แสดง error alert, stay at /login</td></tr>
-      <tr><td>Division → /finance</td><td>Router guard redirect → /budget</td></tr>
+      <tr><td>FA login</td><td>redirect → /budget (เห็น Division + Department sections)</td></tr>
+      <tr><td>Division role login (ba)</td><td>redirect → /budget (เห็น combined section)</td></tr>
+      <tr><td>Staff role login (it)</td><td>redirect → /budget (เห็น combined section)</td></tr>
+      <tr><td>Faculty Chairman login</td><td>redirect → /budget</td></tr>
+      <tr><td>role='user' login</td><td>Router guard block → stay at /login</td></tr>
       <tr><td>Logout</td><td>clear session, redirect → /login</td></tr>
       <tr><td>Responsive (iPhone 13)</td><td>Login page renders ถูกต้อง</td></tr>
     </table>

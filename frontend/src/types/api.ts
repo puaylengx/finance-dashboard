@@ -49,6 +49,7 @@ export interface IoKpis {
   total_amount: number; total_budget: number
   total_amount_io_goods: number; count_io_goods: number
   total_amount_io_project: number; count_io_project: number
+  count_io_activity: number; count_io_work: number
 }
 export interface SpendingItem {
   cost_center_eng: string; cost_center_description: string; total: number
@@ -66,12 +67,18 @@ export interface IoWorkItem {
   io_work: string; io_work_description: string
   total_amount: number; order_breakdown: IoOrderBreakdownItem[]
 }
+export interface IoActivityItem {
+  io_activity: string; io_activity_description: string
+  total_amount: number; order_breakdown: IoOrderBreakdownItem[]
+}
 export interface IoPayload {
   kpis: IoKpis
+  spending_by_all: SpendingItem[]
   spending_by_dept: SpendingItem[]; spending_by_division: SpendingItem[]
   pivot_table_by_io_goods: IoGoodsItem[]
   pivot_table_by_io_project: IoProjectItem[]
   pivot_table_by_io_work: IoWorkItem[]
+  pivot_table_by_io_activity: IoActivityItem[]
 }
 
 // ── Query Params ─────────────────────────────────────────────────────────────

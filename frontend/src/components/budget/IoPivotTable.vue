@@ -48,9 +48,11 @@ import { ref } from 'vue'
 import { fmt } from '@/utils/format'
 
 interface BreakdownItem { details: string; amount: number }
-interface Row { total_amount: number; order_breakdown: BreakdownItem[]; [key: string]: unknown }
 
-defineProps<{
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = Record<string, any>
+
+const props = defineProps<{
   title: string
   rows: Row[]
   idKey: string

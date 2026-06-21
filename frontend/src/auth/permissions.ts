@@ -3,7 +3,7 @@ export const DIVISION_ROLES = new Set(['bba', 'hld', 'sci', 'ss', 'thm', 'faa', 
 export const POSITION_ROLES = new Set(['chief', 'chairman', 'head'])
 
 export const PAGE_ROLES: Record<string, Set<string> | null> = {
-  budget: new Set(['fa']),
+  budget: null,
   io:      null,
 }
 

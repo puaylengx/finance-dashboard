@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isUserFA              = computed(() => isFA(role.value))
   const isUserDiv             = computed(() => isDivision(role.value))
   const hasPos                = computed(() => hasPosition(position.value))
-  const canViewBudget         = computed(() => isUserFA.value)
+  const canViewBudget         = computed(() => isLoggedIn.value)
   const canManageCoordinators = computed(() => isUserFA.value && hasPos.value)
 
   function setUser(token: string, tokenResponse: {

@@ -31,56 +31,33 @@
         <!-- Row 2: Monthly Trend -->
         <TrendChart :items="data.trend_month ?? []" :year-type="filterStore.yearMode" />
 
-        <!-- Division section — FA or division roles only -->
-        <template v-if="auth.isUserFA || auth.isUserDiv">
-        <SectionHeader label="Division" />
-        <div class="grid grid-cols-3 gap-4">
-          <GlDonutChart
-            :rows="data.table_by_gl_division ?? []"
-            :chart-colors="DIVISION_COLORS"
-            class="border-t-4 border-t-indigo-600"
-          />
-          <CostOwnerBarChart
-            :rows="data.table_by_cost_center_division ?? []"
-            class="border-t-4 border-t-indigo-600"
-          />
-          <TableByCostOwner
-            :rows="data.table_by_cost_center_division ?? []"
-            class="border-t-4 border-t-indigo-600"
-          />
-        </div>
-        <PivotTable
-          :items="data.pivot_table_by_gl_detail_division ?? []"
-          class="border-t-4 border-t-indigo-600"
-          @export="exportDivision"
-        />
-        </template>
+        <!-- FA: Division + Department sections -->
+        <template v-if="auth.isUserFA">
+          <SectionHeader label="Division" />
+          <div class="grid grid-cols-3 gap-4">
+            <GlDonutChart :rows="data.table_by_gl_division ?? []" :chart-colors="DIVISION_COLORS" class="border-t-4 border-t-indigo-600" />
+            <CostOwnerBarChart :rows="data.table_by_cost_center_division ?? []" class="border-t-4 border-t-indigo-600" />
+            <TableByCostOwner :rows="data.table_by_cost_center_division ?? []" class="border-t-4 border-t-indigo-600" />
+          </div>
+          <PivotTable :items="data.pivot_table_by_gl_detail_division ?? []" class="border-t-4 border-t-indigo-600" @export="exportDivision" />
 
-        <!-- Department section — FA or non-division roles -->
-        <template v-if="auth.isUserFA || !auth.isUserDiv">
           <SectionHeader label="Department" color="violet" top-padding="pt-3" />
           <div class="grid grid-cols-3 gap-4">
-            <GlDonutChart
-              :rows="data.table_by_gl ?? []"
-              :chart-colors="DEPT_COLORS"
-              class="border-t-4 border-t-violet-600"
-            />
-            <CostOwnerBarChart
-              :rows="data.table_by_cost_center ?? []"
-              bar-color="rgba(147, 51, 234, 0.85)"
-              hover-color="rgba(147, 51, 234, 1)"
-              class="border-t-4 border-t-violet-600"
-            />
-            <TableByCostOwner
-              :rows="data.table_by_cost_center ?? []"
-              class="border-t-4 border-t-violet-600"
-            />
+            <GlDonutChart :rows="data.table_by_gl ?? []" :chart-colors="DEPT_COLORS" class="border-t-4 border-t-violet-600" />
+            <CostOwnerBarChart :rows="data.table_by_cost_center ?? []" bar-color="rgba(147, 51, 234, 0.85)" hover-color="rgba(147, 51, 234, 1)" class="border-t-4 border-t-violet-600" />
+            <TableByCostOwner :rows="data.table_by_cost_center ?? []" class="border-t-4 border-t-violet-600" />
           </div>
-          <PivotTable
-            :items="data.pivot_table_by_gl_detail ?? []"
-            class="border-t-4 border-t-violet-600"
-            @export="exportDept"
-          />
+          <PivotTable :items="data.pivot_table_by_gl_detail ?? []" class="border-t-4 border-t-violet-600" @export="exportDept" />
+        </template>
+
+        <!-- Non-FA: combined view (no Division/Department split) -->
+        <template v-else>
+          <div class="grid grid-cols-3 gap-4">
+            <GlDonutChart :rows="data.table_by_gl_all ?? []" :chart-colors="DIVISION_COLORS" class="border-t-4 border-t-indigo-600" />
+            <CostOwnerBarChart :rows="data.table_by_cost_center_all ?? []" class="border-t-4 border-t-indigo-600" />
+            <TableByCostOwner :rows="data.table_by_cost_center_all ?? []" class="border-t-4 border-t-indigo-600" />
+          </div>
+          <PivotTable :items="data.pivot_table_by_gl_detail_all ?? []" class="border-t-4 border-t-indigo-600" @export="exportAll" />
         </template>
       </template>
     </div>
@@ -158,6 +135,15 @@ const exportDept = () => {
       gl_id: r.gl_id, gl_description: r.gl_description, total_amount: r.total_amount,
     })),
     'budget-dept',
+  )
+}
+const exportAll = () => {
+  if (!data.value) return
+  exportCSV(
+    data.value.pivot_table_by_gl_detail_all.map(r => ({
+      gl_id: r.gl_id, gl_description: r.gl_description, total_amount: r.total_amount,
+    })),
+    'budget-all',
   )
 }
 </script>

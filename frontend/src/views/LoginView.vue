@@ -149,6 +149,7 @@ const DIVISIONS = [
   { value: 'faa', label: 'FAA', sub: 'Finance'  },
   { value: 'mba', label: 'MBA', sub: 'Mgmt'     },
   { value: 'mm',  label: 'MM',  sub: 'Media'    },
+  { value: 'it',  label: 'IT',  sub: 'Technology' },
 ]
 const POSITIONS = [
   { value: 'chief',    label: 'Chief'    },
@@ -177,7 +178,7 @@ async function handleLogin() {
   try {
     const res = await draftLogin({ job_title: jobTitlePreview.value, name: name.value.trim() })
     auth.setUser(res.token, res, jobTitlePreview.value)
-    router.push(isFA(res.role) ? '/budget' : '/io')
+    router.push('/budget')
   } catch (e: unknown) {
     const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
     error.value = msg ?? 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่'

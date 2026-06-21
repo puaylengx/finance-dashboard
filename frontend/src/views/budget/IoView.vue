@@ -4,8 +4,12 @@
       <FilterBar :locked-cost-owner="lockedOwner" />
 
       <template v-if="isPending">
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <SkeletonCard v-for="i in 6" :key="i" height="88px" />
+        <div class="grid grid-cols-3 gap-4">
+          <SkeletonCard height="180px" />
+          <SkeletonCard height="88px" />
+          <SkeletonCard height="88px" />
+          <SkeletonCard height="88px" />
+          <SkeletonCard height="88px" />
         </div>
         <SkeletonCard height="280px" />
       </template>
@@ -15,103 +19,135 @@
       </div>
 
       <template v-else-if="data">
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <KpiCard label="ยอดรวม (THB)"    :value="data.kpis.total_amount"          color="text-accent" />
-          <KpiCard label="งบประมาณ (THB)"   :value="data.kpis.total_budget"          color="text-accent2" />
-          <KpiCard label="IO Goods (THB)"   :value="data.kpis.total_amount_io_goods" color="text-success" />
-          <KpiCard label="IO Project (THB)" :value="data.kpis.total_amount_io_project" color="text-warning" />
-          <KpiCard label="จำนวน IO Goods"   :value="data.kpis.count_io_goods"        color="text-accent" />
-          <KpiCard label="จำนวน IO Project" :value="data.kpis.count_io_project"      color="text-accent2" />
+        <!-- KPIs -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="col-span-1 flex flex-col">
+            <KpiCards :kpis="data.kpis" />
+          </div>
+          <div class="col-span-2 grid grid-cols-2 gap-4">
+            <StatCard label="IO Goods" :value="fmtRound(data.kpis.count_io_goods)" unit="จำนวนรายการ" color="emerald">
+              <template #icon>
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                </svg>
+              </template>
+            </StatCard>
+            <StatCard label="IO Project" :value="fmtRound(data.kpis.count_io_project)" unit="จำนวนรายการ" color="violet">
+              <template #icon>
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+              </template>
+            </StatCard>
+            <StatCard label="IO Activity" :value="fmtRound(data.kpis.count_io_activity)" unit="จำนวนรายการ" color="indigo">
+              <template #icon>
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </template>
+            </StatCard>
+            <StatCard label="IO Work" :value="fmtRound(data.kpis.count_io_work)" unit="จำนวนรายการ" color="emerald">
+              <template #icon>
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </template>
+            </StatCard>
+          </div>
         </div>
 
+        <!-- Spending donuts: FA sees dept+division, non-FA sees combined -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <template v-if="auth.isUserFA">
+            <DonutChart
+              :labels="data.spending_by_dept.slice(0,8).map(r => r.cost_center_description)"
+              :values="data.spending_by_dept.slice(0,8).map(r => r.total)"
+              title="สัดส่วน (Dept)"
+            />
+            <DonutChart
+              :labels="data.spending_by_division.slice(0,8).map(r => r.cost_center_description)"
+              :values="data.spending_by_division.slice(0,8).map(r => r.total)"
+              title="สัดส่วน (Division)"
+            />
+          </template>
           <DonutChart
-            :labels="data.spending_by_dept.slice(0,8).map(r => r.cost_center_description)"
-            :values="data.spending_by_dept.slice(0,8).map(r => r.total)"
-            title="สัดส่วน (Dept)"
-          />
-          <DonutChart
-            :labels="data.spending_by_division.slice(0,8).map(r => r.cost_center_description)"
-            :values="data.spending_by_division.slice(0,8).map(r => r.total)"
-            title="สัดส่วน (Division)"
+            v-else
+            :labels="data.spending_by_all.slice(0,8).map(r => r.cost_center_description)"
+            :values="data.spending_by_all.slice(0,8).map(r => r.total)"
+            title="สัดส่วน (Cost Center)"
+            class="col-span-1 lg:col-span-2"
           />
         </div>
 
-        <!-- IO Goods Pivot -->
-        <div class="rounded-xl border border-border bg-surface overflow-hidden">
-          <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-            <div class="text-sm font-medium text-muted">IO Goods</div>
-            <button @click="exportIoGoods" class="text-xs text-accent hover:underline">Export CSV</button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-muted text-left">
-                  <th class="px-4 py-3 font-medium">IO Code</th>
-                  <th class="px-4 py-3 font-medium">Description</th>
-                  <th class="px-4 py-3 font-medium text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-for="item in data.pivot_table_by_io_goods" :key="item.io_goods">
-                  <tr
-                    class="border-t border-border bg-surface2 cursor-pointer hover:brightness-95 transition-all"
-                    @click="toggleGoods(item.io_goods)"
-                  >
-                    <td class="px-4 py-3 font-mono text-xs text-accent">{{ item.io_goods }}</td>
-                    <td class="px-4 py-3 text-fg">
-                      <span class="text-muted text-xs mr-1">{{ expandedGoods.has(item.io_goods) ? '▾' : '▸' }}</span>
-                      {{ item.io_goods_description }}
-                    </td>
-                    <td class="px-4 py-3 text-right text-success">{{ fmt(item.total_amount) }}</td>
-                  </tr>
-                  <template v-if="expandedGoods.has(item.io_goods)">
-                    <tr v-for="d in item.order_breakdown" :key="d.details" class="border-t border-border bg-surface">
-                      <td class="px-4 py-2" />
-                      <td class="px-4 py-2 text-xs text-muted pl-10">{{ d.details }}</td>
-                      <td class="px-4 py-2 text-right text-xs text-fg">{{ fmt(d.amount) }}</td>
-                    </tr>
-                  </template>
-                </template>
-                <tr v-if="!data.pivot_table_by_io_goods.length">
-                  <td colspan="3" class="px-4 py-6 text-center text-muted">ไม่พบข้อมูล</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <!-- IO Goods -->
+        <IoPivotTable
+          title="IO Goods"
+          :rows="data.pivot_table_by_io_goods"
+          id-key="io_goods"
+          desc-key="io_goods_description"
+          @export="exportGoods"
+        />
+
+        <!-- IO Project -->
+        <IoPivotTable
+          title="IO Project"
+          :rows="data.pivot_table_by_io_project"
+          id-key="io_project"
+          desc-key="io_project_description"
+          @export="exportProject"
+        />
+
+        <!-- IO Activity -->
+        <IoPivotTable
+          title="IO Activity"
+          :rows="data.pivot_table_by_io_activity"
+          id-key="io_activity"
+          desc-key="io_activity_description"
+          @export="exportActivity"
+        />
+
+        <!-- IO Work -->
+        <IoPivotTable
+          title="IO Work"
+          :rows="data.pivot_table_by_io_work"
+          id-key="io_work"
+          desc-key="io_work_description"
+          @export="exportWork"
+        />
       </template>
     </div>
   </AppLayout>
 </template>
+
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useFilterStore } from '@/stores/filter'
 import { useAuthStore } from '@/stores/auth'
 import { fetchIO } from '@/api/budget'
-import { fmt } from '@/utils/format'
+import { fmtRound } from '@/utils/format'
 import { exportCSV } from '@/utils/export'
 import AppLayout    from '@/layouts/AppLayout.vue'
 import FilterBar    from '@/components/budget/FilterBar.vue'
-import KpiCard      from '@/components/ui/KpiCard.vue'
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
+import KpiCards     from '@/components/budget/KpiCards.vue'
+import StatCard     from '@/components/budget/StatCard.vue'
 import DonutChart   from '@/components/budget/DonutChart.vue'
+import IoPivotTable from '@/components/budget/IoPivotTable.vue'
 
 const filter      = useFilterStore()
 const auth        = useAuthStore()
 const lockedOwner = computed(() => auth.isUserFA ? undefined : auth.role)
+
 const { data, isPending, isError, error } = useQuery({
   queryKey: computed(() => ['io', filter.ioParams]),
   queryFn: () => fetchIO(filter.ioParams),
   staleTime: 5 * 60_000,
 })
 
-const expandedGoods = ref(new Set<string>())
-const toggleGoods = (id: string) => expandedGoods.value.has(id) ? expandedGoods.value.delete(id) : expandedGoods.value.add(id)
-
-const exportIoGoods = () => exportCSV(
-  (data.value?.pivot_table_by_io_goods ?? []).map(r => ({ io_goods: r.io_goods, description: r.io_goods_description, total: r.total_amount })),
-  'io_goods',
-)
+const exportGoods    = () => exportCSV((data.value?.pivot_table_by_io_goods    ?? []).map(r => ({ id: r.io_goods,    desc: r.io_goods_description,    total: r.total_amount })), 'io_goods')
+const exportProject  = () => exportCSV((data.value?.pivot_table_by_io_project  ?? []).map(r => ({ id: r.io_project,  desc: r.io_project_description,  total: r.total_amount })), 'io_project')
+const exportActivity = () => exportCSV((data.value?.pivot_table_by_io_activity ?? []).map(r => ({ id: r.io_activity, desc: r.io_activity_description, total: r.total_amount })), 'io_activity')
+const exportWork     = () => exportCSV((data.value?.pivot_table_by_io_work     ?? []).map(r => ({ id: r.io_work,     desc: r.io_work_description,     total: r.total_amount })), 'io_work')
 </script>

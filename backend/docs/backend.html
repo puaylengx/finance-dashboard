@@ -351,7 +351,7 @@ backend/
 │   │   ├── router.py              <span class="note">← v1 router aggregator</span>
 │   │   └── <span class="dir">endpoints/</span>
 │   │       ├── auth.py            <span class="note">← /auth/* endpoints</span>
-│   │       ├── finance.py         <span class="note">← /finance, /budget</span>
+│   │       ├── finance.py         <span class="note">← /budget (all roles)</span>
 │   │       ├── io.py              <span class="note">← /io</span>
 │   │       └── coordinator.py     <span class="note">← /admin/coordinators CRUD</span>
 │   ├── <span class="dir">schemas/</span>                   <span class="note">← Pydantic request/response models</span>
@@ -512,7 +512,6 @@ _pool = AsyncConnectionPool(
 
     <table>
       <tr><th>Key Pattern</th><th>TTL</th><th>เก็บอะไร</th></tr>
-      <tr><td><code>seamless:v1:finance:{role}:{hash}</code></td><td>300s (5 min)</td><td>Finance dashboard payload</td></tr>
       <tr><td><code>seamless:v1:budget:{role}:{hash}</code></td><td>300s (5 min)</td><td>Budget dashboard payload</td></tr>
       <tr><td><code>seamless:v1:io:{role}:{hash}</code></td><td>300s (5 min)</td><td>IO dashboard payload</td></tr>
       <tr><td><code>seamless:coordinator:{username}</code></td><td>600s (10 min)</td><td>Coordinator lookup result (1/0)</td></tr>
@@ -531,7 +530,7 @@ _pool = AsyncConnectionPool(
     <pre><span class="cmt"># Payload structure</span>
 {
   <span class="key">"sub"</span>: <span class="str">"username"</span>,
-  <span class="key">"role"</span>: <span class="str">"fa"</span>,           <span class="cmt"># fa | bba | hld | sci | ss | thm | faa | mba | mm</span>
+  <span class="key">"role"</span>: <span class="str">"fa"</span>,           <span class="cmt"># fa | ba | faa | hld | sci | ss | thm (division) | ab | ar | as | ca | cc | ea | ed | gp | hr | ia | it | ls | oe | op | pc | pe | ps | rm | sa | sd (staff)</span>
   <span class="key">"position"</span>: <span class="str">"chief"</span>,    <span class="cmt"># chief | chairman | head (optional)</span>
   <span class="key">"coordinator"</span>: <span class="kw">true</span>,    <span class="cmt"># optional — เข้าผ่าน coordinator table</span>
   <span class="key">"iat"</span>: <span class="num">1717300000</span>,
@@ -568,10 +567,10 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
     <div class="two-col">
       <div class="card">
         <h4>Console (Colored)</h4>
-        <pre style="font-size:12px"><span style="color:#22d3ee">DEBUG</span>    Cache HIT: seamless:v1:finance:fa:a1b2
+        <pre style="font-size:12px"><span style="color:#22d3ee">DEBUG</span>    Cache HIT: seamless:v1:budget:fa:a1b2
 <span style="color:#34d399">INFO</span>     Entra login OK: alice → role=fa pos=chief
 <span style="color:#fbbf24">WARNING</span>  Draft login denied: name=bob
-<span style="color:#f87171">ERROR</span>    Finance query failed: connection refused</pre>
+<span style="color:#f87171">ERROR</span>    Budget query failed: connection refused</pre>
       </div>
       <div class="card">
         <h4>File (Rotating)</h4>
@@ -611,14 +610,16 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
     </div>
 
     <h3>job_title Parsing</h3>
+    <p>ระบบแยก job_title ด้วย <code>,</code> แล้ว extract role (ส่วนท้ายสุดก่อน position) และ position (ถ้าตรงกับ chief/chairman/head)</p>
     <table>
-      <tr><th>job_title (จาก Entra)</th><th>role</th><th>position</th><th>เข้าได้?</th></tr>
-      <tr><td><code>dept,fa,chief</code></td><td>fa</td><td>chief</td><td><span style="color:var(--green)">✓ ทันที</span></td></tr>
-      <tr><td><code>dept,fa,chairman</code></td><td>fa</td><td>chairman</td><td><span style="color:var(--green)">✓ ทันที</span></td></tr>
-      <tr><td><code>dept,bba,head</code></td><td>bba</td><td>head</td><td><span style="color:var(--green)">✓ ทันที</span></td></tr>
-      <tr><td><code>dept,fa</code></td><td>fa</td><td>—</td><td><span style="color:var(--yellow)">✓ ถ้าอยู่ใน coordinator</span></td></tr>
-      <tr><td><code>faculty,lecturer,sci</code></td><td>sci</td><td>—</td><td><span style="color:var(--yellow)">✓ ถ้าอยู่ใน coordinator</span></td></tr>
-      <tr><td><code>staff,it</code></td><td>it</td><td>—</td><td><span style="color:var(--red)">✗ 403</span></td></tr>
+      <tr><th>job_title (รูปแบบจริง)</th><th>role</th><th>position</th><th>เข้าได้?</th></tr>
+      <tr><td><code>staff,fa,chief</code></td><td>fa</td><td>chief</td><td><span style="color:var(--green)">✓ ทันที (FA + position)</span></td></tr>
+      <tr><td><code>staff,fa,head</code></td><td>fa</td><td>head</td><td><span style="color:var(--green)">✓ ทันที (FA + position)</span></td></tr>
+      <tr><td><code>staff,it,chief</code></td><td>it</td><td>chief</td><td><span style="color:var(--green)">✓ ทันที (staff + position)</span></td></tr>
+      <tr><td><code>staff,ba</code></td><td>ba</td><td>—</td><td><span style="color:var(--yellow)">✓ division role — เห็นข้อมูลตัวเอง</span></td></tr>
+      <tr><td><code>staff,it</code></td><td>it</td><td>—</td><td><span style="color:var(--yellow)">✓ staff role — เห็นข้อมูลตัวเอง</span></td></tr>
+      <tr><td><code>faculty,ft_lecturers,ba,chairman</code></td><td>ba</td><td>chairman</td><td><span style="color:var(--green)">✓ ทันที (faculty + position)</span></td></tr>
+      <tr><td><code>faculty,pt_lecturers,sc,chairman</code></td><td>sc</td><td>chairman</td><td><span style="color:var(--green)">✓ ทันที (faculty + position)</span></td></tr>
     </table>
 
     <h3>Endpoints</h3>
@@ -643,7 +644,7 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
       </div>
       <p>Simulate Entra ID โดยไม่เชื่อมต่อ Azure — ใช้สำหรับ dev/testing</p>
       <pre>{
-  <span class="key">"job_title"</span>: <span class="str">"dept,fa,chief"</span>,
+  <span class="key">"job_title"</span>: <span class="str">"staff,fa,chief"</span>,
   <span class="key">"name"</span>:      <span class="str">"Finance Chief"</span>
 }</pre>
       <p><strong>Response (success):</strong></p>
@@ -685,20 +686,38 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
     <div class="test-steps">
       <div class="test-step">
         <div>
-          <strong>Draft login — ทดสอบด้วย FA + position (chief)</strong>
+          <strong>Draft login — FA + position (chief)</strong>
           <pre>curl -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,fa,chief","name":"Test Chief"}'</pre>
-          <p>ต้องได้ <code>200</code> + JSON ที่มี <code>success: true</code> และ <code>data.position: "chief"</code></p>
+  -d '{"job_title":"staff,fa,chief","name":"Test Chief"}'</pre>
+          <p>ต้องได้ <code>200</code> + JSON ที่มี <code>data.role: "fa"</code>, <code>data.position: "chief"</code></p>
         </div>
       </div>
       <div class="test-step">
         <div>
-          <strong>Draft login — ทดสอบ division role ที่ไม่มีสิทธิ์</strong>
+          <strong>Draft login — division role (ba)</strong>
           <pre>curl -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"staff,it","name":"IT User"}'</pre>
-          <p>ต้องได้ <code>403</code> — ไม่มี position และไม่ได้เป็น coordinator</p>
+  -d '{"job_title":"staff,ba","name":"BA User"}'</pre>
+          <p>ต้องได้ <code>200</code> — role=ba, position=null; เข้าระบบได้และเห็นข้อมูลเฉพาะ BA</p>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Draft login — staff + position (it,chief)</strong>
+          <pre>curl -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"staff,it,chief","name":"IT Chief"}'</pre>
+          <p>ต้องได้ <code>200</code> — role=it, position=chief</p>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Draft login — faculty chairman</strong>
+          <pre>curl -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"faculty,ft_lecturers,ba,chairman","name":"BA Chairman"}'</pre>
+          <p>ต้องได้ <code>200</code> — role=ba, position=chairman</p>
         </div>
       </div>
       <div class="test-step">
@@ -717,7 +736,7 @@ DRAFT_MODE=false
 
 <span class="cmt"># เรียก draft-login</span>
 curl -X POST http://localhost:8000/api/v1/auth/draft-login \
-  -d '{"job_title":"dept,fa,chief","name":"Test"}'
+  -d '{"job_title":"staff,fa,chief","name":"Test"}'
 <span class="cmt"># → 404 Not found</span></pre>
         </div>
       </div>
@@ -733,16 +752,10 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
         <th>Endpoint</th><th>Method</th><th>Access</th><th>คำอธิบาย</th>
       </tr>
       <tr>
-        <td><code>/api/v1/finance</code></td>
-        <td><span class="badge badge-get">GET</span></td>
-        <td><span class="badge badge-fa">FA only</span></td>
-        <td>Dashboard ยอดใช้จ่าย dept + division แยกกัน</td>
-      </tr>
-      <tr>
         <td><code>/api/v1/budget</code></td>
         <td><span class="badge badge-get">GET</span></td>
         <td><span class="badge badge-all">All roles</span></td>
-        <td>Budget dashboard — Non-FA เห็นเฉพาะ dept ตัวเอง</td>
+        <td>Budget dashboard — FA เห็นทั้งหมด; non-FA เห็นเฉพาะข้อมูลตัวเอง (cost_owner = role.upper())</td>
       </tr>
     </table>
 
@@ -793,34 +806,35 @@ curl -X POST http://localhost:8000/api/v1/auth/draft-login \
     <div class="test-steps">
       <div class="test-step">
         <div>
-          <strong>ขอ token ก่อน</strong>
+          <strong>ขอ FA token</strong>
           <pre>TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")</pre>
+  -d '{"job_title":"staff,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")</pre>
         </div>
       </div>
       <div class="test-step">
         <div>
-          <strong>เรียก finance dashboard (FA เท่านั้น)</strong>
-          <pre>curl "http://localhost:8000/api/v1/finance?year=2025" \
+          <strong>FA — เห็นข้อมูลทั้งหมด (Division + Department)</strong>
+          <pre>curl "http://localhost:8000/api/v1/budget?year=2025" \
   -H "Authorization: Bearer $TOKEN"</pre>
-          <p>ต้องได้ <code>200</code> พร้อม <code>success: true</code> และ <code>data.kpis</code>, <code>data.trend_month</code>, <code>data.table_by_gl</code></p>
+          <p>ต้องได้ <code>200</code> พร้อม <code>data.table_by_gl_division</code>, <code>data.table_by_gl</code>, <code>data.table_by_gl_all</code></p>
         </div>
       </div>
       <div class="test-step">
         <div>
-          <strong>ทดสอบ access control — Division role กับ /finance</strong>
+          <strong>Division role — เห็นเฉพาะข้อมูลตัวเอง</strong>
           <pre>DIV_TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,bba,head","name":"BBA Head"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
-
-curl "http://localhost:8000/api/v1/finance?year=2025" \
-  -H "Authorization: Bearer $DIV_TOKEN"
-<span class="cmt"># → 403 Requires FA role</span>
+  -d '{"job_title":"staff,ba","name":"BA User"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
 
 curl "http://localhost:8000/api/v1/budget?year=2025" \
   -H "Authorization: Bearer $DIV_TOKEN"
-<span class="cmt"># → 200 (เห็นเฉพาะข้อมูล BBA ตัวเอง)</span></pre>
+<span class="cmt"># → 200 (cost_owner forced = 'BA'; data.table_by_gl_all แสดงเฉพาะ BA)</span>
+
+<span class="cmt"># ทดสอบว่า cost_owner override ไม่ได้ — backend ignore ค่าที่ส่งมา</span>
+curl "http://localhost:8000/api/v1/budget?year=2025&amp;cost_owner=FA" \
+  -H "Authorization: Bearer $DIV_TOKEN"
+<span class="cmt"># → 200 แต่ยังคงเห็นแค่ BA (cost_owner ถูก force เป็น BA)</span></pre>
         </div>
       </div>
       <div class="test-step">
@@ -846,7 +860,7 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
         <td><code>/api/v1/io</code></td>
         <td><span class="badge badge-get">GET</span></td>
         <td><span class="badge badge-all">All roles</span></td>
-        <td>Internal Order — Goods, Project, Work breakdown</td>
+        <td>Internal Order — Goods, Project, Activity, Work breakdown; FA เห็นทั้ง dept+division; Non-FA เห็น combined ตัวเอง</td>
       </tr>
     </table>
 
@@ -869,26 +883,58 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
   <span class="key">"data"</span>: {
     <span class="key">"kpis"</span>: {
       <span class="key">"total_amount"</span>:            <span class="num">12400000.00</span>,
+      <span class="key">"total_budget"</span>:            <span class="num">20000000.00</span>,
       <span class="key">"total_amount_io_goods"</span>:   <span class="num">7200000.00</span>,
       <span class="key">"count_io_goods"</span>:          <span class="num">14</span>,
       <span class="key">"total_amount_io_project"</span>: <span class="num">5200000.00</span>,
-      <span class="key">"count_io_project"</span>:        <span class="num">6</span>
+      <span class="key">"count_io_project"</span>:        <span class="num">6</span>,
+      <span class="key">"count_io_activity"</span>:       <span class="num">23</span>,   <span class="cmt">// จำนวน IO Activity</span>
+      <span class="key">"count_io_work"</span>:           <span class="num">8</span>    <span class="cmt">// จำนวน IO Work</span>
     },
-    <span class="key">"spending_by_dept"</span>:            <span class="cmt">// การใช้จ่ายแยก dept</span>
-    <span class="key">"spending_by_division"</span>:        <span class="cmt">// การใช้จ่ายแยก division</span>
-    <span class="key">"pivot_table_by_io_goods"</span>:     <span class="cmt">// IO Goods drilldown</span>
-    <span class="key">"pivot_table_by_io_project"</span>:   <span class="cmt">// IO Project drilldown</span>
-    <span class="key">"pivot_table_by_io_work"</span>       <span class="cmt">// IO Work drilldown</span>
+    <span class="key">"spending_by_all"</span>:             <span class="cmt">// combined — ใช้สำหรับ non-FA (bar chart เดียว)</span>
+    <span class="key">"spending_by_dept"</span>:            <span class="cmt">// การใช้จ่ายแยก dept — FA only</span>
+    <span class="key">"spending_by_division"</span>:        <span class="cmt">// การใช้จ่ายแยก division — FA only</span>
+    <span class="key">"pivot_table_by_io_goods"</span>:     <span class="cmt">// IO Goods drilldown + order_breakdown</span>
+    <span class="key">"pivot_table_by_io_project"</span>:   <span class="cmt">// IO Project drilldown + order_breakdown</span>
+    <span class="key">"pivot_table_by_io_activity"</span>:  <span class="cmt">// IO Activity drilldown — มี io_activity_description จาก master_io_activities</span>
+    <span class="key">"pivot_table_by_io_work"</span>:      <span class="cmt">// IO Work drilldown + order_breakdown</span>
   }
 }</pre>
+
+    <div class="callout callout-info">
+      <strong>ℹ Non-FA combined view</strong>
+      Non-FA users (division roles เช่น ba, hld; staff roles เช่น it, hr) จะถูก force <code>cost_owner = role.upper()</code>
+      ใน backend — frontend ใช้ <code>spending_by_all</code> + <code>pivot_table_by_*_all</code> (ถ้ามี) แสดงเป็น combined view เดียว
+    </div>
+
+    <h3>IO Activity — Master Join</h3>
+    <p><code>pivot_table_by_io_activity</code> ทำ LEFT JOIN กับ <code>master_io_activities</code> เพื่อแปลง io_activity code เป็น description:</p>
+    <pre>LEFT JOIN master_io_activities activity ON activity.io_activity_id = erp.io_activity
+<span class="cmt">-- io_activity_description มาจาก master_io_activities table</span></pre>
 
     <h3>วิธีทดสอบ</h3>
     <div class="test-steps">
       <div class="test-step">
         <div>
-          <strong>เรียก IO dashboard</strong>
+          <strong>FA — เรียก IO dashboard (ต้องได้ dept + division + all)</strong>
           <pre>curl "http://localhost:8000/api/v1/io?year=2025" \
-  -H "Authorization: Bearer $TOKEN"</pre>
+  -H "Authorization: Bearer $TOKEN"
+<span class="cmt"># ต้องมี: spending_by_all, spending_by_dept, spending_by_division</span>
+<span class="cmt"># และ: pivot_table_by_io_goods/project/activity/work</span>
+<span class="cmt"># count_io_activity และ count_io_work ต้องอยู่ใน kpis</span></pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Non-FA — ทดสอบ combined view (spending_by_all)</strong>
+          <pre>BA_TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
+  -H "Content-Type: application/json" \
+  -d '{"job_title":"staff,ba","name":"BA User"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
+
+curl "http://localhost:8000/api/v1/io?year=2025" \
+  -H "Authorization: Bearer $BA_TOKEN"
+<span class="cmt"># ต้อง 200 — spending_by_all มีแค่ cost_owner='BA'</span>
+<span class="cmt"># spending_by_dept/division อาจว่างเปล่าหรือไม่มีสิทธิ์</span></pre>
         </div>
       </div>
       <div class="test-step">
@@ -897,6 +943,14 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
           <pre>curl "http://localhost:8000/api/v1/io?year=2025&amp;month_from=1&amp;month_to=6" \
   -H "Authorization: Bearer $TOKEN"
 <span class="cmt"># fiscal month 1-6 = ต.ค. - มี.ค.</span></pre>
+        </div>
+      </div>
+      <div class="test-step">
+        <div>
+          <strong>Keyword search (ค้นหา IO Activity description)</strong>
+          <pre>curl "http://localhost:8000/api/v1/io?year=2025&amp;q=training" \
+  -H "Authorization: Bearer $TOKEN"
+<span class="cmt"># ค้นใน io_good_description, io_project_description, io_activity_description</span></pre>
         </div>
       </div>
     </div>
@@ -977,7 +1031,7 @@ curl "http://localhost:8000/api/v1/budget?year=2025" -H "Authorization: Bearer $
           <strong>ขอ token ที่เป็น FA + position</strong>
           <pre>FA_TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")</pre>
+  -d '{"job_title":"staff,fa,chief","name":"FA Chief"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")</pre>
         </div>
       </div>
       <div class="test-step">
@@ -1015,7 +1069,7 @@ curl "http://localhost:8000/api/v1/admin/coordinators?q=john&amp;active=true" \
           <pre><span class="cmt"># john.doe ต้องอยู่ใน finance_coordinator แล้ว</span>
 curl -X POST http://localhost:8000/api/v1/auth/draft-login \
   -H "Content-Type: application/json" \
-  -d '{"job_title":"dept,bba","name":"john.doe@example.com"}'
+  -d '{"job_title":"staff,ba","name":"john.doe@example.com"}'
 <span class="cmt"># → 200 { "success": true, "data": { ..., "coordinator": true } }</span></pre>
         </div>
       </div>
@@ -1172,7 +1226,7 @@ open htmlcov/index.html</pre>
       <tr>
         <td><code>integration/test_finance.py</code></td>
         <td>Integration</td>
-        <td>/finance (FA only), /budget (all roles), /io, top_n validation + slicing, 500 error paths</td>
+        <td>/budget (all roles; FA vs non-FA response), /io (Goods/Project/Activity/Work), top_n validation + slicing, 500 error paths</td>
         <td>18</td>
       </tr>
       <tr>

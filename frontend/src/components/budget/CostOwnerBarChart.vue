@@ -9,10 +9,12 @@ interface CostCenterRow { cost_center_eng: string; cost_center_description: stri
 
 const props = withDefaults(defineProps<{
   rows:       CostCenterRow[]
+  title?:     string
   barColor?:  string
   hoverColor?: string
 }>(), {
   rows:       () => [],
+  title:      'Top Cost Centers',
   barColor:   '#2563eb',
   hoverColor: '#1d4ed8',
 })
@@ -78,7 +80,7 @@ const options = computed((): ApexOptions => {
           <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
       </div>
-      <h2 class="text-sm font-semibold text-fg">Top Cost Centers</h2>
+      <h2 class="text-sm font-semibold text-fg">{{ title }}</h2>
     </div>
     <div v-if="!rows.length" class="text-center text-muted py-6 text-sm">No data</div>
     <div v-else class="h-72">

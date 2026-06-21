@@ -4,7 +4,6 @@ export const POSITION_ROLES = new Set(['chief', 'chairman', 'head'])
 
 export const PAGE_ROLES: Record<string, Set<string> | null> = {
   finance: new Set(['fa']),
-  budget:  null,
   io:      null,
 }
 

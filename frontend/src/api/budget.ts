@@ -12,7 +12,7 @@ function toParams(p: Record<string, unknown>): Record<string, string> {
 }
 
 export async function fetchBudget(params: BudgetQueryParams): Promise<BudgetPayload> {
-  const { data } = await apiClient.get<ApiResponse<BudgetPayload>>(`${BASE}/finance`, { params: toParams(params as Record<string, unknown>) })
+  const { data } = await apiClient.get<ApiResponse<BudgetPayload>>(`${BASE}/budget`, { params: toParams(params as Record<string, unknown>) })
   return data.data
 }
 

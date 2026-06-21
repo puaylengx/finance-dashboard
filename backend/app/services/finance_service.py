@@ -13,8 +13,9 @@ _FINANCE_TABLE_KEYS = (
 )
 
 _IO_TABLE_KEYS = (
-    "spending_by_dept", "spending_by_division",
-    "pivot_table_by_io_goods", "pivot_table_by_io_project", "pivot_table_by_io_work",
+    "spending_by_all", "spending_by_dept", "spending_by_division",
+    "pivot_table_by_io_goods", "pivot_table_by_io_project",
+    "pivot_table_by_io_work", "pivot_table_by_io_activity",
 )
 
 
@@ -209,6 +210,8 @@ WITH base AS (
     good.io_good_description                           AS io_goods_description,
     erp.io_project,
     project.io_project_description,
+    erp.io_activity,
+    activity.io_activity_description,
     erp.io_work,
     work.io_work_description,
     COALESCE(NULLIF(TRIM(erp.cost_owner),''),'Other') AS cost_owner,
@@ -223,9 +226,10 @@ WITH base AS (
     MOD(erp.month + 5, 12) + 1                                    AS pa_month,
     CASE WHEN erp.month >= 7 THEN erp.year ELSE erp.year - 1 END  AS pa_year
   FROM erp_transactions erp
-    LEFT JOIN master_io_goods   good    ON good.io_good_id       = erp.io_goods
-    LEFT JOIN master_io_project project ON project.io_project_id = erp.io_project
-    LEFT JOIN master_io_work    work    ON work.io_work_id        = erp.io_work
+    LEFT JOIN master_io_goods      good     ON good.io_good_id          = erp.io_goods
+    LEFT JOIN master_io_activities activity ON activity.io_activity_id  = erp.io_activity
+    LEFT JOIN master_io_project    project  ON project.io_project_id    = erp.io_project
+    LEFT JOIN master_io_work       work     ON work.io_work_id           = erp.io_work
     LEFT JOIN master_cost_ctr   costOwn ON erp.cost_owner         = costOwn.cost_center_id
     LEFT JOIN master_cost_ctr   costCtr ON erp.cost_ctr_id        = costCtr.cost_center_id
   WHERE (
@@ -244,7 +248,8 @@ WITH base AS (
     AND (%(q)s IS NULL
          OR erp.details                    ILIKE %(q_like)s
          OR erp.order_description          ILIKE %(q_like)s
-         OR good.io_good_description       ILIKE %(q_like)s
+         OR good.io_good_description         ILIKE %(q_like)s
+         OR activity.io_activity_description ILIKE %(q_like)s
          OR project.io_project_description ILIKE %(q_like)s
          OR work.io_work_description       ILIKE %(q_like)s)
 )
@@ -255,7 +260,18 @@ SELECT JSONB_BUILD_OBJECT(
     'total_amount_io_goods',  (SELECT COALESCE(SUM(amount),0) FROM base WHERE base.io_goods IS NOT NULL),
     'count_io_goods',         (SELECT COUNT(DISTINCT io_goods) FROM base WHERE base.io_goods IS NOT NULL),
     'total_amount_io_project',(SELECT COALESCE(SUM(amount),0) FROM base WHERE base.io_project IS NOT NULL),
-    'count_io_project',       (SELECT COUNT(DISTINCT io_project) FROM base WHERE base.io_project IS NOT NULL)
+    'count_io_project',       (SELECT COUNT(DISTINCT io_project) FROM base WHERE base.io_project IS NOT NULL),
+    'count_io_activity',      (SELECT COUNT(DISTINCT io_activity) FROM base WHERE base.io_activity IS NOT NULL),
+    'count_io_work',          (SELECT COUNT(DISTINCT io_work)     FROM base WHERE base.io_work     IS NOT NULL)
+  ),
+  'spending_by_all', (
+    SELECT COALESCE(JSONB_AGG(
+      JSONB_BUILD_OBJECT('cost_center_eng',cost_center_eng,'cost_center_description',cost_center_description,'total',total)
+      ORDER BY total DESC), '[]'::jsonb)
+    FROM (
+      SELECT MAX(cost_center_eng) AS cost_center_eng, MAX(cost_center_description) AS cost_center_description, SUM(amount) AS total
+      FROM base GROUP BY cost_center_description
+    ) c
   ),
   'spending_by_dept', (
     SELECT COALESCE(JSONB_AGG(
@@ -317,6 +333,20 @@ SELECT JSONB_BUILD_OBJECT(
         FROM base GROUP BY io_work, io_work_description, details, order_description
       ) d WHERE io_work IS NOT NULL
       GROUP BY io_work
+    ) x
+  ),
+  'pivot_table_by_io_activity', (
+    SELECT COALESCE(JSONB_AGG(
+      JSONB_BUILD_OBJECT('io_activity',io_activity,'io_activity_description',io_activity_description,'total_amount',total_amount,'order_breakdown',order_breakdown)
+      ORDER BY io_activity), '[]'::jsonb)
+    FROM (
+      SELECT io_activity, MAX(io_activity_description) AS io_activity_description, SUM(order_amount) AS total_amount,
+        COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT('order_description',order_description,'details',details,'amount',order_amount) ORDER BY io_activity),'[]'::jsonb) AS order_breakdown
+      FROM (
+        SELECT io_activity, io_activity_description, order_description, details, SUM(amount) AS order_amount
+        FROM base GROUP BY io_activity, io_activity_description, details, order_description
+      ) d WHERE io_activity IS NOT NULL
+      GROUP BY io_activity
     ) x
   )
 ) AS payload

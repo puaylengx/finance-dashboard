@@ -1,13 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { PivotGlItem } from '@/types/api'
 import { fmt } from '@/utils/format'
 
-defineProps<{ title?: string; items: PivotGlItem[] }>()
+const props = defineProps<{ title?: string; items: PivotGlItem[] }>()
 defineEmits<{ (e: 'export'): void }>()
 
 const expanded = ref(new Set<string>())
 const toggle   = (id: string) => expanded.value.has(id) ? expanded.value.delete(id) : expanded.value.add(id)
+
+type SortCol = 'gl_id' | 'gl_description' | 'total_amount'
+type SortDir = 'asc' | 'desc'
+
+const sortCol = ref<SortCol>('gl_id')
+const sortDir = ref<SortDir>('asc')
+
+function setSort(col: SortCol) {
+  if (sortCol.value === col) {
+    sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    sortCol.value = col
+    sortDir.value = col === 'total_amount' ? 'desc' : 'asc'
+  }
+}
+
+function sortIcon(col: SortCol) {
+  if (sortCol.value !== col) return '⇅'
+  return sortDir.value === 'desc' ? '▼' : '▲'
+}
+
+const sorted = computed(() => {
+  return [...props.items].sort((a, b) => {
+    const dir = sortDir.value === 'desc' ? -1 : 1
+    if (sortCol.value === 'total_amount') return dir * (a.total_amount - b.total_amount)
+    if (sortCol.value === 'gl_id') return dir * a.gl_id.localeCompare(b.gl_id)
+    return dir * a.gl_description.localeCompare(b.gl_description)
+  })
+})
 </script>
 
 <template>
@@ -28,13 +57,37 @@ const toggle   = (id: string) => expanded.value.has(id) ? expanded.value.delete(
         <thead class="sticky top-0 bg-surface2">
           <tr class="text-left text-xs text-muted uppercase tracking-wide">
             <th class="py-2 px-3 w-6"></th>
-            <th class="py-2 px-3 whitespace-nowrap">GL Code</th>
-            <th class="py-2 px-3">Description</th>
-            <th class="py-2 px-3 text-right whitespace-nowrap">Total Amount (THB)</th>
+            <th
+              class="py-2 px-3 whitespace-nowrap cursor-pointer select-none hover:text-fg transition-colors"
+              @click="setSort('gl_id')"
+            >
+              GL Code
+              <span class="ml-1 text-[10px]" :class="sortCol === 'gl_id' ? 'text-accent' : 'text-muted/40'">
+                {{ sortIcon('gl_id') }}
+              </span>
+            </th>
+            <th
+              class="py-2 px-3 cursor-pointer select-none hover:text-fg transition-colors"
+              @click="setSort('gl_description')"
+            >
+              Description
+              <span class="ml-1 text-[10px]" :class="sortCol === 'gl_description' ? 'text-accent' : 'text-muted/40'">
+                {{ sortIcon('gl_description') }}
+              </span>
+            </th>
+            <th
+              class="py-2 px-3 text-right whitespace-nowrap cursor-pointer select-none hover:text-fg transition-colors"
+              @click="setSort('total_amount')"
+            >
+              Total Amount (THB)
+              <span class="ml-1 text-[10px]" :class="sortCol === 'total_amount' ? 'text-accent' : 'text-muted/40'">
+                {{ sortIcon('total_amount') }}
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
-          <template v-for="item in items" :key="item.gl_id">
+          <template v-for="item in sorted" :key="item.gl_id">
             <!-- Parent row -->
             <tr
               :class="expanded.has(item.gl_id) ? 'border-t border-indigo-500/30 bg-indigo-500/5' : 'border-t border-border hover:bg-surface2'"

@@ -40,7 +40,7 @@
           </div>
 
           <!-- FA card -->
-          <button type="button" @click="selectFA" class="role-card w-full mb-3" :class="isFASelected ? 'role-card--active' : ''">
+          <button type="button" @click="selectFA" class="role-card w-full" :class="isFASelected ? 'role-card--active' : ''">
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" :class="isFASelected ? 'bg-accent/25' : 'bg-surface2'">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -57,6 +57,17 @@
               <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
           </button>
+          <!-- FA position -->
+          <div v-if="isFASelected" class="flex gap-2 mt-2 mb-3">
+            <button
+              v-for="pos in STAFF_POSITIONS" :key="pos.value"
+              type="button"
+              @click="selectedPosition = selectedPosition === pos.value ? null : pos.value"
+              class="pos-pill" :class="selectedPosition === pos.value ? 'pos-pill--active' : ''"
+            >{{ pos.label }}</button>
+            <span class="pos-pill text-muted/50 cursor-default border-dashed" v-if="!selectedPosition">ไม่มีตำแหน่ง</span>
+          </div>
+          <div v-else class="mb-3" />
 
           <!-- Category tabs -->
           <div class="flex gap-2 mb-3">
@@ -222,7 +233,7 @@ const loading          = ref(false)
 const error            = ref('')
 
 const jobTitlePreview = computed(() => {
-  if (isFASelected.value) return 'fa'
+  if (isFASelected.value) return selectedPosition.value ? `fa,${selectedPosition.value}` : 'fa'
   if (!selectedRole.value) return ''
   if (category.value === 'division') return `staff,${selectedRole.value}`
   if (category.value === 'staff')

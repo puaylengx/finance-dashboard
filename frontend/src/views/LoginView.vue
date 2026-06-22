@@ -104,25 +104,17 @@
 
           <!-- Faculty -->
           <div v-if="category === 'faculty'">
-            <!-- Sub-type -->
-            <div class="flex gap-2 mb-3">
+            <!-- Faculty roles (FT only) -->
+            <div class="grid grid-cols-4 gap-2">
               <button
-                v-for="st in FACULTY_SUBTYPES" :key="st.value"
-                type="button" @click="selectSubType(st.value)"
-                class="cat-tab flex-1 text-xs" :class="selectedSubType === st.value ? 'cat-tab--active' : ''"
-              >{{ st.label }} <span class="text-muted font-normal">({{ st.sub }})</span></button>
-            </div>
-            <!-- Faculty roles -->
-            <div v-if="selectedSubType" class="grid grid-cols-4 gap-2">
-              <button
-                v-for="r in facultyRoles" :key="r.value"
+                v-for="r in FACULTY_ROLES" :key="r.value"
                 type="button" @click="selectedRole = r.value"
                 class="div-card" :class="selectedRole === r.value ? 'div-card--active' : ''"
               >
                 <div class="text-sm font-bold" :class="selectedRole === r.value ? 'text-accent' : 'text-fg'">{{ r.label }}</div>
               </button>
             </div>
-            <div v-if="selectedRole && selectedSubType" class="mt-2">
+            <div v-if="selectedRole" class="mt-2">
               <span class="inline-flex items-center gap-1 text-xs text-accent bg-accent/10 border border-accent/30 rounded-full px-3 py-1">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 Chairman
@@ -212,26 +204,11 @@ const STAFF_POSITIONS = [
   { value: 'head',  label: 'Head'  },
 ]
 
-const FACULTY_SUBTYPES = [
-  { value: 'ft', label: 'FT', sub: 'Full-time' },
-  { value: 'pt', label: 'PT', sub: 'Part-time' },
-  { value: 'pc', label: 'PC', sub: 'PC'        },
+const FACULTY_ROLES = [
+  { value: 'ba', label: 'BA' }, { value: 'fa', label: 'FA' },
+  { value: 'hl', label: 'HL' }, { value: 'sc', label: 'SC' },
+  { value: 'ss', label: 'SS' }, { value: 'th', label: 'TH' },
 ]
-
-const FACULTY_ROLES: Record<string, { value: string; label: string }[]> = {
-  ft: [
-    { value: 'ba', label: 'BA' }, { value: 'fa', label: 'FA' },
-    { value: 'hl', label: 'HL' }, { value: 'sc', label: 'SC' },
-    { value: 'ss', label: 'SS' }, { value: 'th', label: 'TH' },
-  ],
-  pt: [
-    { value: 'ba', label: 'BA' }, { value: 'fa', label: 'FA' },
-    { value: 'hl', label: 'HL' }, { value: 'pc', label: 'PC' },
-    { value: 'sc', label: 'SC' }, { value: 'ss', label: 'SS' },
-    { value: 'th', label: 'TH' },
-  ],
-  pc: [{ value: 'pc', label: 'PC' }],
-}
 
 const router           = useRouter()
 const auth             = useAuthStore()
@@ -239,15 +216,10 @@ const themeCtrl        = useTheme()
 const isFASelected     = ref(false)
 const category         = ref<Category | null>(null)
 const selectedRole     = ref<string | null>(null)
-const selectedSubType  = ref<string | null>(null)
 const selectedPosition = ref<string | null>(null)
 const name             = ref('')
 const loading          = ref(false)
 const error            = ref('')
-
-const facultyRoles = computed(() =>
-  selectedSubType.value ? (FACULTY_ROLES[selectedSubType.value] ?? []) : []
-)
 
 const jobTitlePreview = computed(() => {
   if (isFASelected.value) return 'fa'
@@ -257,19 +229,16 @@ const jobTitlePreview = computed(() => {
     return selectedPosition.value
       ? `staff,${selectedRole.value},${selectedPosition.value}`
       : `staff,${selectedRole.value}`
-  if (category.value === 'faculty' && selectedSubType.value) {
-    const st = selectedSubType.value === 'ft' ? 'ft_lecturers'
-             : selectedSubType.value === 'pt' ? 'pt_lecturers' : 'pc_lecturers'
-    return `faculty,${st},${selectedRole.value},chairman`
+  if (category.value === 'faculty' && selectedRole.value) {
+    return `faculty,ft_lecturers,${selectedRole.value},chairman`
   }
   return ''
 })
 
 function selectFA() {
-  isFASelected.value = true
-  category.value     = null
-  selectedRole.value = null
-  selectedSubType.value  = null
+  isFASelected.value     = true
+  category.value         = null
+  selectedRole.value     = null
   selectedPosition.value = null
 }
 
@@ -277,13 +246,7 @@ function selectCategory(cat: Category) {
   isFASelected.value     = false
   category.value         = cat
   selectedRole.value     = null
-  selectedSubType.value  = null
   selectedPosition.value = null
-}
-
-function selectSubType(st: string) {
-  selectedSubType.value = st
-  selectedRole.value    = null
 }
 
 watch(selectedRole, () => { selectedPosition.value = null })

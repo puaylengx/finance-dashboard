@@ -17,6 +17,19 @@
         โหลดข้อมูลไม่สำเร็จ: {{ error?.message }}
       </div>
 
+      <!-- No data after filter -->
+      <div v-else-if="data && data.kpis.doc_count === 0"
+        class="rounded-xl border border-border bg-surface">
+        <EmptyState variant="no-results">
+          <template #action>
+            <button
+              @click="filterStore.$reset()"
+              class="text-xs px-4 py-2 rounded-lg border border-border text-muted hover:text-fg hover:border-accent transition"
+            >ล้าง filter</button>
+          </template>
+        </EmptyState>
+      </div>
+
       <template v-else-if="data">
         <!-- Row 1: KPI (1/3) + Quarterly (2/3) -->
         <div class="grid grid-cols-3 gap-4">
@@ -74,6 +87,7 @@ import { exportExcel, exportCSV, printPage } from '@/utils/export'
 import { DIVISION_COLORS, DEPT_COLORS } from '@/utils/constants'
 
 import AppLayout          from '@/layouts/AppLayout.vue'
+import EmptyState         from '@/components/atoms/EmptyState.vue'
 import FilterBar          from '@/components/budget/FilterBar.vue'
 import SkeletonCard       from '@/components/ui/SkeletonCard.vue'
 import KpiCards           from '@/components/budget/KpiCards.vue'

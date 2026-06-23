@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import type { PivotGlItem } from '@/types/api'
 import { fmt } from '@/utils/format'
+import EmptyState from '@/components/atoms/EmptyState.vue'
 
 const props = defineProps<{ title?: string; items: PivotGlItem[] }>()
 defineEmits<{ (e: 'export'): void }>()
@@ -51,7 +52,7 @@ const sorted = computed(() => {
       <button @click="$emit('export')" class="text-xs text-accent hover:underline">Export CSV</button>
     </div>
 
-    <div v-if="!items.length" class="text-center text-muted py-8 text-sm">No data</div>
+    <EmptyState v-if="!items.length" variant="no-results" />
     <div v-else class="overflow-auto max-h-96">
       <table class="w-full text-sm">
         <thead class="sticky top-0 bg-surface2">

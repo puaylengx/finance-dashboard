@@ -53,6 +53,8 @@
 <nav>
   <div class="logo"><h1>Seamless Dashboard</h1><p>Frontend Docs &amp; Checklists</p></div>
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+  <a href="../../docs/index.html" id="nav-home">← หน้าหลัก</a>
+
   <div class="group">Overview</div>
   <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
   <a href="frontend.html">Frontend Guide</a>
@@ -109,18 +111,20 @@ grep -rn "v-html" src/components/
       <div class="block"><h4>คืออะไร</h4><p>HTTP-only cookie คือ cookie ที่ browser ไม่ให้ JavaScript อ่านได้ผ่าน <code>document.cookie</code> ตั้งโดย backend ผ่าน <code>Set-Cookie: token=...; HttpOnly; SameSite=Strict</code> browser ส่งให้อัตโนมัติทุก request ไปยัง same origin</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p><code>localStorage</code> อ่านได้จาก JavaScript ทุก script ในหน้า — ถ้ามี XSS แม้เล็กน้อย ก็ขโมย token ได้ทันที HTTP-only cookie ทำให้ XSS ขโมย token ไม่ได้เลยเพราะ JavaScript เข้าไม่ถึง</p></div>
       <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p>ปัจจุบันใช้ <strong>sessionStorage + Authorization Bearer header</strong> (ไม่ใช่ HTTP-only cookie):</p>
         <ul>
-          <li>Backend ส่ง <code>Set-Cookie: token=...; HttpOnly; Secure; SameSite=Strict; Path=/</code></li>
+          <li>JWT เก็บใน <code>sessionStorage</code> — ปิด tab → หาย, ไม่ตกค้างข้ามวัน (ดีกว่า localStorage)</li>
           <li>Frontend ไม่มีการ <code>localStorage.setItem('token', ...)</code> ที่ใดเลย</li>
-          <li>Axios ใช้ <code>withCredentials: true</code> ทำให้ browser ส่ง cookie ทุก request</li>
+          <li>MSAL สำหรับ Entra ID ใช้ <code>localStorage</code> สำหรับ MSAL internal cache เท่านั้น (ไม่ใช่ JWT ของระบบ)</li>
+          <li>Axios interceptor ส่ง <code>Authorization: Bearer {token}</code> ทุก request</li>
           <li>Pinia auth store เก็บเฉพาะ user metadata (role, name) ที่ไม่ sensitive — ไม่เก็บ token</li>
         </ul>
-        <pre># ตรวจสอบ — ต้องไม่พบ token ใน localStorage
-grep -rn "localStorage.*token\|sessionStorage.*token" src/
-# ต้องไม่พบผลลัพธ์ใดเลย</pre>
+        <pre># ตรวจสอบ — token ไม่อยู่ใน localStorage
+# auth/session.ts ใช้ sessionStorage.setItem('auth_user', ...) เท่านั้น</pre>
       </div>
       <div class="block"><h4>วิธีทดสอบ</h4>
-        <p>Login แล้วเปิด DevTools → Application → Cookies — ต้องเห็น cookie ที่มี HttpOnly flag ✓ เปิด Console แล้วรัน <code>document.cookie</code> — ต้องไม่เห็น token value</p>
+        <p>Login แล้วเปิด DevTools → Application → Session Storage → <code>auth_user</code> key → ปิด tab แล้วเปิดใหม่ → ต้องถูก redirect ไป /login (session หาย)</p>
+        <p>ตรวจ localStorage — ไม่มี <code>auth_user</code> หรือ token ของระบบ (มีเฉพาะ MSAL internal + theme)</p>
       </div>
     </div>
   </div>
@@ -262,7 +266,7 @@ add_header Content-Security-Policy
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    อัปเดต 2026-06-20 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-testing.html" style="color:var(--accent)">Testing →</a>
+    อัปเดต 2026-06-23 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-testing.html" style="color:var(--accent)">Testing →</a>
   </div>
 </main>
 <script>

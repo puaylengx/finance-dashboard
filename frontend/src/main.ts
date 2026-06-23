@@ -4,6 +4,11 @@ import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
 import router           from '@/router'
 import App              from './App.vue'
 import './style.css'
+import { msalInstance, isMsalConfigured } from '@/lib/msalConfig'
+
+if (isMsalConfigured()) {
+  await msalInstance.initialize()
+}
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5 * 60_000, retry: 1 } },

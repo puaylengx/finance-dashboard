@@ -27,10 +27,44 @@
           </svg>
         </div>
         <h1 class="text-xl font-bold text-fg">Finance Dashboard</h1>
-        <p class="text-sm text-muted mt-1">เลือกหน่วยงานและตำแหน่งเพื่อเข้าสู่ระบบ</p>
+        <p class="text-sm text-muted mt-1">
+          {{ hasMsal ? 'เข้าสู่ระบบด้วยบัญชี Microsoft องค์กร' : 'เลือกหน่วยงานและตำแหน่งเพื่อเข้าสู่ระบบ' }}
+        </p>
       </div>
 
       <div class="rounded-2xl border border-border bg-surface p-6 flex flex-col gap-6">
+
+        <!-- Microsoft Login -->
+        <div v-if="hasMsal" class="flex flex-col gap-3">
+          <button
+            type="button" :disabled="loading" @click="() => handleMicrosoftLogin()"
+            class="flex items-center justify-center gap-3 w-full py-3 rounded-xl border border-border bg-surface2 hover:border-accent/60 hover:bg-accent/5 transition-all text-sm font-medium text-fg disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <!-- Microsoft logo -->
+            <svg width="16" height="16" viewBox="0 0 21 21" fill="none">
+              <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+              <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+            </svg>
+            {{ loading && !showDraftForm ? 'กำลังเชื่อมต่อ...' : 'เข้าสู่ระบบด้วย Microsoft' }}
+          </button>
+        </div>
+
+        <!-- Divider (MSAL + draft mode) -->
+        <div v-if="hasMsal && isDraft" class="flex items-center gap-3 -my-2">
+          <div class="flex-1 border-t border-border" />
+          <button
+            type="button" @click="showDraftForm = !showDraftForm"
+            class="text-xs text-muted hover:text-fg transition-colors px-2 shrink-0"
+          >
+            {{ showDraftForm ? '▲ ซ่อน' : '▼ เข้าสู่ระบบแบบทดสอบ' }}
+          </button>
+          <div class="flex-1 border-t border-border" />
+        </div>
+
+        <!-- Draft Login Form -->
+        <template v-if="showDraftForm">
 
         <!-- Step 1: เลือกหน่วยงาน -->
         <div>
@@ -144,27 +178,33 @@
             <input
               v-model="name" type="text" placeholder="กรอกชื่อ-นามสกุล"
               class="w-full bg-surface2 border border-border rounded-xl px-4 py-2.5 text-sm text-fg outline-none placeholder:text-placeholder focus:border-accent transition-colors"
-              autocomplete="off" @keydown.enter="handleLogin"
+              autocomplete="off" @keydown.enter="handleDraftLogin"
             />
           </div>
         </Transition>
 
-        <!-- Error -->
-        <div v-if="error" class="text-xs text-danger rounded-lg border border-danger/30 bg-danger/10 px-3 py-2">
+        <!-- Draft: Error + Submit -->
+        <div v-if="error && showDraftForm" class="text-xs text-danger rounded-lg border border-danger/30 bg-danger/10 px-3 py-2">
           {{ error }}
         </div>
 
-        <!-- Summary + Submit -->
         <div v-if="jobTitlePreview" class="flex items-center gap-3">
           <div class="flex-1 text-xs text-muted bg-surface2 rounded-lg px-3 py-2 font-mono truncate">
             {{ jobTitlePreview }}
           </div>
           <button
-            type="button" :disabled="loading || !name.trim()" @click="handleLogin"
+            type="button" :disabled="loading || !name.trim()" @click="handleDraftLogin"
             class="px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent-h transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             {{ loading ? '...' : 'เข้าสู่ระบบ' }}
           </button>
+        </div>
+
+        </template><!-- end draft form -->
+
+        <!-- MS Login error (shared) -->
+        <div v-if="error && !showDraftForm" class="text-xs text-danger rounded-lg border border-danger/30 bg-danger/10 px-3 py-2">
+          {{ error }}
         </div>
 
       </div>
@@ -175,9 +215,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { draftLogin } from '@/api/auth'
+import { draftLogin, entraLogin } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
+import { msalInstance, loginScopes, isMsalConfigured } from '@/lib/msalConfig'
+
+const hasMsal  = isMsalConfigured()
+const isDraft  = import.meta.env.VITE_DRAFT_MODE === 'true'
+const showDraftForm = ref(!hasMsal)
 
 type Category = 'division' | 'staff' | 'faculty'
 
@@ -262,18 +307,50 @@ function selectCategory(cat: Category) {
 
 watch(selectedRole, () => { selectedPosition.value = null })
 
-async function handleLogin() {
+async function handleDraftLogin() {
   if (!jobTitlePreview.value || !name.value.trim()) return
   error.value = ''; loading.value = true
   try {
     const res = await draftLogin({ job_title: jobTitlePreview.value, name: name.value.trim() })
-    auth.setUser(res.token, res, jobTitlePreview.value)
+    auth.setUser(res.token, res, name.value.trim())
     router.push('/budget')
   } catch (e: unknown) {
     const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
     error.value = msg ?? 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่'
   } finally { loading.value = false }
 }
+
+async function handleMicrosoftLogin(isRetry = false) {
+  error.value = ''; loading.value = true
+  try {
+    const result = await msalInstance.loginPopup({
+      ...loginScopes,
+      redirectUri: `${window.location.origin}/auth-redirect.html`,
+      prompt: 'select_account',
+    })
+    console.log('[MSAL] popup ok, account:', result.account?.username, 'token len:', result.accessToken.length)
+    const session = await entraLogin(result.accessToken)
+    console.log('[MSAL] backend ok, role:', session.role)
+    auth.setUser(session.token, session, result.account?.username ?? result.account?.name ?? '')
+    router.push('/budget')
+  } catch (e: unknown) {
+    const errorCode = (e as { errorCode?: string })?.errorCode
+    if (errorCode === 'user_cancelled') return
+    if (errorCode === 'interaction_in_progress' && !isRetry) {
+      Object.keys(sessionStorage)
+        .filter(k => k.startsWith('msal.'))
+        .forEach(k => sessionStorage.removeItem(k))
+      loading.value = false
+      await handleMicrosoftLogin(true)
+      return
+    }
+    console.error('[MSAL] login error:', e)
+    const backendMsg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+    const rawMsg = (e as { message?: string })?.message ?? String(e)
+    error.value = backendMsg ?? rawMsg
+  } finally { loading.value = false }
+}
+
 </script>
 
 <style scoped>

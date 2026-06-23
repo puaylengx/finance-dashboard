@@ -71,7 +71,7 @@
     <a href="checklist-fe-testing.html">← Testing</a>
     <a href="checklist-fe-accessibility.html">Accessibility →</a>
   </div>
-  <h2>CI/CD <small>— 3 requirements &nbsp; Pass 1 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <h2>CI/CD <small>— 3 requirements &nbsp; Pass 2 / Partial 0 / Defer 0 / Fail 1</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">Automated build, deploy pipeline, และ quality gates ที่ป้องกัน performance regression ก่อนถึง production</p>
 
   <!-- 1. Automated Build & Deploy -->
@@ -116,46 +116,51 @@ jobs:
   <div class="item" id="bundle-size">
     <div class="item-head">
       <div><div class="item-title">2. Bundle Size Budget</div><div class="item-sub">กำหนด max bundle size ใน CI ถ้า exceed ให้ fail build ป้องกัน performance regression</div></div>
-      <div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Bundle size budget คือ limit ที่กำหนดว่า JavaScript bundle ต้องไม่เกิน X KB ถ้าเกิน CI จะ fail ทำให้นักพัฒนารู้ทันทีว่า dependency ใหม่ที่เพิ่มเข้าไปทำให้ bundle ใหญ่เกินไป</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี budget check library ขนาดใหญ่สามารถแอบเข้ามาใน bundle โดยไม่มีใครสังเกต ทำให้ LCP เพิ่มขึ้นเรื่อยๆ โดยไม่รู้สาเหตุ bundle size budget เป็น guard ที่ทำงานโดยอัตโนมัติ</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ยังไม่มีการกำหนด bundle size limit — dependency ใหม่เพิ่มได้โดยไม่มีการแจ้งเตือน</p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Pass</h4>
+        <p>Implemented ใน <code>scripts/check-bundle-size.js</code> — Node.js script ที่อ่าน <code>dist/assets/*.js</code> หลัง build และตรวจ size ตาม limit ที่กำหนด exit code 1 ถ้า exceed:</p>
+        <pre> Bundle Size Budget (วัด 2026-06-23)
+
+ Chunk                                  Size     Limit
+ ────────────────────────────────────────────────────────
+ charts     (ApexCharts)            1,133 kB   1,300 kB  ✓
+ utils      (exceljs+dayjs)           908 kB   1,050 kB  ✓
+ msalConfig (MSAL)                    201 kB     250 kB  ✓
+ query      (TanStack+axios)           80 kB     150 kB  ✓
+ vue-core   (vue+pinia+router)         30 kB      80 kB  ✓
+ ────────────────────────────────────────────────────────
+ TOTAL JS                           2,476 kB   2,800 kB  ✓</pre>
+        <p style="margin-top:8px"><strong>Scripts เพิ่มใน <code>package.json</code>:</strong></p>
+        <pre>"size":        "node scripts/check-bundle-size.js",  // check เฉยๆ (ต้อง build ก่อน)
+"build:check": "npm run build &amp;&amp; npm run size"         // build + check ในคำสั่งเดียว</pre>
+        <p style="margin-top:8px"><strong>Limit strategy</strong>: current measured size + 10-15% buffer — กัน regression โดยไม่ tight เกินไปจน fail ตลอด</p>
       </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p><strong>Option 1: Vite built-in chunk size warning</strong></p>
-        <pre>// vite.config.ts
-build: {
-  chunkSizeWarningLimit: 500,  // warn เมื่อ chunk &gt; 500KB
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        vendor: ['vue', 'vue-router', 'pinia'],
-        charts: ['chart.js', 'vue-chartjs'],
-      }
-    }
-  }
-}</pre>
-        <p style="margin-top:8px"><strong>Option 2: bundlesize package (fail CI จริง)</strong></p>
-        <pre>npm install -D bundlesize
-
-# package.json
-"bundlesize": [
-  { "path": "dist/assets/index-*.js", "maxSize": "200 kB" },
-  { "path": "dist/assets/vendor-*.js", "maxSize": "300 kB" }
-],
-"scripts": {
-  "bundlesize": "bundlesize"
-}
-
-# เพิ่มใน CI workflow หลัง build
-- run: npm run bundlesize</pre>
-        <p style="margin-top:8px"><strong>Option 3: Vite Bundle Analyzer</strong> — ดู visual treemap ของ bundle</p>
-        <pre>npm install -D rollup-plugin-visualizer
-# หลัง build รัน: npx vite-bundle-visualizer
-# เปิด stats.html เพื่อดู bundle composition</pre>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ol>
+          <li><strong>รัน check ปกติ (ผ่าน)</strong>:
+            <pre>cd frontend
+npm run build:check
+# ต้องเห็น: ✓ All bundle sizes within budget.</pre>
+          </li>
+          <li><strong>จำลอง exceed limit</strong> — แก้ไข <code>scripts/check-bundle-size.js</code> ชั่วคราว ลด limit ให้ต่ำกว่า current size แล้วรัน:
+            <pre>npm run size
+# ต้องเห็น: ✗ FAIL และ exit code 1
+echo $?   # ต้องได้ 1</pre>
+          </li>
+          <li><strong>ตรวจว่า fail จริงใน shell chain</strong>:
+            <pre>npm run size &amp;&amp; echo "PASS" || echo "BLOCKED"
+# ถ้า exceed limit → พิมพ์ "BLOCKED" (ใช้แทน CI fail ได้)</pre>
+          </li>
+          <li><strong>ดู composition ด้วย visualizer (optional)</strong>:
+            <pre>npx vite-bundle-visualizer
+# เปิด stats.html เพื่อดู treemap ว่า package ไหนใหญ่</pre>
+          </li>
+        </ol>
+        <p style="margin-top:8px;font-size:12px;color:var(--muted)">⚠ เพิ่มใน CI workflow ด้วย <code>- run: npm run size</code> หลัง <code>npm run build</code> — ถ้า exceed จะ fail pipeline ทันที</p>
       </div>
     </div>
   </div>
@@ -209,7 +214,7 @@ build: {
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    อัปเดต 2026-06-23 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-accessibility.html" style="color:var(--accent)">Accessibility →</a>
+    อัปเดต 2026-06-23 (Bundle Size Budget → Pass) &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-accessibility.html" style="color:var(--accent)">Accessibility →</a>
   </div>
 </main>
 <script>

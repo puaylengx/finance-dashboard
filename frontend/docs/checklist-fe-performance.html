@@ -72,7 +72,7 @@
     <a href="checklist-fe-ux.html">← UX/UI</a>
     <a href="checklist-fe-architecture.html">Architecture →</a>
   </div>
-  <h2>Performance <small>— 5 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <h2>Performance <small>— 5 requirements &nbsp; Pass 4 / Partial 0 / Defer 0 / Fail 1</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความเร็วและประสิทธิภาพในการโหลดและแสดงผล ครอบคลุม bundle size, runtime performance, และ network optimization</p>
 
   <!-- 1. Code Splitting -->
@@ -167,36 +167,36 @@ npx lighthouse http://localhost:5173 --output=json --quiet \
   <div class="item" id="virtual-scroll">
     <div class="item-head">
       <div><div class="item-title">4. Virtual Scrolling</div><div class="item-sub">ใช้ virtual scroll บนตารางที่มีข้อมูลเป็นหมื่นแถว ไม่ render DOM ทั้งหมด</div></div>
-      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Virtual scrolling คือเทคนิคที่ render เฉพาะแถวที่อยู่ใน viewport ณ ขณะนั้น แม้ข้อมูลมี 50,000 แถว แต่ DOM มีแค่ ~30 node เสมอ โดยคำนวณ offset ตาม scroll position</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ตาราง ERP transaction อาจมีหลายหมื่นแถวต่อปี ถ้า render ทั้งหมด browser จะสร้าง DOM nodes หลายหมื่น node ทำให้ scroll ติดขัด, layout recalculation ช้า, และอาจ crash บน mobile device ที่ RAM น้อย</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ปัจจุบัน DataTable render แถวทั้งหมดใน DOM ยังไม่มี virtualization</p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li><code>@tanstack/vue-virtual@3.13</code> ติดตั้งแล้วใน <code>package.json</code></li>
+          <li><code>DataTable.vue</code> ใช้ <code>useVirtualizer</code> — render เฉพาะแถวที่อยู่ใน viewport (overscan 5) ผ่าน padding-row technique</li>
+          <li>Container <code>max-height: 480px; overflow: auto</code> — scroll ทั้ง X และ Y</li>
+          <li><code>&lt;thead&gt;</code> ใช้ <code>sticky top-0</code> — header ติด viewport ขณะ scroll ในตัว container</li>
+        </ul>
+        <pre>// DataTable.vue — useVirtualizer setup
+const rowVirtualizer = useVirtualizer(
+  computed(() => ({
+    count: props.rows.length,
+    getScrollElement: () => scrollRef.value,
+    estimateSize: () => 44,
+    overscan: 5,
+  }))
+)
+
+// template: render virtualItems เท่านั้น
+// spacer tr (paddingTop / paddingBottom) simulate ความสูงรวม</pre>
       </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p><strong>Option 1 (แนะนำ): <code>@tanstack/vue-virtual</code></strong></p>
-        <pre>npm install @tanstack/vue-virtual
-
-# VirtualDataTable.vue
-import { useVirtualizer } from '@tanstack/vue-virtual'
-
-const parentRef = ref&lt;HTMLDivElement | null&gt;(null)
-const rowVirtualizer = useVirtualizer({
-  count: rows.value.length,
-  getScrollElement: () => parentRef.value,
-  estimateSize: () => 44,  // row height px
-  overscan: 5,
-})
-
-// template: render rowVirtualizer.getVirtualItems() เท่านั้น
-// ตั้ง paddingTop/paddingBottom เพื่อ simulate scroll height</pre>
-        <p style="margin-top:8px"><strong>Option 2: <code>vue-virtual-scroller</code></strong> (ง่ายกว่าแต่ bundle ใหญ่กว่า)</p>
-        <pre>npm install vue-virtual-scroller
-# ใช้ &lt;RecycleScroller :items="rows" :item-size="44"&gt; wrapper</pre>
-        <p style="margin-top:8px"><strong>เมื่อใช้งาน:</strong> ตาราง ERP transactions และทุก list ที่อาจมีข้อมูลเกิน 500 แถว</p>
-        <p style="margin-top:4px;color:var(--yellow);font-size:12px">⚠ Virtual scroll ใช้ไม่ได้กับ CSS <code>position: sticky</code> header แบบปกติ ต้องออกแบบ sticky header แยก</p>
+      <div class="block"><h4>หมายเหตุ</h4>
+        <ul>
+          <li>PivotTable / IoPivotTable มี accordion expand/collapse ใช้ <code>max-h-96</code> จำกัดแล้ว ไม่ virtualize เพื่อหลีกเลี่ยงความซับซ้อนของ variable-height rows</li>
+          <li>Virtual scroll ใช้งานกับ sticky header ในตัว container ได้ (sticky scoped to overflow ancestor) ✓</li>
+        </ul>
       </div>
     </div>
   </div>

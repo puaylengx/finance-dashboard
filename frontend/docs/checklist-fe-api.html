@@ -212,40 +212,52 @@ window.location.href = '/login?reason=session_expired'</pre>
   <div class="item" id="optimistic-updates">
     <div class="item-head">
       <div><div class="item-title">5. Optimistic Updates</div><div class="item-sub">Update UI ทันทีก่อน server ตอบกลับ แล้ว rollback หาก error เพื่อ UX ที่ลื่นไหล</div></div>
-      <div class="item-badges"><span class="p4">P4</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p4">P4</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Optimistic update คือ pattern ที่ update UI ทันทีเมื่อ user ทำ action โดยไม่รอ server ตอบกลับ ถ้า server ตอบ success ก็ดำเนินต่อ ถ้า error ให้ rollback กลับค่าเดิมและแสดง error message</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>บน network ที่ช้า การรอ server response ก่อน update UI ทำให้รู้สึกว่า app ช้าและไม่ responsive optimistic update ทำให้ UX ลื่นกว่าบน high-latency network โดยเฉพาะ mobile</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>Write operations รอ server response ก่อนแสดงผลเสมอ ยังไม่มี optimistic pattern</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ (เมื่อพร้อม)</h4>
-        <p>ใช้ TanStack Query <code>useMutation</code> พร้อม <code>onMutate</code> + <code>onError</code> rollback:</p>
-        <pre>// ตัวอย่าง: toggle coordinator active status
-const { mutate } = useMutation({
-  mutationFn: (id: number) => apiClient.patch(`/admin/coordinators/${id}/toggle`),
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Pass</h4>
+        <p>Implemented ใน <code>AdminView.vue</code> สำหรับ toggle coordinator active status:</p>
+        <ul>
+          <li><strong>onMutate</strong>: cancel in-flight queries, snapshot cache, flip <code>active</code> ใน TanStack Query cache ทันที</li>
+          <li><strong>onError</strong>: rollback cache กลับ snapshot เดิม + แสดง toast error ผ่าน <code>useToast</code></li>
+          <li><strong>onSettled</strong>: invalidate <code>['coordinators']</code> เพื่อ sync ข้อมูลจาก server</li>
+          <li><strong>Add coordinator</strong>: ใช้ <code>useMutation</code> พร้อม toast error (ไม่ทำ optimistic เพราะต้องการ server-generated ID)</li>
+          <li><strong>Toast system</strong>: <code>src/composables/useToast.ts</code> + outlet ใน <code>AppLayout.vue</code></li>
+        </ul>
+        <pre>// AdminView.vue — toggle optimistic update
+const { mutate: mutateToggle } = useMutation({
+  mutationFn: (id: number) => toggleCoordinator(id),
 
   onMutate: async (id) => {
-    await queryClient.cancelQueries({ queryKey: ['coordinators'] })
-    const previous = queryClient.getQueryData(['coordinators'])
-
-    // อัปเดต cache ทันที (ก่อน server ตอบ)
-    queryClient.setQueryData(['coordinators'], (old: Coordinator[]) =>
-      old.map(c => c.id === id ? { ...c, active: !c.active } : c)
+    await qc.cancelQueries({ queryKey: ['coordinators'] })
+    const previous = qc.getQueryData&lt;CoordinatorResponse[]&gt;(['coordinators'])
+    qc.setQueryData&lt;CoordinatorResponse[]&gt;(['coordinators'], old =>
+      old?.map(c => c.id === id ? { ...c, active: !c.active } : c) ?? []
     )
     return { previous }
   },
 
   onError: (_err, _id, context) => {
-    // rollback ถ้า server ตอบ error
-    queryClient.setQueryData(['coordinators'], context?.previous)
-    toast.error('ไม่สามารถบันทึกได้ กรุณาลองใหม่')
+    qc.setQueryData(['coordinators'], context?.previous)
+    toast.error('ไม่สามารถเปลี่ยนสถานะได้ กรุณาลองใหม่')
   },
 
-  onSettled: () => queryClient.invalidateQueries({ queryKey: ['coordinators'] })
+  onSettled: () => qc.invalidateQueries({ queryKey: ['coordinators'] }),
 })</pre>
-        <p style="margin-top:6px">P4 Low — ทำหลังจาก P1/P2/P3 เสร็จ และเฉพาะ action ที่ user ทำบ่อยและ network อาจช้า</p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ol>
+          <li><strong>Optimistic flip (happy path)</strong> — ไปที่ <code>/admin</code> → กด ปิดสิทธิ์/เปิดสิทธิ์ coordinator → badge สถานะต้องเปลี่ยนทันที ก่อนที่ spinner จะแสดง (ไม่มีช่วง loading หลังกด)</li>
+          <li><strong>Rollback on error</strong> — เปิด DevTools → Network → คลิกขวา PATCH request ของ coordinators → Block request URL → กดปุ่ม toggle → badge ต้องเปลี่ยนทันที แล้ว rollback กลับสถานะเดิม + toast error ปรากฏมุมบนขวา</li>
+          <li><strong>Toast timeout</strong> — toast ต้องหายไปเองหลัง 4 วินาที และกด ✕ ได้ทันที</li>
+          <li><strong>Add error toast</strong> — พยายามเพิ่ม username ซ้ำที่มีอยู่แล้ว → ต้องเห็น toast error (ไม่ใช่ inline error เดิม)</li>
+          <li><strong>Throttle test</strong> — DevTools → Network → Throttling → Slow 3G → กด toggle → badge ต้องเปลี่ยนทันทีโดยไม่รอ server (ต่างจากก่อน)</li>
+        </ol>
+        <pre># จำลอง network error ใน browser console
+# ขณะอยู่ที่ /admin, block API แล้วกด toggle
+# DevTools → Network → คลิกขวา request → Block request URL</pre>
       </div>
     </div>
   </div>

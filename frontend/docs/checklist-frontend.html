@@ -131,8 +131,8 @@
       </tr>
       <tr>
         <td><a class="cat-link" href="checklist-fe-api.html">API Integration</a></td><td>5</td>
-        <td style="color:var(--green)">3</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">2</td>
-        <td style="color:var(--muted);font-size:12px">Axios+TanStack ✓ · Error UI ✓ · Skeleton ✓ · Axios Auth Interceptor ✗ · Optimistic ✗</td>
+        <td style="color:var(--green)">5</td><td style="color:var(--yellow)">0</td><td style="color:var(--blue)">0</td><td style="color:var(--red)">0</td>
+        <td style="color:var(--muted);font-size:12px">Axios+TanStack ✓ · Error UI ✓ · Skeleton ✓ · Axios Auth Interceptor ✓ · Optimistic ✓</td>
       </tr>
       <tr>
         <td><a class="cat-link" href="checklist-fe-security.html">Security</a></td><td>6</td>
@@ -156,7 +156,7 @@
       </tr>
       <tr style="font-weight:700;background:var(--surface2)">
         <td>รวม</td><td>35</td>
-        <td style="color:var(--green)">27</td><td style="color:var(--yellow)">1</td><td style="color:var(--blue)">1</td><td style="color:var(--red)">6</td>
+        <td style="color:var(--green)">29</td><td style="color:var(--yellow)">1</td><td style="color:var(--blue)">1</td><td style="color:var(--red)">4</td>
         <td></td>
       </tr>
     </table>
@@ -168,20 +168,13 @@
       <tr><th>#</th><th>รายการ</th><th>หมวดหมู่</th><th>สถานะ</th><th>ความเสี่ยง</th></tr>
       <tr>
         <td>1</td>
-        <td><a class="cat-link" href="checklist-fe-api.html#axios-auth">Axios Interceptor (Auth)</a></td>
-        <td>API Integration</td>
-        <td><span class="fail">Fail</span> <span class="p1">P1</span></td>
-        <td style="color:var(--red);font-size:12px">ไม่มี auth interceptor → 401 ไม่ถูกจัดการ, session หมดไม่ redirect</td>
-      </tr>
-      <tr>
-        <td>2</td>
         <td><a class="cat-link" href="checklist-fe-security.html#csrf">CSRF Protection</a></td>
         <td>Security</td>
         <td><span class="partial">Partial</span> <span class="p2">P2</span></td>
         <td style="color:var(--yellow);font-size:12px">HTTP-only SameSite=Strict ช่วยได้ส่วนหนึ่ง ยังไม่มี CSRF token header</td>
       </tr>
       <tr>
-        <td>3</td>
+        <td>2</td>
         <td><a class="cat-link" href="checklist-fe-security.html#csp">Content Security Policy</a></td>
         <td>Security</td>
         <td><span class="fail">Fail</span> <span class="p2">P2</span></td>
@@ -192,7 +185,7 @@
 
   <div style="padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted)">
     <strong style="color:var(--text)">Seamless Dashboard — Frontend Requirement Checklist</strong> &nbsp;·&nbsp;
-    อัปเดต 2026-06-23 (Env Config → Pass) &nbsp;·&nbsp; 35 items &nbsp;·&nbsp;
+    อัปเดต 2026-06-23 (Axios Auth Interceptor → Pass · Optimistic Updates → Pass) &nbsp;·&nbsp; 35 items &nbsp;·&nbsp;
     คลิกชื่อหมวดหมู่เพื่อดูรายละเอียดและคำอธิบายทุกข้อ
   </div>
 </main>

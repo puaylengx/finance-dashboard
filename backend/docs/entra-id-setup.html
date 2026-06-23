@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entra ID Setup — Seamless Dashboard</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;--accent:#6c8efb;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--muted:#8892b0;--code-bg:#141824;--sidebar-w:220px;--radius:8px;}
+    html[data-theme="light"]{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde1ee;--accent:#4f6ef7;--accent2:#7c3aed;--green:#059669;--yellow:#b45309;--red:#dc2626;--blue:#2563eb;--cyan:#0891b2;--purple:#7c3aed;--text:#1e2438;--muted:#64748b;--code-bg:#f1f5f9;}
+    html[data-theme="light"] code{background:rgba(8,145,178,.1);}
+    html[data-theme="light"] main{background:var(--surface);}
+    html[data-theme="light"] body{background:var(--surface2);}
+    .theme-btn{display:flex;align-items:center;gap:6px;margin:10px 16px 4px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;width:calc(100% - 32px);}
+    .theme-btn:hover{color:var(--text);border-color:var(--accent);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.7;display:flex;}
+    nav{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;overflow-y:auto;z-index:100;}
+    nav .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+    nav .logo h1{font-size:13px;color:var(--accent);font-weight:700;}
+    nav .logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+    nav .group{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;padding:10px 16px 3px;}
+    nav a{display:flex;align-items:center;gap:6px;padding:5px 16px 5px 22px;color:var(--muted);text-decoration:none;font-size:12px;border-left:2px solid transparent;transition:all .15s;}
+    nav a:hover,nav a.active{color:var(--text);background:rgba(108,142,251,.08);border-left-color:var(--accent);}
+    nav a .cnt{margin-left:auto;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;}
+    main{margin-left:var(--sidebar-w);flex:1;max-width:900px;padding:40px 36px 80px;}
+    h2{font-size:18px;font-weight:800;margin:36px 0 10px;color:var(--text);}
+    h3{font-size:15px;font-weight:700;margin:24px 0 8px;color:var(--text);}
+    h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+    p{font-size:13.5px;margin-bottom:8px;}
+    ul,ol{padding-left:20px;margin-bottom:10px;}
+    li{margin-bottom:5px;font-size:13.5px;}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:rgba(34,211,238,.08);padding:1px 5px;border-radius:3px;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;margin:10px 0;line-height:1.65;}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 16px;}
+    th{text-align:left;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+    td{padding:8px 12px;border:1px solid var(--border);vertical-align:top;}
+    .nav-btn{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+    .nav-btn a{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;font-size:12px;transition:all .15s;}
+    .nav-btn a:hover{color:var(--text);border-color:var(--accent);}
+
+    /* Step card */
+    .step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:24px;overflow:hidden;}
+    .step-head{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--border);}
+    .step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .step-num.azure{background:linear-gradient(135deg,#0078d4,#00bcf2);}
+    .step-num.backend{background:linear-gradient(135deg,var(--green),#059669);}
+    .step-num.frontend{background:linear-gradient(135deg,var(--accent),var(--accent2));}
+    .step-num.user{background:linear-gradient(135deg,var(--yellow),#d97706);}
+    .step-head h3{margin:0;font-size:14px;font-weight:700;}
+    .step-head .tag{margin-left:auto;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;flex-shrink:0;}
+    .tag-azure{background:rgba(0,120,212,.15);color:#60a5fa;border:1px solid rgba(0,120,212,.3);}
+    .tag-backend{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+    .tag-frontend{background:rgba(108,142,251,.15);color:var(--accent);border:1px solid rgba(108,142,251,.3);}
+    .tag-user{background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3);}
+    .step-body{padding:18px 22px;display:grid;gap:14px;}
+
+    /* Info / warning / note boxes */
+    .box{border-radius:6px;padding:12px 16px;font-size:13px;}
+    .box-info{background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.25);}
+    .box-info::before{content:"ℹ️  ";font-size:14px;}
+    .box-warn{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);}
+    .box-warn::before{content:"⚠️  ";font-size:14px;}
+    .box-ok{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.25);}
+    .box-ok::before{content:"✅  ";font-size:14px;}
+    .box-error{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);}
+    .box-error::before{content:"🚫  ";font-size:14px;}
+
+    /* Screenshot placeholder */
+    .screen{background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--muted);margin:6px 0;}
+    .screen strong{color:var(--text);}
+
+    /* Flow diagram */
+    .flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:12px 0;}
+    .flow-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:12px;text-align:center;min-width:110px;}
+    .flow-arrow{color:var(--muted);font-size:18px;padding:0 6px;font-weight:300;}
+    .flow-box.highlight{border-color:var(--accent);background:rgba(108,142,251,.08);color:var(--accent);}
+
+    /* Badge pill */
+    .pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:4px;vertical-align:middle;}
+    .pill-spa{background:rgba(108,142,251,.15);color:var(--accent);border:1px solid rgba(108,142,251,.3);}
+    .pill-web{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+
+    /* TOC */
+    .toc-container{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:32px;}
+    .toc-title{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+    .toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;}
+    .toc a{color:var(--muted);text-decoration:none;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px;}
+    .toc a:hover{color:var(--text);}
+    .toc a::before{content:"›";color:var(--accent);font-weight:bold;}
+
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
+  </style>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+</head>
+<body>
+<nav>
+  <div class="logo">
+    <h1>Seamless Dashboard</h1>
+    <p>System Docs &amp; Checklists</p>
+  </div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
+
+  <div class="group">Overview</div>
+  <a href="checklist.html">Checklist Index &amp; Summary</a>
+  <a href="backend.html">Backend Guide</a>
+  <a href="data-dictionary.html">Data Dictionary</a>
+  <a href="runbook.html">Operations Runbook</a>
+  <a href="entra-id-setup.html" class="active">Entra ID Setup</a>
+
+  <div class="group">หมวดหมู่ Checklist</div>
+  <a href="checklist-api-design.html">API Design <span class="cnt">8</span></a>
+  <a href="checklist-data-management.html">Data Management <span class="cnt">10</span></a>
+  <a href="checklist-security.html">Security <span class="cnt">11</span></a>
+  <a href="checklist-architecture.html">Architecture <span class="cnt">6</span></a>
+  <a href="checklist-logging.html">Logging &amp; Monitoring <span class="cnt">5</span></a>
+  <a href="checklist-concurrency.html">Concurrency <span class="cnt">3</span></a>
+  <a href="checklist-testing.html">Testing <span class="cnt">4</span></a>
+  <a href="checklist-cicd.html">Deployment &amp; CI/CD <span class="cnt">6</span></a>
+  <a href="checklist-data-pipeline.html">Data Pipeline <span class="cnt">3</span></a>
+  <a href="checklist-documentation.html">Documentation <span class="cnt">4</span></a>
+</nav>
+
+<main>
+  <div class="nav-btn">
+    <a href="runbook.html">← Operations Runbook</a>
+    <a href="checklist.html">กลับ Index →</a>
+  </div>
+
+  <div style="margin-bottom:36px">
+    <h1 style="font-size:28px;font-weight:800;background:linear-gradient(135deg,#0078d4,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">Microsoft Entra ID Setup</h1>
+    <p style="color:var(--muted);font-size:14px">Seamless Dashboard API &nbsp;·&nbsp; คู่มือตั้งค่า Authentication ด้วย Microsoft Entra ID (Azure AD) แบบ end-to-end</p>
+    <p style="color:var(--muted);font-size:12px;margin-top:4px">อัปเดต 2026-06-22 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ทำตามลำดับ Step 1 → 6 เพื่อผลลัพธ์ที่ถูกต้อง</strong></p>
+  </div>
+
+  <!-- Auth Flow Overview -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:28px;">
+    <h4 style="margin-bottom:14px">Auth Flow — ภาพรวม</h4>
+    <div class="flow">
+      <div class="flow-box">User<br><span style="font-size:10px;color:var(--muted)">คลิก Login</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box highlight">MSAL Popup<br><span style="font-size:10px">Azure Login Page</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Access Token<br><span style="font-size:10px;color:var(--muted)">(มี jobTitle)</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">POST /auth/<br>entra-login</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Validate JWKS<br><span style="font-size:10px;color:var(--muted)">ที่ Backend</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box highlight">JWT<br><span style="font-size:10px">ของระบบ</span></div>
+    </div>
+    <p style="margin-top:10px;font-size:12px;color:var(--muted)">
+      Frontend ใช้ MSAL (Authorization Code + PKCE) → ได้ MS Access Token → ส่งมาให้ Backend validate กับ Azure JWKS → Backend ออก JWT ของระบบเองที่ใช้ต่อ
+    </p>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc-container">
+    <div class="toc-title">สารบัญ</div>
+    <div class="toc">
+      <a href="#step1">Step 1 — App Registration (Azure Portal)</a>
+      <a href="#step2">Step 2 — Redirect URI (SPA)</a>
+      <a href="#step3">Step 3 — Token Claims (jobTitle)</a>
+      <a href="#step4">Step 4 — API Permissions</a>
+      <a href="#step5">Step 5 — Backend .env</a>
+      <a href="#step6">Step 6 — Frontend MSAL Setup</a>
+      <a href="#step7">Step 7 — ตั้งค่า jobTitle ของ Users</a>
+      <a href="#troubleshoot">Troubleshooting</a>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step" id="step1">
+    <div class="step-head">
+      <div class="step-num azure">1</div>
+      <h3>App Registration — สร้าง Application ใน Azure Portal</h3>
+      <span class="tag tag-azure">Azure Portal</span>
+    </div>
+    <div class="step-body">
+      <ol>
+        <li>ไปที่ <strong>portal.azure.com</strong> → Login ด้วย Admin account</li>
+        <li>ค้นหา <strong>Microsoft Entra ID</strong> ในช่อง Search บนสุด</li>
+        <li>เลือก <strong>App registrations</strong> จาก sidebar ซ้าย</li>
+        <li>คลิก <strong>+ New registration</strong></li>
+      </ol>
+
+      <table>
+        <tr><th>Field</th><th>ค่าที่ตั้ง</th><th>หมายเหตุ</th></tr>
+        <tr><td><strong>Name</strong></td><td><code>seamless-dashboard</code></td><td>ตั้งอะไรก็ได้ ไม่กระทบ technical</td></tr>
+        <tr><td><strong>Supported account types</strong></td><td>Accounts in this organizational directory only</td><td>Single tenant — เฉพาะ org เดียวกัน</td></tr>
+        <tr><td><strong>Redirect URI</strong></td><td>ข้ามไปก่อน ตั้งใน Step 2</td><td>ต้องเลือก platform ก่อน</td></tr>
+      </table>
+
+      <p>กด <strong>Register</strong> → หน้า Overview จะแสดงข้อมูล:</p>
+      <div class="box box-ok">
+        คัดลอกค่าสำคัญจากหน้า Overview:<br>
+        <code>Application (client) ID</code> → ใช้เป็น <code>AZURE_CLIENT_ID</code><br>
+        <code>Directory (tenant) ID</code> → ใช้เป็น <code>AZURE_TENANT_ID</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="step2">
+    <div class="step-head">
+      <div class="step-num azure">2</div>
+      <h3>Redirect URI — เลือก Platform เป็น SPA</h3>
+      <span class="tag tag-azure">Azure Portal</span>
+    </div>
+    <div class="step-body">
+      <ol>
+        <li>ใน App ที่เพิ่ง register → เลือก <strong>Authentication</strong> จาก sidebar</li>
+        <li>คลิก <strong>+ Add a platform</strong></li>
+        <li>เลือก <strong>Single-page application (SPA)</strong></li>
+      </ol>
+
+      <div class="box box-warn">
+        <strong>ต้องเลือก SPA ไม่ใช่ Web</strong> — frontend ใช้ <code>@azure/msal-browser</code> ซึ่งใช้ Authorization Code + PKCE ทำงานใน browser โดยตรง ถ้าเลือก Web จะเจอ CORS error
+      </div>
+
+      <table>
+        <tr><th>Platform</th><th>Flow</th><th>ใช้ได้กับ MSAL Browser</th></tr>
+        <tr>
+          <td><span class="pill pill-spa">SPA</span> Single-page application</td>
+          <td>Auth Code + PKCE (ไม่ต้อง client secret)</td>
+          <td style="color:var(--green)">✓ ถูกต้อง</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-web">Web</span> Web application</td>
+          <td>Auth Code + client secret (server-side)</td>
+          <td style="color:var(--red)">✗ CORS error</td>
+        </tr>
+      </table>
+
+      <p>ใส่ Redirect URI ตามสภาพแวดล้อม:</p>
+      <table>
+        <tr><th>สภาพแวดล้อม</th><th>Redirect URI</th></tr>
+        <tr><td>Development</td><td><code>http://localhost:5173</code></td></tr>
+        <tr><td>Staging</td><td><code>https://staging.your-domain.com</code></td></tr>
+        <tr><td>Production</td><td><code>https://your-domain.com</code></td></tr>
+      </table>
+
+      <div class="box box-info">
+        สามารถเพิ่ม URI ได้หลายตัวพร้อมกัน แนะนำใส่ทั้ง dev และ production ในครั้งเดียว
+      </div>
+
+      <p>เลื่อนลงหา <strong>Implicit grant and hybrid flows</strong> → <strong>ไม่ต้องติ๊ก</strong> ทั้ง Access tokens และ ID tokens (SPA ใช้ PKCE แทน)</p>
+      <p>กด <strong>Save</strong></p>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="step3">
+    <div class="step-head">
+      <div class="step-num azure">3</div>
+      <h3>Token Configuration — เพิ่ม jobTitle Claim</h3>
+      <span class="tag tag-azure">Azure Portal</span>
+    </div>
+    <div class="step-body">
+      <p>Backend ใช้ <code>jobTitle</code> จาก Access Token เพื่อ extract role และ position ของ user</p>
+
+      <div class="box box-warn">
+        <strong><code>job_title</code> ไม่ปรากฏในรายการ optional claim ของ UI</strong> — ต้องเพิ่มผ่าน Manifest (JSON) โดยตรง
+      </div>
+
+      <ol>
+        <li>เลือก <strong>Manifest</strong> จาก sidebar</li>
+        <li>ค้นหา key <code>"optionalClaims"</code> ใน JSON</li>
+        <li>แก้ค่าเป็น:</li>
+      </ol>
+
+      <pre>"optionalClaims": {
+    "idToken": [],
+    "accessToken": [
+        {
+            "name": "job_title",
+            "source": null,
+            "essential": false,
+            "additionalProperties": []
+        }
+    ],
+    "saml2Token": []
+},</pre>
+
+      <ol start="4">
+        <li>กด <strong>Save</strong></li>
+      </ol>
+
+      <div class="box box-info">
+        <strong>ชื่อ claim ใน token คือ <code>job_title</code> (snake_case)</strong> — Backend รองรับทั้ง <code>job_title</code> และ <code>jobTitle</code> แล้วใน <code>auth_service.py</code><br><br>
+        <strong>ทำไมต้องเป็น Access token ไม่ใช่ ID token?</strong><br>
+        Backend รับ Access Token จาก MSAL แล้ว validate กับ Azure JWKS → claim ต้องอยู่ใน Access Token
+      </div>
+
+      <p>ตรวจสอบ claim ใน token — หลัง login ใหม่ ให้วาง access token ที่ได้จาก MSAL ที่ <strong>jwt.ms</strong> แล้วดูว่ามี field <code>job_title</code> ปรากฏหรือไม่</p>
+
+      <div class="box box-warn">
+        ถ้า login อยู่แล้ว → ต้อง <strong>logout แล้ว login ใหม่</strong> เพื่อให้ Azure ออก token ใหม่ที่มี claim ครบ
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" id="step4">
+    <div class="step-head">
+      <div class="step-num azure">4</div>
+      <h3>API Permissions — ให้สิทธิ์ที่จำเป็น</h3>
+      <span class="tag tag-azure">Azure Portal</span>
+    </div>
+    <div class="step-body">
+      <ol>
+        <li>เลือก <strong>API permissions</strong> จาก sidebar</li>
+        <li>คลิก <strong>+ Add a permission</strong> → เลือก <strong>Microsoft Graph</strong></li>
+        <li>เลือก <strong>Delegated permissions</strong></li>
+        <li>ค้นหาและติ๊ก permission ต่อไปนี้:</li>
+      </ol>
+
+      <table>
+        <tr><th>Permission</th><th>เหตุผล</th><th>จำเป็น?</th></tr>
+        <tr><td><code>openid</code></td><td>OIDC login flow พื้นฐาน</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+        <tr><td><code>profile</code></td><td>ดึง name, jobTitle จาก Entra</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+        <tr><td><code>email</code></td><td>ดึง email / UPN สำหรับ username</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+        <tr><td><code>User.Read</code></td><td>อ่านข้อมูล user ที่ login</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+      </table>
+
+      <p>กด <strong>Add permissions</strong></p>
+
+      <div class="box box-info">
+        <strong>Grant admin consent</strong> — ถ้า org ต้องการ admin consent ให้คลิก <strong>Grant admin consent for [organization]</strong> แล้วกด <strong>Yes</strong> (ต้องมีสิทธิ์ Global Admin หรือ Application Admin)
+      </div>
+
+      <p>หลัง grant — status column จะเปลี่ยนเป็น <span style="color:var(--green)">Granted for [org]</span></p>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step" id="step5">
+    <div class="step-head">
+      <div class="step-num backend">5</div>
+      <h3>Backend — ตั้งค่า .env</h3>
+      <span class="tag tag-backend">Backend</span>
+    </div>
+    <div class="step-body">
+      <p>เปิดไฟล์ <code>backend/.env</code> แล้วใส่ค่าจาก Step 1:</p>
+      <pre><span style="color:var(--muted)"># Microsoft Entra ID</span>
+AZURE_TENANT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>   <span style="color:var(--muted)"># Directory (tenant) ID</span>
+AZURE_CLIENT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>   <span style="color:var(--muted)"># Application (client) ID</span>
+AZURE_AUTHORITY=https://login.microsoftonline.com/<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+
+<span style="color:var(--muted)"># ปิด Draft Mode เมื่อพร้อม production</span>
+DRAFT_MODE=false
+APP_ENV=production</pre>
+
+      <div class="box box-warn">
+        <strong>APP_ENV=production + DRAFT_MODE=true → App จะ refuse to start</strong><br>
+        backend มี guard ใน <code>config.py</code> ที่ block combination นี้ไว้ ถ้ายังทดสอบอยู่ให้ใช้ <code>APP_ENV=staging</code>
+      </div>
+
+      <p>Restart backend หลังแก้ไข <code>.env</code>:</p>
+      <pre>cd backend
+uvicorn app.main:app --reload</pre>
+
+      <p>ทดสอบว่า Backend อ่าน config ถูกต้อง:</p>
+      <pre>curl http://localhost:8000/health | python3 -m json.tool</pre>
+
+      <div class="box box-info">
+        Backend validate token โดย fetch JWKS จาก:<br>
+        <code>https://login.microsoftonline.com/{AZURE_TENANT_ID}/discovery/v2.0/keys</code><br>
+        ไม่ต้องมี client secret — ใช้ RS256 public key verify เท่านั้น
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="step6">
+    <div class="step-head">
+      <div class="step-num frontend">6</div>
+      <h3>Frontend — ติดตั้ง MSAL และเชื่อม Login</h3>
+      <span class="tag tag-frontend">Frontend</span>
+    </div>
+    <div class="step-body">
+
+      <h3>6.1 ติดตั้ง Package</h3>
+      <pre>cd frontend
+npm install @azure/msal-browser @azure/msal-react</pre>
+
+      <h3>6.2 ตั้งค่า Environment Variables</h3>
+      <p>เพิ่มในไฟล์ <code>frontend/.env</code>:</p>
+      <pre>VITE_API_BASE_URL=http://localhost:8000
+VITE_AZURE_CLIENT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+VITE_AZURE_TENANT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span></pre>
+
+      <h3>6.3 สร้าง MSAL Config</h3>
+      <p>สร้างไฟล์ <code>frontend/src/lib/msalConfig.ts</code>:</p>
+      <pre><span style="color:var(--purple)">import</span> { Configuration, PublicClientApplication } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-browser'</span>
+
+<span style="color:var(--purple)">export const</span> <span style="color:var(--cyan)">msalConfig</span>: Configuration = {
+  auth: {
+    clientId: <span style="color:var(--cyan)">import</span>.meta.env.VITE_AZURE_CLIENT_ID,
+    authority: <span style="color:var(--green)">`https://login.microsoftonline.com/${<span style="color:var(--cyan)">import</span>.meta.env.VITE_AZURE_TENANT_ID}`</span>,
+    redirectUri: <span style="color:var(--cyan)">window</span>.location.origin,
+  },
+  cache: {
+    cacheLocation: <span style="color:var(--green)">'sessionStorage'</span>,  <span style="color:var(--muted)">// ปลอดภัยกว่า localStorage</span>
+    storeAuthStateInCookie: <span style="color:var(--yellow)">false</span>,
+  },
+}
+
+<span style="color:var(--purple)">export const</span> <span style="color:var(--cyan)">msalInstance</span> = <span style="color:var(--purple)">new</span> <span style="color:var(--blue)">PublicClientApplication</span>(msalConfig)
+
+<span style="color:var(--purple)">export const</span> <span style="color:var(--cyan)">loginScopes</span> = {
+  scopes: [<span style="color:var(--green)">'openid'</span>, <span style="color:var(--green)">'profile'</span>, <span style="color:var(--green)">'email'</span>, <span style="color:var(--green)">'User.Read'</span>],
+}</pre>
+
+      <h3>6.4 Wrap App ด้วย MsalProvider</h3>
+      <p>แก้ไฟล์ <code>frontend/src/main.tsx</code>:</p>
+      <pre><span style="color:var(--purple)">import</span> { MsalProvider } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-react'</span>
+<span style="color:var(--purple)">import</span> { msalInstance } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/lib/msalConfig'</span>
+
+<span style="color:var(--purple)">await</span> msalInstance.<span style="color:var(--cyan)">initialize</span>()  <span style="color:var(--muted)">// ต้อง initialize ก่อน render</span>
+
+createRoot(document.getElementById(<span style="color:var(--green)">'root'</span>)!).render(
+  &lt;<span style="color:var(--blue)">MsalProvider</span> instance={msalInstance}&gt;
+    &lt;<span style="color:var(--blue)">App</span> /&gt;
+  &lt;/<span style="color:var(--blue)">MsalProvider</span>&gt;
+)</pre>
+
+      <h3>6.5 Login Function</h3>
+      <p>ในหน้า Login — เพิ่ม handler สำหรับ Microsoft login:</p>
+      <pre><span style="color:var(--purple)">import</span> { useMsal } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-react'</span>
+<span style="color:var(--purple)">import</span> { loginScopes } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/lib/msalConfig'</span>
+<span style="color:var(--purple)">import</span> { entraLogin } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/api/auth'</span>
+
+<span style="color:var(--purple)">const</span> { instance } = <span style="color:var(--blue)">useMsal</span>()
+
+<span style="color:var(--purple)">async function</span> <span style="color:var(--cyan)">handleMicrosoftLogin</span>() {
+  <span style="color:var(--purple)">const</span> result = <span style="color:var(--purple)">await</span> instance.<span style="color:var(--cyan)">loginPopup</span>(loginScopes)
+  <span style="color:var(--purple)">const</span> session = <span style="color:var(--purple)">await</span> <span style="color:var(--cyan)">entraLogin</span>(result.accessToken)
+  <span style="color:var(--muted)">// บันทึก session.token ใน store / localStorage</span>
+}</pre>
+
+      <div class="box box-info">
+        <code>entraLogin()</code> อยู่ที่ <code>frontend/src/api/auth.ts</code> — ส่ง POST ไปยัง <code>/api/v1/auth/entra-login</code> พร้อม <code>access_token</code> จาก MSAL แล้วรับ JWT ของระบบกลับมา
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="step" id="step7">
+    <div class="step-head">
+      <div class="step-num user">7</div>
+      <h3>ตั้งค่า jobTitle ของ Users ใน Entra ID</h3>
+      <span class="tag tag-user">Azure Portal — Users</span>
+    </div>
+    <div class="step-body">
+      <p>Backend อ่าน <code>jobTitle</code> จาก token แล้ว parse เป็น role และ position ของระบบ</p>
+
+      <h3>รูปแบบ jobTitle ที่ระบบรองรับ</h3>
+      <table>
+        <tr><th>รูปแบบ jobTitle</th><th>Role</th><th>Position</th><th>สิทธิ์ที่ได้</th></tr>
+        <tr><td><code>FIN,FA</code></td><td>fa</td><td>-</td><td style="color:var(--red)">ต้องเป็น coordinator จึงเข้าได้</td></tr>
+        <tr><td><code>FIN,BBA</code></td><td>bba</td><td>-</td><td style="color:var(--red)">ต้องเป็น coordinator จึงเข้าได้</td></tr>
+        <tr><td><code>FIN,FA,chief</code></td><td>fa</td><td>chief</td><td style="color:var(--green)">เข้าได้ (scoped ตาม dept)</td></tr>
+        <tr><td><code>FIN,BBA,head</code></td><td>bba</td><td>head</td><td style="color:var(--green)">เข้าได้ (scoped ตาม dept)</td></tr>
+        <tr><td><code>FIN,SCI,chairman</code></td><td>sci</td><td>chairman</td><td style="color:var(--green)">เข้าได้ (scoped ตาม dept)</td></tr>
+        <tr><td><code>FIN,TYPE,BBA,chief</code></td><td>bba</td><td>chief</td><td style="color:var(--green)">เข้าได้ (รองรับ 4 segments)</td></tr>
+      </table>
+
+      <div class="box box-info">
+        <strong>Logic การ parse:</strong> segment สุดท้ายที่เป็น <code>chief</code> / <code>chairman</code> / <code>head</code> → position, segment ก่อนหน้าคือ role<br>
+        ดู code ได้ที่ <code>backend/app/core/security.py</code> → <code>extract_claims()</code>
+      </div>
+
+      <h3>วิธีตั้งค่า jobTitle ใน Azure Portal</h3>
+      <ol>
+        <li>ไปที่ <strong>Entra ID → Users</strong></li>
+        <li>คลิกชื่อ user ที่ต้องการ</li>
+        <li>คลิก <strong>Edit properties</strong> (ปุ่มดินสอบนสุด)</li>
+        <li>เลื่อนหา field <strong>Job title</strong></li>
+        <li>ใส่ค่าตามรูปแบบ เช่น <code>FIN,FA,chief</code></li>
+        <li>กด <strong>Save</strong></li>
+      </ol>
+
+      <div class="box box-warn">
+        <strong>ระวังตัวพิมพ์ใหญ่-เล็ก</strong> — ระบบ <code>.lower()</code> ทุก segment ก่อน compare ดังนั้น <code>FIN,FA,CHIEF</code> และ <code>fin,fa,chief</code> ให้ผลเหมือนกัน
+      </div>
+    </div>
+  </div>
+
+  <!-- Troubleshooting -->
+  <div id="troubleshoot" style="margin-top:36px">
+    <h2>Troubleshooting</h2>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--red)">!</div>
+        <h3>CORS error ตอน loginPopup()</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-error">
+          <strong>สาเหตุ:</strong> เลือก Platform เป็น <strong>Web</strong> แทน <strong>SPA</strong>
+        </div>
+        <p><strong>วิธีแก้:</strong> Azure Portal → App registration → Authentication → ลบ Web platform → Add platform → เลือก <strong>Single-page application</strong></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--red)">!</div>
+        <h3>Backend ตอบ 503 — "MS Entra ID ยังไม่ได้ตั้งค่า"</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-error">
+          <strong>สาเหตุ:</strong> <code>AZURE_TENANT_ID</code> หรือ <code>AZURE_CLIENT_ID</code> ใน <code>.env</code> ว่างอยู่
+        </div>
+        <p><strong>วิธีแก้:</strong> ตรวจสอบ <code>backend/.env</code> ให้ครบ แล้ว restart backend</p>
+        <pre>grep AZURE backend/.env</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--red)">!</div>
+        <h3>Backend ตอบ 403 — "ไม่มีสิทธิ์เข้าถึง"</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-error">
+          <strong>สาเหตุ:</strong> <code>jobTitle</code> ของ user ไม่ถูกต้อง หรือไม่ได้ set position และ user ไม่อยู่ใน <code>finance_coordinator</code> table
+        </div>
+        <p><strong>วิธีแก้:</strong></p>
+        <ol>
+          <li>ตรวจสอบ <code>jobTitle</code> ของ user ใน Entra ID ตามรูปแบบ Step 7</li>
+          <li>หรือ เพิ่ม username เข้า <code>finance_coordinator</code> table ด้วย <code>active = TRUE</code></li>
+        </ol>
+        <pre><span style="color:var(--muted)">-- เพิ่ม coordinator</span>
+INSERT INTO finance_coordinator (username, display_name, active)
+VALUES ('user@example.com', 'Display Name', TRUE);</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--red)">!</div>
+        <h3>Token ไม่มี jobTitle claim</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-error">
+          <strong>สาเหตุ:</strong> ยังไม่ได้เพิ่ม <code>jobTitle</code> ใน Token configuration (Step 3)
+        </div>
+        <p><strong>วิธีตรวจสอบ:</strong> Decode access token ที่ได้จาก MSAL ใน <a href="https://jwt.ms" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">jwt.ms</a> แล้วดูว่ามี field <code>jobTitle</code> หรือไม่</p>
+        <p><strong>วิธีแก้:</strong> กลับไปทำ Step 3 แล้ว logout/login ใหม่เพื่อรับ token ใหม่</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--red)">!</div>
+        <h3>App จะ refuse to start — "DRAFT_MODE must be false"</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-error">
+          <strong>สาเหตุ:</strong> ตั้ง <code>APP_ENV=production</code> แต่ <code>DRAFT_MODE=true</code> พร้อมกัน
+        </div>
+        <p><strong>วิธีแก้:</strong> ถ้าจะใช้ production → ตั้ง <code>DRAFT_MODE=false</code><br>ถ้ายังทดสอบอยู่ → ตั้ง <code>APP_ENV=staging</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Checklist -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-top:40px;">
+    <h4 style="margin-bottom:14px">Checklist ก่อน Go Live</h4>
+    <table>
+      <tr><th>รายการ</th><th>ตรวจสอบอย่างไร</th></tr>
+      <tr><td>App Registration สร้างแล้ว</td><td>Azure Portal → Entra ID → App registrations</td></tr>
+      <tr><td>Platform เป็น SPA ไม่ใช่ Web</td><td>Authentication → Platform configurations</td></tr>
+      <tr><td>Redirect URI ถูกต้อง</td><td>Authentication → Redirect URIs</td></tr>
+      <tr><td>jobTitle claim เปิดอยู่ (Access token)</td><td>Token configuration → Optional claims</td></tr>
+      <tr><td>API Permissions: openid, profile, email, User.Read</td><td>API permissions → status = Granted</td></tr>
+      <tr><td><code>AZURE_TENANT_ID</code> และ <code>AZURE_CLIENT_ID</code> ใน backend .env</td><td><code>grep AZURE backend/.env</code></td></tr>
+      <tr><td><code>DRAFT_MODE=false</code> ใน production</td><td><code>grep DRAFT backend/.env</code></td></tr>
+      <tr><td>Frontend ใส่ค่า MSAL config ถูกต้อง</td><td><code>grep VITE_AZURE frontend/.env</code></td></tr>
+      <tr><td>Users มี <code>jobTitle</code> ถูกรูปแบบ</td><td>Entra ID → Users → [user] → Job title</td></tr>
+      <tr><td>ทดสอบ login ครบ flow</td><td>loginPopup() → token → POST /auth/entra-login → JWT</td></tr>
+    </table>
+  </div>
+
+</main>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme')
+  const next = cur === 'dark' ? 'light' : 'dark'
+  document.documentElement.setAttribute('data-theme', next)
+  localStorage.setItem('theme', next)
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '☀️ Light' : '🌙 Dark'
+}
+const t = localStorage.getItem('theme') || 'dark'
+document.getElementById('theme-btn').textContent = t === 'dark' ? '☀️ Light' : '🌙 Dark'
+</script>
+</body>
+</html>

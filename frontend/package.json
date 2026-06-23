@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "preview:staging": "vite preview --mode staging",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "size": "node scripts/check-bundle-size.js",
+    "build:check": "npm run build && npm run size"
   },
   "dependencies": {
     "@azure/msal-browser": "^5.14.0",

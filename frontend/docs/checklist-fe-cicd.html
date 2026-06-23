@@ -71,7 +71,7 @@
     <a href="checklist-fe-testing.html">← Testing</a>
     <a href="checklist-fe-accessibility.html">Accessibility →</a>
   </div>
-  <h2>CI/CD <small>— 3 requirements &nbsp; Pass 2 / Partial 0 / Defer 0 / Fail 1</small></h2>
+  <h2>CI/CD <small>— 3 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">Automated build, deploy pipeline, และ quality gates ที่ป้องกัน performance regression ก่อนถึง production</p>
 
   <!-- 1. Automated Build & Deploy -->
@@ -169,52 +169,61 @@ echo $?   # ต้องได้ 1</pre>
   <div class="item" id="lighthouse-ci">
     <div class="item-head">
       <div><div class="item-title">3. Lighthouse CI</div><div class="item-sub">วัด Core Web Vitals ทุก deploy ถ้าคะแนนต่ำกว่า threshold ให้ fail</div></div>
-      <div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Lighthouse CI (LHCI) คือ automated tool ที่รัน Google Lighthouse ใน CI pipeline วัด Performance, Accessibility, Best Practices, SEO score และ Core Web Vitals ทุก deploy ถ้าคะแนนต่ำกว่า threshold ที่กำหนด CI จะ fail</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Core Web Vitals อาจ degrade ทีละนิดโดยไม่มีใครสังเกต LHCI จับการ degrade ระหว่าง deploy ทำให้ทีมรู้ทันทีว่า PR ใดทำให้ performance แย่ลง แทนที่จะรู้ทีหลังเมื่อ user report</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ยังไม่มีการรัน Lighthouse ใน CI pipeline — performance regression จะถูกจับได้ก็ต่อเมื่อ user report หรือ manual audit</p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Pass</h4>
+        <p>Implemented ด้วย <code>@lhci/cli</code> + <code>.lighthouserc.json</code> + GitHub Actions job <code>frontend-lhci</code> ที่รัน build → bundle check → Lighthouse ทุก push</p>
+        <p style="margin-top:8px"><strong>ไฟล์ที่เพิ่ม/แก้ไข:</strong></p>
+        <ul style="margin:4px 0 0 16px;line-height:1.7">
+          <li><code>frontend/.lighthouserc.json</code> — config: audit <code>/login</code>, thresholds, upload ผลไป temporary-public-storage</li>
+          <li><code>.github/workflows/ci.yml</code> — เพิ่ม job <code>frontend-lhci</code></li>
+          <li><code>frontend/package.json</code> — เพิ่ม script <code>"lhci": "lhci autorun"</code></li>
+        </ul>
+        <p style="margin-top:8px"><strong>Thresholds ที่กำหนด</strong> (audit หน้า <code>/login</code> เพราะหน้าอื่น require MSAL auth):</p>
+        <pre>"categories:performance":    warn  ≥ 0.75
+"categories:accessibility":  error ≥ 0.80   ← fail CI ถ้าต่ำกว่า
+"categories:best-practices": warn  ≥ 0.80
+"categories:seo":            off   (dashboard ไม่ต้อง SEO)
+"largest-contentful-paint":  warn  ≤ 3000ms
+"cumulative-layout-shift":   error ≤ 0.10   ← fail CI ถ้าเกิน
+"total-blocking-time":       warn  ≤ 500ms</pre>
+        <p style="margin-top:8px"><strong>GitHub Actions job <code>frontend-lhci</code></strong> (ใน <code>.github/workflows/ci.yml</code>):</p>
+        <pre>steps:
+  - npm ci
+  - npm run build
+  - npm run size          # bundle budget check
+  - npm run lhci          # Lighthouse CI
+    env:
+      LHCI_GITHUB_APP_TOKEN: $&#123;&#123; secrets.LHCI_GITHUB_APP_TOKEN &#125;&#125;</pre>
+        <p style="margin-top:6px;font-size:12px;color:var(--muted)">⚠ ตั้ง <code>LHCI_GITHUB_APP_TOKEN</code> ใน GitHub Secrets เพื่อให้ LHCI post comment บน PR แสดงคะแนนก่อน/หลัง (optional)</p>
       </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p><strong>1. ติดตั้ง @lhci/cli</strong></p>
-        <pre>npm install -D @lhci/cli</pre>
-        <p style="margin-top:8px"><strong>2. สร้าง lighthouserc.json</strong></p>
-        <pre>{
-  "ci": {
-    "collect": {
-      "url": ["http://localhost:4173"],
-      "startServerCommand": "npm run preview",
-      "numberOfRuns": 3
-    },
-    "assert": {
-      "assertions": {
-        "categories:performance": ["error", { "minScore": 0.85 }],
-        "categories:accessibility": ["error", { "minScore": 0.90 }],
-        "first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
-        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
-        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }]
-      }
-    },
-    "upload": { "target": "temporary-public-storage" }
-  }
-}</pre>
-        <p style="margin-top:8px"><strong>3. เพิ่มใน GitHub Actions</strong></p>
-        <pre># .github/workflows/frontend-ci.yml — เพิ่ม step หลัง build
-- name: Run Lighthouse CI
-  run: |
-    npm run build
-    npx lhci autorun
-  env:
-    LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}</pre>
-        <p style="margin-top:6px">Lighthouse CI จะ post comment บน PR แสดงคะแนนก่อน/หลัง ช่วยให้ review ง่ายขึ้น</p>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ol>
+          <li><strong>ตรวจ config ถูกต้อง</strong>:
+            <pre>cd frontend
+npx lhci healthcheck
+# ต้องเห็น: ✅ Chrome installation found · ✅ Configuration file found · Healthcheck passed!</pre>
+          </li>
+          <li><strong>รัน Lighthouse ในเครื่อง</strong> (ต้อง build ก่อน):
+            <pre>npm run build
+npm run lhci
+# LHCI จะ start vite preview → audit /login → แสดง scores → upload link ไป temporary storage</pre>
+          </li>
+          <li><strong>จำลอง fail threshold</strong> — แก้ <code>.lighthouserc.json</code> ชั่วคราว เปลี่ยน accessibility เป็น <code>minScore: 1.0</code> แล้วรัน:
+            <pre>npm run lhci
+# ต้องเห็น: ✖ accessibility score below threshold → exit code 1</pre>
+          </li>
+          <li><strong>ตรวจ GitHub Actions</strong> — push commit แล้วดู tab Actions → job <code>Lighthouse CI (Frontend)</code> ต้องปรากฏและผ่าน</li>
+        </ol>
       </div>
     </div>
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    อัปเดต 2026-06-23 (Bundle Size Budget → Pass) &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-accessibility.html" style="color:var(--accent)">Accessibility →</a>
+    อัปเดต 2026-06-23 (Bundle Size Budget → Pass · Lighthouse CI → Pass) &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-accessibility.html" style="color:var(--accent)">Accessibility →</a>
   </div>
 </main>
 <script>

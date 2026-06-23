@@ -95,7 +95,7 @@
     <a href="checklist-frontend.html">← Index</a>
     <a href="checklist-fe-performance.html">Performance →</a>
   </div>
-  <h2>UX/UI <small>— 5 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <h2>UX/UI <small>— 5 requirements &nbsp; Pass 5 / Partial 0 / Defer 0 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การออกแบบที่ใช้งานง่าย รองรับทุกขนาดหน้าจอ และสม่ำเสมอทั้ง application</p>
 
   <!-- 1. Intuitive Design -->
@@ -187,33 +187,38 @@ grep -rn "#[0-9a-fA-F]\{6\}" src/components/
   <div class="item" id="dark-mode">
     <div class="item-head">
       <div><div class="item-title">4. Dark Mode Support</div><div class="item-sub">รองรับ prefers-color-scheme สลับ light/dark ได้ ตัวเลขและกราฟต้องอ่านง่ายในทั้งสอง mode</div></div>
-      <div class="item-badges"><span class="p4">P4</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p4">P4</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Dark mode คือ UI variant ที่ใช้พื้นหลังเข้มและข้อความสว่าง ลดแสงสีฟ้าและความเมื่อยล้าสายตาในสภาพแวดล้อมที่มีแสงน้อย ระบบรองรับได้ 2 วิธี: ตาม OS preference อัตโนมัติ (<code>prefers-color-scheme</code>) หรือมี toggle ให้ user เลือกเอง</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>User ที่ทำงานกลางคืนหรือในห้องที่แสงน้อย dark mode ช่วยได้มาก นอกจากนี้ graph และ chart ต้องยังอ่านได้ — contrast ของสีข้อมูลต้องผ่าน WCAG ทั้งใน light และ dark mode</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ปัจจุบันใช้ light mode ตายตัว ไม่มี dark mode หรือ color scheme toggle</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
         <ul>
-          <li>เปิด Tailwind dark mode: <code>darkMode: 'class'</code> ใน <code>tailwind.config.ts</code></li>
-          <li>เพิ่ม <code>dark:</code> variants ให้ทุก component ที่มีสีพื้นหลังและข้อความ</li>
-          <li>สร้าง Pinia store <code>useThemeStore</code> เก็บ <code>isDark</code> และ persist ใน <code>localStorage</code></li>
-          <li>เพิ่ม ThemeToggle button ใน header — toggle class <code>dark</code> บน <code>&lt;html&gt;</code></li>
-          <li>ตรวจสอบ chart colors ใน dark mode — ใช้ computed palette ที่ adjust ตาม theme</li>
-          <li>ทดสอบ color contrast ทุก state ด้วย axe DevTools ทั้ง light และ dark</li>
+          <li>CSS variable theming ใน <code>src/style.css</code> — dark default ที่ <code>:root</code>, light override ที่ <code>:root[data-theme="light"]</code></li>
+          <li>Composable <code>src/composables/useTheme.ts</code> — toggle <code>data-theme</code> บน <code>&lt;html&gt;</code> และ persist ใน <code>localStorage</code></li>
+          <li>Theme toggle button ใน sidebar ของ <code>AppLayout.vue</code> — แสดง icon sun/moon ตาม theme ปัจจุบัน</li>
+          <li>Charts (<code>TrendChart</code> ฯลฯ) ใช้ <code>useTheme()</code> และ recompute palette เมื่อ theme เปลี่ยน</li>
+          <li>Default theme: dark — ค่าที่ persist ใน localStorage จะถูกนำมาใช้ทันทีก่อน Vue mount</li>
         </ul>
-        <pre>// useThemeStore.ts
-export const useThemeStore = defineStore('theme', () => {
-  const isDark = ref(localStorage.getItem('theme') === 'dark')
-  const toggle = () => {
-    isDark.value = !isDark.value
-    document.documentElement.classList.toggle('dark', isDark.value)
-    localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-  }
-  return { isDark, toggle }
-})</pre>
+        <pre>// src/composables/useTheme.ts
+const theme = ref&lt;Theme&gt;((localStorage.getItem('theme') as Theme) || 'dark')
+watchEffect(() => {
+  document.documentElement.setAttribute('data-theme', theme.value)
+  localStorage.setItem('theme', theme.value)
+})
+export function useTheme() {
+  const toggle = () => { theme.value = theme.value === 'dark' ? 'light' : 'dark' }
+  const isDark = () => theme.value === 'dark'
+  return { theme, toggle, isDark }
+}</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ol style="padding-left:18px">
+          <li style="margin-bottom:6px">เปิด app → คลิกปุ่ม <strong>Light mode / Dark mode</strong> ใน sidebar ล่าง — หน้าจอต้องสลับ theme ทันที</li>
+          <li style="margin-bottom:6px">Refresh browser — theme ต้องคงเดิม (ตรวจสอบ <code>localStorage.getItem('theme')</code> ใน DevTools Console)</li>
+          <li style="margin-bottom:6px">ตรวจสอบ chart ใน light mode ว่า axis label, grid, tooltip อ่านได้ชัดเจน (ไม่มีสีขาวบนพื้นขาว)</li>
+          <li>ใช้ axe DevTools extension ตรวจ color contrast ratio ทั้ง light และ dark — ต้องผ่าน WCAG AA (≥4.5:1 สำหรับ text)</li>
+        </ol>
       </div>
     </div>
   </div>
@@ -222,42 +227,46 @@ export const useThemeStore = defineStore('theme', () => {
   <div class="item" id="empty-state">
     <div class="item-head">
       <div><div class="item-title">5. Empty State Design</div><div class="item-sub">ออกแบบ empty state ทุก view: เมื่อไม่มีข้อมูล, ไม่มีสิทธิ์, หรือ filter ไม่เจอผล</div></div>
-      <div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Empty state คือสิ่งที่แสดงเมื่อ content area ไม่มีข้อมูล มี 3 กรณีหลัก: (1) ข้อมูลยังไม่มี (first use), (2) filter ไม่เจอผล, (3) ไม่มีสิทธิ์ดูข้อมูลนั้น แต่ละกรณีควร communicate แตกต่างกัน พร้อม action ที่เหมาะสม</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าแสดงพื้นที่ว่างเปล่าโดยไม่มีคำอธิบาย user จะไม่รู้ว่าระบบพัง, filter ผิด, หรือไม่มีสิทธิ์ ความสับสนนี้ทำให้ user ไม่เชื่อถือตัวเลขและระบบ</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ปัจจุบัน view ที่ไม่มีข้อมูลแสดงพื้นที่ว่างเปล่า ไม่มี message หรือ action guide</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p><strong>สร้าง EmptyState component (<code>src/components/atoms/EmptyState.vue</code>)</strong></p>
-        <pre>&lt;!-- EmptyState.vue --&gt;
-&lt;template&gt;
-  &lt;div class="flex flex-col items-center justify-center py-16 text-center"&gt;
-    &lt;component :is="iconComponent" class="w-12 h-12 text-muted mb-4" /&gt;
-    &lt;h3 class="text-lg font-semibold text-text mb-2"&gt;{{ title }}&lt;/h3&gt;
-    &lt;p class="text-sm text-muted mb-6 max-w-sm"&gt;{{ description }}&lt;/p&gt;
-    &lt;slot name="action" /&gt;
-  &lt;/div&gt;
-&lt;/template&gt;
-
-&lt;script setup lang="ts"&gt;
-defineProps&lt;{ title: string; description: string; icon?: string }&gt;()
-&lt;/script&gt;</pre>
-        <p style="margin-top:8px"><strong>3 variant ที่ต้องมี:</strong></p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
         <ul>
-          <li><strong>No data</strong>: "ยังไม่มีข้อมูล" + icon: document empty + ไม่มี action (หรือ link ไปสร้างข้อมูล)</li>
-          <li><strong>No results</strong>: "ไม่พบข้อมูลที่ตรงกับ filter" + icon: search empty + ปุ่ม "ล้าง filter"</li>
-          <li><strong>No permission</strong>: "คุณไม่มีสิทธิ์ดูข้อมูลนี้" + icon: lock + ลิงก์ติดต่อ admin</li>
+          <li>สร้าง <code>src/components/atoms/EmptyState.vue</code> — รองรับ 3 variant: <code>no-data</code>, <code>no-results</code>, <code>no-permission</code></li>
+          <li>แต่ละ variant มี icon, title, description เป็นค่า default ภาษาไทย และ override ผ่าน props ได้</li>
+          <li><code>&lt;slot name="action"&gt;</code> สำหรับปุ่ม action เช่น "ล้าง filter" หรือ link ติดต่อ admin</li>
+          <li>ใช้ใน <code>DataTable.vue</code> (prop <code>emptyVariant</code>), <code>PivotTable.vue</code>, <code>IoPivotTable.vue</code></li>
+          <li><code>BudgetView.vue</code>: แสดง <code>no-results</code> + ปุ่ม "ล้าง filter" เมื่อ <code>kpis.doc_count === 0</code></li>
+          <li><code>IoView.vue</code>: แสดง <code>no-results</code> + ปุ่ม "ล้าง filter" เมื่อ <code>kpis.total_amount === 0</code></li>
         </ul>
-        <p style="margin-top:8px">ใช้ใน DataTable, Dashboard widget, และทุก list view ที่ data อาจเป็น empty array</p>
+        <pre>// EmptyState.vue — 3 built-in variants
+&lt;EmptyState variant="no-data" /&gt;
+&lt;!-- ยังไม่มีข้อมูลในระบบสำหรับช่วงเวลานี้ --&gt;
+
+&lt;EmptyState variant="no-results"&gt;
+  &lt;template #action&gt;
+    &lt;button @click="filter.$reset()"&gt;ล้าง filter&lt;/button&gt;
+  &lt;/template&gt;
+&lt;/EmptyState&gt;
+
+&lt;EmptyState variant="no-permission" /&gt;
+&lt;!-- คุณไม่มีสิทธิ์ดูข้อมูลนี้ กรุณาติดต่อผู้ดูแลระบบ --&gt;</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ol style="padding-left:18px">
+          <li style="margin-bottom:6px"><strong>No results:</strong> ตั้ง filter เดือนที่ไม่มีข้อมูล (เช่น เดือนอนาคต) → BudgetView และ IoView ต้องแสดง EmptyState พร้อมปุ่ม "ล้าง filter" — คลิกแล้ว filter ต้องถูกรีเซ็ต</li>
+          <li style="margin-bottom:6px"><strong>DataTable empty:</strong> ส่ง <code>:rows="[]"</code> ให้ DataTable → ต้องแสดง EmptyState แทนแถวว่าง</li>
+          <li style="margin-bottom:6px"><strong>PivotTable empty:</strong> filter ที่ไม่มี GL detail → PivotTable และ IoPivotTable ต้องแสดง EmptyState</li>
+          <li><strong>Accessibility:</strong> ใช้ axe DevTools ตรวจว่า EmptyState ไม่มี contrast issue ทั้ง light และ dark mode</li>
+        </ol>
       </div>
     </div>
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    อัปเดต 2026-06-23 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-performance.html" style="color:var(--accent)">Performance →</a>
+    อัปเดต 2026-06-23 (Dark Mode ✓, Empty State ✓) &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-performance.html" style="color:var(--accent)">Performance →</a>
   </div>
 </main>
 <script>

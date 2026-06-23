@@ -2,6 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.core.cache import invalidate_coordinator_cache
+from app.core.config import settings
 from app.core.database import get_admin_db
 from app.core.logging import get_logger
 
@@ -56,7 +57,7 @@ async def list_coordinators(
             sql_params["offset"] = offset
             await cur.execute(
                 f"""
-                SELECT id, username, active, created_at, updated_at, created_by, updated_by
+                SELECT id, username, upn, active, created_at, updated_at, created_by, updated_by
                 FROM finance_coordinator
                 {where}
                 ORDER BY active DESC, created_at DESC
@@ -78,26 +79,35 @@ async def list_coordinators(
     }
 
 
+def _build_upn(username: str) -> str | None:
+    domain = settings.entra_domain
+    return f"{username}@{domain}" if domain else None
+
+
 async def add_coordinator(username: str, created_by: str) -> dict:
     now = _now_thai()
+    upn = _build_upn(username)
     async with get_admin_db() as conn:
         async with conn.cursor() as cur:
             await cur.execute("""
-                INSERT INTO finance_coordinator (username, created_by, created_at)
-                VALUES (%(username)s, %(created_by)s, %(now)s)
+                INSERT INTO finance_coordinator (username, upn, created_by, created_at)
+                VALUES (%(username)s, %(upn)s, %(created_by)s, %(now)s)
                 ON CONFLICT (username) DO UPDATE
                     SET active     = TRUE,
+                        upn        = EXCLUDED.upn,
                         updated_at = EXCLUDED.created_at,
                         updated_by = EXCLUDED.created_by,
                         created_by = EXCLUDED.created_by
-                RETURNING id, username, active, created_at, updated_at, created_by, updated_by
-            """, {"username": username, "created_by": created_by, "now": now})
+                RETURNING id, username, upn, active, created_at, updated_at, created_by, updated_by
+            """, {"username": username, "upn": upn, "created_by": created_by, "now": now})
             row = await cur.fetchone()
             result = _row_to_dict(cur.description, row)
         await conn.commit()
 
+    if upn:
+        await invalidate_coordinator_cache(upn)
     await invalidate_coordinator_cache(username)
-    logger.info("Coordinator added/reactivated: %s by %s", username, created_by)
+    logger.info("Coordinator added/reactivated: %s (upn=%s) by %s", username, upn, created_by)
     return result
 
 
@@ -131,7 +141,7 @@ async def toggle_coordinator(
                        updated_at = %(now)s,
                        updated_by = %(updated_by)s
                  WHERE id = %(id)s
-                RETURNING id, username, active, created_at, updated_at, created_by, updated_by
+                RETURNING id, username, upn, active, created_at, updated_at, created_by, updated_by
                 """,
                 {"now": now, "updated_by": updated_by, "id": coord_id},
             )
@@ -139,6 +149,8 @@ async def toggle_coordinator(
             result = _row_to_dict(cur.description, row)
         await conn.commit()
 
+    if result.get("upn"):
+        await invalidate_coordinator_cache(result["upn"])
     await invalidate_coordinator_cache(result["username"])
     logger.info("Coordinator toggled: id=%s active=%s", coord_id, result["active"])
     return result

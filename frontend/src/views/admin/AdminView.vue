@@ -20,8 +20,6 @@
         </button>
       </form>
 
-      <div v-if="addError" class="text-xs text-danger">{{ addError }}</div>
-
       <!-- Table -->
       <div class="rounded-xl border border-border bg-surface overflow-hidden">
         <template v-if="isPending">
@@ -113,30 +111,52 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { fetchCoordinators, addCoordinator, toggleCoordinator } from '@/api/budget'
 import type { CoordinatorResponse } from '@/types/api'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { useToast } from '@/composables/useToast'
 
-const qc = useQueryClient()
+const qc    = useQueryClient()
+const toast = useToast()
 
 const { data, isPending } = useQuery({ queryKey: ['coordinators'], queryFn: fetchCoordinators })
 
 const newUsername = ref('')
-const adding      = ref(false)
-const addError    = ref('')
 
+// ── Toggle: optimistic update ─────────────────────────────────────────────────
 const { mutate: mutateToggle } = useMutation({
   mutationFn: (id: number) => toggleCoordinator(id),
-  onSuccess: () => qc.invalidateQueries({ queryKey: ['coordinators'] }),
+
+  onMutate: async (id: number) => {
+    await qc.cancelQueries({ queryKey: ['coordinators'] })
+    const previous = qc.getQueryData<CoordinatorResponse[]>(['coordinators'])
+    qc.setQueryData<CoordinatorResponse[]>(['coordinators'], old =>
+      old?.map(c => c.id === id ? { ...c, active: !c.active } : c) ?? []
+    )
+    return { previous }
+  },
+
+  onError: (_err, _id, context) => {
+    qc.setQueryData(['coordinators'], context?.previous)
+    toast.error('ไม่สามารถเปลี่ยนสถานะได้ กรุณาลองใหม่')
+  },
+
+  onSettled: () => qc.invalidateQueries({ queryKey: ['coordinators'] }),
 })
 
-async function handleAdd() {
-  if (!newUsername.value.trim()) return
-  addError.value = ''; adding.value = true
-  try {
-    await addCoordinator(newUsername.value.trim())
+// ── Add: standard mutation with toast error ───────────────────────────────────
+const { mutate: mutateAdd, isPending: adding } = useMutation({
+  mutationFn: (username: string) => addCoordinator(username),
+  onSuccess: () => {
     newUsername.value = ''
     qc.invalidateQueries({ queryKey: ['coordinators'] })
-  } catch (e: unknown) {
-    addError.value = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'เพิ่มไม่สำเร็จ'
-  } finally { adding.value = false }
+  },
+  onError: (e: unknown) => {
+    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+    toast.error(detail ?? 'เพิ่มไม่สำเร็จ กรุณาลองใหม่')
+  },
+})
+
+function handleAdd() {
+  if (!newUsername.value.trim()) return
+  mutateAdd(newUsername.value.trim())
 }
 
 const handleToggle = (id: number) => mutateToggle(id)

@@ -72,7 +72,7 @@
     <a href="checklist-fe-ux.html">← UX/UI</a>
     <a href="checklist-fe-architecture.html">Architecture →</a>
   </div>
-  <h2>Performance <small>— 5 requirements &nbsp; Pass 4 / Partial 0 / Defer 0 / Fail 1</small></h2>
+  <h2>Performance <small>— 5 requirements &nbsp; Pass 5 / Partial 0 / Defer 0 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความเร็วและประสิทธิภาพในการโหลดและแสดงผล ครอบคลุม bundle size, runtime performance, และ network optimization</p>
 
   <!-- 1. Code Splitting -->
@@ -205,17 +205,17 @@ const rowVirtualizer = useVirtualizer(
   <div class="item" id="image-optimization">
     <div class="item-head">
       <div><div class="item-title">5. Image Optimization</div><div class="item-sub">ใช้ WebP format, lazy loading, และ srcset สำหรับ responsive images</div></div>
-      <div class="item-badges"><span class="p4">P4</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p4">P4</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Image optimization ครอบคลุม: (1) <strong>WebP format</strong> — ขนาดเล็กกว่า JPEG 25–34%, (2) <strong>Lazy loading</strong> — โหลดรูปเมื่อเลื่อนมาถึง viewport, (3) <strong>srcset</strong> — ส่งรูปขนาดต่างกันตาม screen resolution</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Images คิดเป็น ~50-70% ของน้ำหนักหน้าเว็บโดยเฉลี่ย ถึงแม้ financial dashboard จะไม่มีรูปเยอะ แต่ logo, avatar, และ icon sprites ก็ควร optimize ไว้ก่อน</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>รูปภาพใช้ PNG/JPG ธรรมดา ไม่มี lazy loading attribute ไม่มี srcset</p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Pass (SVG-only)</h4>
+        <p>โปรเจกต์ใช้เฉพาะ <strong>SVG</strong> (<code>favicon.svg</code>, <code>icons.svg</code>) — ไม่มี PNG/JPG/JPEG รูปภาพ raster ใดๆ ใน <code>src/</code> หรือ <code>public/</code> SVG เป็น vector format ที่ไม่ต้องการ compression เพิ่มเติม และไม่มี <code>&lt;img&gt;</code> tag ในไฟล์ Vue เลย ดังนั้นข้อกำหนดนี้ผ่านโดยสภาวะจริง</p>
       </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
+      <div class="block block-todo"><h4>ถ้ามีรูป raster ในอนาคต — ให้ทำดังนี้</h4>
         <ul>
-          <li>เพิ่ม <code>vite-plugin-imagemin</code> ใน <code>vite.config.ts</code> — auto-convert PNG→WebP ตอน build</li>
+          <li>ติดตั้ง <code>vite-plugin-imagemin</code> ใน <code>vite.config.ts</code> — auto-convert PNG→WebP ตอน build</li>
           <li>เพิ่ม <code>loading="lazy"</code> ทุก <code>&lt;img&gt;</code> ที่ไม่อยู่ above the fold</li>
           <li>เพิ่ม <code>srcset</code> สำหรับรูปที่ขนาดต่างกันตาม viewport</li>
           <li>ใช้ <code>&lt;picture&gt;</code> element เพื่อ fallback จาก WebP → PNG บน browser เก่า</li>
@@ -227,12 +227,18 @@ plugins: [
   viteImagemin({ webp: { quality: 80 }, png: { quality: 80 } })
 ]
 
-// template
+// template — ถ้ามีรูป raster
 &lt;picture&gt;
   &lt;source srcset="logo.webp" type="image/webp" /&gt;
   &lt;img src="logo.png" alt="Logo" loading="lazy" width="120" height="40" /&gt;
 &lt;/picture&gt;</pre>
-        <p style="margin-top:6px">เนื่องจาก financial dashboard ไม่ heavy on images ข้อนี้จึง P4 (Low) — ทำหลังจาก P1/P2/P3 เสร็จ</p>
+      </div>
+      <div class="block block-pass"><h4>วิธีทดสอบ</h4>
+        <ul>
+          <li><strong>Chrome DevTools → Network tab → กรอง "Img"</strong> — ต้องเห็นเฉพาะ SVG ไม่มี PNG/JPG ที่ unoptimized</li>
+          <li><strong>Lighthouse → Performance Report</strong> — หัวข้อ "Efficiently encode images" ต้องไม่มี warning หรือ flag ใดๆ</li>
+          <li><strong>DevTools → Application → Frames → Resources</strong> — ยืนยันว่า assets ที่โหลดทั้งหมดเป็น SVG หรือ font เท่านั้น</li>
+        </ul>
       </div>
     </div>
   </div>

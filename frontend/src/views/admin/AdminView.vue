@@ -9,7 +9,7 @@
       <!-- Add form -->
       <form @submit.prevent="handleAdd" class="flex gap-3 max-w-md">
         <input
-          v-model="newUsername" placeholder="username"
+          v-model="newUsername" placeholder="username เช่น juntima.nuc"
           class="flex-1 bg-surface2 border border-border rounded-xl px-4 py-2.5 text-sm text-fg outline-none focus:border-accent transition-colors"
         />
         <button

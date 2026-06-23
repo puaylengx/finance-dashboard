@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>MSAL Login Test</title>
+  <style>
+    body { font-family: monospace; background: #0f1117; color: #e2e8f0; padding: 24px; max-width: 800px; }
+    h2 { color: #6c8efb; }
+    .step { border: 1px solid #2e3250; border-radius: 8px; padding: 14px 18px; margin: 12px 0; }
+    .step-title { font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #8892b0; margin-bottom: 8px; }
+    .ok  { border-color: #34d399; } .ok  .step-title { color: #34d399; }
+    .err { border-color: #f87171; } .err .step-title { color: #f87171; }
+    .run { border-color: #fbbf24; } .run .step-title { color: #fbbf24; }
+    pre { background: #141824; border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+    button { background: #6c8efb; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; cursor: pointer; margin: 6px 4px; }
+    button:hover { background: #5a7df0; } button:disabled { opacity: 0.4; cursor: not-allowed; }
+    input { background: #1a1d27; border: 1px solid #2e3250; border-radius: 6px; color: #e2e8f0; padding: 8px 12px; font-family: monospace; font-size: 12px; width: 100%; box-sizing: border-box; margin-top: 4px; }
+    label { font-size: 11px; color: #8892b0; display: block; margin-top: 10px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  </style>
+</head>
+<body>
+
+<h2>MSAL Login Test — Seamless Dashboard</h2>
+<p style="color:#8892b0;font-size:13px">ทดสอบ MSAL popup flow โดยไม่ผ่าน Vue app</p>
+
+<div class="step">
+  <div class="step-title">Config</div>
+  <div class="row">
+    <div>
+      <label>Client ID (VITE_AZURE_CLIENT_ID)</label>
+      <input id="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+    </div>
+    <div>
+      <label>Tenant ID (VITE_AZURE_TENANT_ID)</label>
+      <input id="tenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+    </div>
+  </div>
+</div>
+
+<div>
+  <button id="btnMsal">1. ทดสอบ MSAL Popup</button>
+  <button id="btnBackend" disabled>2. ทดสอบ Backend</button>
+  <button id="btnClear" style="background:#2e3250">Clear</button>
+</div>
+
+<div id="results"></div>
+
+<script type="module">
+import { PublicClientApplication } from 'https://esm.sh/@azure/msal-browser@3'
+
+let lastToken = null
+let pca = null
+
+function addStep(id, title, status, content) {
+  const existing = document.getElementById('step-' + id)
+  const html = `<div id="step-${id}" class="step ${status}">
+    <div class="step-title">${title}</div>
+    <pre>${content}</pre>
+  </div>`
+  if (existing) existing.outerHTML = html
+  else document.getElementById('results').insertAdjacentHTML('beforeend', html)
+}
+
+function parseJwt(token) {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))) }
+  catch { return {} }
+}
+
+document.getElementById('btnClear').onclick = () => {
+  document.getElementById('results').innerHTML = ''
+  lastToken = null
+  document.getElementById('btnBackend').disabled = true
+}
+
+document.getElementById('btnMsal').onclick = async () => {
+  const clientId = document.getElementById('clientId').value.trim()
+  const tenantId = document.getElementById('tenantId').value.trim()
+  if (!clientId || !tenantId) { alert('กรุณากรอก Client ID และ Tenant ID'); return }
+
+  document.getElementById('btnMsal').disabled = true
+  addStep('msal-init', 'Step 1 — MSAL Initialize', 'run', 'กำลัง initialize...')
+
+  try {
+    pca = new PublicClientApplication({
+      auth: {
+        clientId,
+        authority: `https://login.microsoftonline.com/${tenantId}`,
+        redirectUri: location.origin + '/msal-test.html',
+      },
+      cache: { cacheLocation: 'localStorage' },
+    })
+    await pca.initialize()
+    addStep('msal-init', 'Step 1 — MSAL Initialize', 'ok', '✅ initialize() สำเร็จ')
+  } catch (e) {
+    addStep('msal-init', 'Step 1 — MSAL Initialize', 'err', '❌ ' + (e.errorCode || e.message || String(e)))
+    document.getElementById('btnMsal').disabled = false
+    return
+  }
+
+  addStep('msal-popup', 'Step 2 — Login Popup', 'run', 'กำลังเปิด popup... (กรุณา login ด้วย Microsoft account)')
+
+  try {
+    const result = await pca.loginPopup({
+      scopes: ['openid', 'profile', `api://${clientId}/access_as_user`],
+      redirectUri: location.origin + '/msal-test.html',
+    })
+    lastToken = result.accessToken
+    const claims = parseJwt(result.accessToken)
+    const { exp, iat, nbf, ...rest } = claims
+    addStep('msal-popup', 'Step 2 — Login Popup', 'ok',
+      `✅ login สำเร็จ\n\naccount : ${result.account?.username}\n\n` +
+      `ALL token claims:\n${JSON.stringify({
+        ...rest,
+        exp: exp ? new Date(exp * 1000).toISOString() : undefined,
+      }, null, 2)}`
+    )
+    document.getElementById('btnBackend').disabled = false
+  } catch (e) {
+    const msg = e.errorCode === 'user_cancelled'
+      ? 'ผู้ใช้ปิด popup'
+      : `❌ errorCode: ${e.errorCode ?? '-'}\nmessage: ${e.message ?? String(e)}`
+    addStep('msal-popup', 'Step 2 — Login Popup', 'err', msg)
+  }
+  document.getElementById('btnMsal').disabled = false
+}
+
+document.getElementById('btnBackend').onclick = async () => {
+  if (!lastToken) return
+  document.getElementById('btnBackend').disabled = true
+  addStep('backend', 'Step 3 — Backend /auth/entra-login', 'run', 'กำลังส่ง token ไปที่ backend...')
+  try {
+    const resp = await fetch('/api/v1/auth/entra-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: lastToken }),
+    })
+    const data = await resp.json()
+    if (resp.ok) {
+      addStep('backend', 'Step 3 — Backend /auth/entra-login', 'ok',
+        `✅ สถานะ ${resp.status} — login สำเร็จ\n\n${JSON.stringify(data.data, null, 2)}`)
+    } else {
+      addStep('backend', 'Step 3 — Backend /auth/entra-login', 'err',
+        `❌ สถานะ ${resp.status}\n\ndetail: ${data.detail ?? JSON.stringify(data)}`)
+    }
+  } catch (e) {
+    addStep('backend', 'Step 3 — Backend /auth/entra-login', 'err', '❌ network error: ' + e.message)
+  }
+  document.getElementById('btnBackend').disabled = false
+}
+
+// Prefill from URL params
+const p = new URLSearchParams(location.search)
+if (p.get('clientId')) document.getElementById('clientId').value = p.get('clientId')
+if (p.get('tenantId')) document.getElementById('tenantId').value = p.get('tenantId')
+</script>
+</body>
+</html>

@@ -218,52 +218,84 @@ npx tsc --noEmit
   <div class="item" id="env-config">
     <div class="item-head">
       <div><div class="item-title">5. Environment Configuration</div><div class="item-sub">แยก config ตาม environment ด้วย .env files ไม่ hardcode URL หรือ key ใน code</div></div>
-      <div class="item-badges"><span class="p2">P2</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Environment configuration คือการเก็บค่าที่เปลี่ยนแปลงตาม environment (dev/staging/prod) ไว้ใน <code>.env</code> files แทนการ hardcode ใน source code Vite ใช้ <code>VITE_</code> prefix สำหรับ env vars ที่ expose ให้ browser ได้</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้า hardcode <code>http://localhost:8000</code> ใน API calls — production build จะ call localhost ซึ่งไม่มี server ทำให้ทุก API fail นอกจากนี้ hardcoded staging URL ที่หลุดไปใน production code เป็น security risk</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ยังไม่มี <code>.env</code> files — API base URL อาจถูก hardcode อยู่ใน Axios config หรือ store</p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — ผ่านแล้ว</h4>
+        <ul>
+          <li>แยกไฟล์ตาม environment ครบ: <code>.env</code> (base) · <code>.env.development</code> · <code>.env.staging</code> · <code>.env.production</code></li>
+          <li><code>.env.example</code> commit เข้า repo เป็น template สำหรับ developer ใหม่</li>
+          <li><code>src/api/client.ts</code> ใช้ <code>import.meta.env.VITE_API_BASE_URL</code> แทน hardcode</li>
+          <li><code>vite.config.ts</code> ใช้ <code>loadEnv</code> อ่าน backend URL สำหรับ dev proxy</li>
+          <li><code>src/vite-env.d.ts</code> ประกาศ TypeScript types สำหรับ env vars ครบทุกตัว</li>
+          <li><code>.gitignore</code> exclude <code>.env*</code> ทุกไฟล์ ยกเว้น <code>.env.example</code></li>
+          <li><code>package.json</code> มี scripts แยกตาม mode: <code>build:staging</code> · <code>build:production</code></li>
+        </ul>
       </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p><strong>1. สร้าง .env files</strong></p>
-        <pre># .env.development
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-VITE_APP_TITLE=Seamless Dashboard (Dev)
-
-# .env.production
-VITE_API_BASE_URL=https://api.seamless.example.com/api/v1
+      <div class="block"><h4>โครงสร้างไฟล์และ overlay pattern</h4>
+        <p style="margin-bottom:8px">Vite โหลด <code>.env</code> ก่อน แล้ว overlay ด้วยไฟล์ mode-specific — ค่าที่ซ้ำกันจากไฟล์ mode-specific จะ override</p>
+        <pre># .env — base ที่โหลดทุก mode (ไม่ใส่ secret)
 VITE_APP_TITLE=Seamless Dashboard
 
-# .env.example (commit เข้า repo — ไม่ใส่ value จริง)
-VITE_API_BASE_URL=
-VITE_APP_TITLE=</pre>
-        <p style="margin-top:8px"><strong>2. ใช้ใน Axios config</strong></p>
-        <pre>// src/api/client.ts
-export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,  // ส่ง HTTP-only cookie
-})
+# .env.development — โหลดเมื่อ npm run dev
+VITE_API_BASE_URL=http://localhost:8000
+VITE_DRAFT_MODE=true
+VITE_AZURE_CLIENT_ID=&lt;dev-client-id&gt;
+VITE_AZURE_TENANT_ID=&lt;dev-tenant-id&gt;
 
-// TypeScript: declare ใน vite-env.d.ts
-interface ImportMetaEnv {
-  readonly VITE_API_BASE_URL: string
-  readonly VITE_APP_TITLE: string
-}</pre>
-        <p style="margin-top:8px"><strong>3. เพิ่ม .env.* ใน .gitignore</strong> (ยกเว้น .env.example)</p>
-        <pre># .gitignore
-.env
-.env.development
-.env.production
-.env.local
-# แต่ commit .env.example ได้</pre>
+# .env.staging — โหลดเมื่อ npm run build:staging
+VITE_API_BASE_URL=https://staging-api.example.com
+VITE_DRAFT_MODE=false
+VITE_AZURE_CLIENT_ID=&lt;staging-client-id&gt;
+VITE_AZURE_TENANT_ID=&lt;staging-tenant-id&gt;
+
+# .env.production — โหลดเมื่อ npm run build:production
+VITE_API_BASE_URL=https://api.example.com
+VITE_DRAFT_MODE=false
+VITE_AZURE_CLIENT_ID=&lt;prod-client-id&gt;
+VITE_AZURE_TENANT_ID=&lt;prod-tenant-id&gt;</pre>
+        <pre>// package.json scripts
+"dev":              "vite"                              // mode=development
+"build":            "vue-tsc -b &amp;&amp; vite build"          // mode=production (default)
+"build:staging":    "vue-tsc -b &amp;&amp; vite build --mode staging"
+"build:production": "vue-tsc -b &amp;&amp; vite build --mode production"
+"preview:staging":  "vite preview --mode staging"</pre>
+        <pre>// vite.config.ts — proxy อ่าน URL จาก env แทน hardcode
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const backendUrl = env.VITE_API_BASE_URL || 'http://localhost:8000'
+  return {
+    server: { proxy: { '/api': { target: backendUrl, changeOrigin: true } } },
+    // ...
+  }
+})</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p><strong>1. ทดสอบ overlay — ค่าถูก override ตาม mode</strong></p>
+        <pre># เพิ่มชั่วคราวใน src/main.ts แล้วดูใน browser console
+console.log('mode:', import.meta.env.MODE)
+console.log('api:', import.meta.env.VITE_API_BASE_URL)
+console.log('draft:', import.meta.env.VITE_DRAFT_MODE)</pre>
+        <p style="margin-top:8px">รัน <code>npm run dev</code> → console ต้องแสดง <code>mode: development</code> และ <code>api: http://localhost:8000</code></p>
+        <p><strong>2. ทดสอบ staging build</strong></p>
+        <pre>npm run build:staging
+# ตรวจสอบใน dist/assets/*.js ว่าไม่มี localhost:8000
+grep -r "localhost" dist/assets/ || echo "Clean — no localhost in build"</pre>
+        <p><strong>3. ทดสอบ gitignore</strong></p>
+        <pre>git status
+# ต้องไม่แสดง .env, .env.development, .env.staging, .env.production
+# แต่ต้องแสดง .env.example ว่า tracked</pre>
+        <p><strong>4. ทดสอบ TypeScript types</strong></p>
+        <pre>npx tsc --noEmit
+# ต้องไม่มี error เกี่ยวกับ import.meta.env.*</pre>
       </div>
     </div>
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    อัปเดต 2026-06-23 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-api.html" style="color:var(--accent)">API Integration →</a>
+    อัปเดต 2026-06-23 (multi-env setup) &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-api.html" style="color:var(--accent)">API Integration →</a>
   </div>
 </main>
 <script>

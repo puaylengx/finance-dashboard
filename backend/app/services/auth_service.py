@@ -1,4 +1,5 @@
 import json
+import time
 
 import bcrypt
 import httpx
@@ -19,6 +20,7 @@ from app.schemas.auth import TokenResponse
 logger = get_logger(__name__)
 
 _entra_jwks_cache: dict | None = None
+_graph_token_cache: dict | None = None
 
 
 class EntraNotConfiguredError(Exception):
@@ -34,9 +36,13 @@ def _load_users() -> list[dict]:
 
 
 async def is_coordinator(username: str) -> bool:
-    """Return True if username is active in finance_coordinator. Cached in Redis."""
+    """Return True if username is active in finance_coordinator. Cached in Redis.
+
+    username is the raw preferred_username from Entra (full UPN) or a local name
+    for draft login. Matches on upn column first, falls back to username column.
+    """
     redis = get_redis()
-    cache_key = auth_coordinator_key(username)
+    cache_key = auth_coordinator_key(username.lower())
 
     if redis:
         try:
@@ -51,7 +57,13 @@ async def is_coordinator(username: str) -> bool:
         async with get_auth_db() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "SELECT 1 FROM finance_coordinator WHERE username = %(username)s AND active = TRUE",
+                    """
+                    SELECT 1 FROM finance_coordinator
+                    WHERE (
+                        LOWER(upn)      = LOWER(%(username)s)
+                        OR LOWER(username) = LOWER(%(username)s)
+                    ) AND active = TRUE
+                    """,
                     {"username": username},
                 )
                 result = await cur.fetchone() is not None
@@ -108,6 +120,44 @@ async def _fetch_entra_jwks() -> dict:
     return _entra_jwks_cache
 
 
+async def _fetch_graph_app_token() -> str:
+    global _graph_token_cache
+    if _graph_token_cache and _graph_token_cache["expires_at"] > time.time() + 60:
+        return _graph_token_cache["access_token"]
+
+    url = f"https://login.microsoftonline.com/{settings.azure_tenant_id}/oauth2/v2.0/token"
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.post(url, data={
+            "grant_type": "client_credentials",
+            "client_id": settings.azure_client_id,
+            "client_secret": settings.azure_client_secret,
+            "scope": "https://graph.microsoft.com/.default",
+        })
+        resp.raise_for_status()
+        result = resp.json()
+
+    _graph_token_cache = {
+        "access_token": result["access_token"],
+        "expires_at": time.time() + result.get("expires_in", 3600),
+    }
+    return result["access_token"]
+
+
+async def _get_job_title_from_graph(oid: str) -> str:
+    try:
+        graph_token = await _fetch_graph_app_token()
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"https://graph.microsoft.com/v1.0/users/{oid}?$select=jobTitle",
+                headers={"Authorization": f"Bearer {graph_token}"},
+            )
+            resp.raise_for_status()
+            return resp.json().get("jobTitle") or ""
+    except Exception as exc:
+        logger.warning("Graph jobTitle fetch failed: %s", exc)
+        return ""
+
+
 async def login_with_entra_token(access_token: str) -> TokenResponse | None:
     """Validate MS Entra ID token and issue our JWT.
 
@@ -137,8 +187,12 @@ async def login_with_entra_token(access_token: str) -> TokenResponse | None:
             access_token,
             key,
             algorithms=["RS256"],
-            audience=settings.azure_client_id,
+            options={"verify_aud": False},
         )
+        valid_audiences = {settings.azure_client_id, f"api://{settings.azure_client_id}"}
+        if claims.get("aud") not in valid_audiences:
+            logger.warning("Entra login: invalid audience: %s", claims.get("aud"))
+            return None
     except (JWTError, httpx.HTTPError, StopIteration) as exc:
         logger.warning("Entra token validation failed: %s", exc)
         return None
@@ -146,6 +200,11 @@ async def login_with_entra_token(access_token: str) -> TokenResponse | None:
     job_title: str = claims.get("jobTitle") or claims.get("job_title") or ""
     display_name: str = claims.get("name") or claims.get("displayName") or ""
     username: str = claims.get("preferred_username") or claims.get("upn") or display_name
+
+    if not job_title and settings.azure_client_secret:
+        oid: str = claims.get("oid") or ""
+        if oid:
+            job_title = await _get_job_title_from_graph(oid)
 
     extracted = extract_claims(job_title)
     role = extracted["role"]

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { fmt } from '@/utils/format'
+import EmptyState from '@/components/atoms/EmptyState.vue'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>
@@ -58,7 +59,7 @@ const sorted = computed(() => {
       <button @click="$emit('export')" class="text-xs text-accent hover:underline">Export CSV</button>
     </div>
 
-    <div v-if="!rows.length" class="text-center text-muted py-8 text-sm">No data</div>
+    <EmptyState v-if="!rows.length" variant="no-results" />
     <div v-else class="overflow-auto max-h-96">
       <table class="w-full text-sm">
         <thead class="sticky top-0 bg-surface2">

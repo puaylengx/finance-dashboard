@@ -4,7 +4,10 @@
       <div class="text-sm font-medium text-muted">{{ title }}</div>
       <button @click="$emit('export')" class="text-xs text-accent hover:underline">Export CSV</button>
     </div>
-    <div class="overflow-x-auto">
+    <div v-if="!rows.length">
+      <EmptyState :variant="emptyVariant" />
+    </div>
+    <div v-else class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="text-muted text-left">
@@ -17,16 +20,20 @@
               {{ col.format ? col.format(row[col.key]) : row[col.key] }}
             </td>
           </tr>
-          <tr v-if="!rows.length">
-            <td :colspan="columns.length" class="px-4 py-6 text-center text-muted">ไม่พบข้อมูล</td>
-          </tr>
         </tbody>
       </table>
     </div>
   </div>
 </template>
 <script setup lang="ts">
+import EmptyState from '@/components/atoms/EmptyState.vue'
+
 interface Column { key: string; label: string; class?: string; format?: (v: unknown) => string }
-defineProps<{ title?: string; columns: Column[]; rows: Record<string, unknown>[] }>()
+defineProps<{
+  title?: string
+  columns: Column[]
+  rows: Record<string, unknown>[]
+  emptyVariant?: 'no-data' | 'no-results' | 'no-permission'
+}>()
 defineEmits<{ (e: 'export'): void }>()
 </script>

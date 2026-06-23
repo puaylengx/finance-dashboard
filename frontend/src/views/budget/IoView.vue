@@ -21,6 +21,19 @@
         โหลดข้อมูลไม่สำเร็จ: {{ error?.message }}
       </div>
 
+      <!-- No IO data after filter -->
+      <div v-else-if="data && data.kpis.total_amount === 0"
+        class="rounded-xl border border-border bg-surface">
+        <EmptyState variant="no-results">
+          <template #action>
+            <button
+              @click="filter.$reset()"
+              class="text-xs px-4 py-2 rounded-lg border border-border text-muted hover:text-fg hover:border-accent transition"
+            >ล้าง filter</button>
+          </template>
+        </EmptyState>
+      </div>
+
       <template v-else-if="data">
         <!-- Row 1: KpiCards (1/3) + CostOwnerBarChart (2/3) -->
         <div class="grid grid-cols-3 gap-4">
@@ -120,6 +133,7 @@ import { fetchIO } from '@/api/budget'
 import { fmtRound } from '@/utils/format'
 import { exportCSV } from '@/utils/export'
 import AppLayout    from '@/layouts/AppLayout.vue'
+import EmptyState   from '@/components/atoms/EmptyState.vue'
 import FilterBar    from '@/components/budget/FilterBar.vue'
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
 import KpiCards     from '@/components/budget/KpiCards.vue'

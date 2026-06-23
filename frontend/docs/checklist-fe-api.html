@@ -72,7 +72,7 @@
     <a href="checklist-fe-architecture.html">← Architecture</a>
     <a href="checklist-fe-security.html">Security →</a>
   </div>
-  <h2>API Integration <small>— 5 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <h2>API Integration <small>— 5 requirements &nbsp; Pass 4 / Partial 0 / Defer 0 / Fail 1</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การเชื่อมต่อ backend API อย่างมีประสิทธิภาพ ครอบคลุม caching, error handling, loading state, และ auth flow</p>
 
   <!-- 1. Axios + TanStack Query -->
@@ -154,48 +154,56 @@ const { data, isPending, isError, refetch } = useBudgetSummary(selectedYear)</pr
   <div class="item" id="axios-auth">
     <div class="item-head">
       <div><div class="item-title">4. Axios Interceptor (Auth)</div><div class="item-sub">แนบ JWT token อัตโนมัติทุก request, handle 401 → refresh token → retry request</div></div>
-      <div class="item-badges"><span class="p1">P1</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Axios interceptor คือ middleware ที่รันก่อนทุก request (request interceptor) หรือหลังทุก response (response interceptor) Auth interceptor ทำ 2 หน้าที่: (1) แนบ auth credentials ทุก request, (2) จัดการ 401 Unauthorized โดย redirect ไป login หรือ refresh token</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี interceptor ทุก API call ต้องเขียน auth header เอง และ 401 จะเป็น unhandled error ที่ user เห็นเป็น blank screen session หมดอายุกลางคันโดยไม่มีการแจ้งเตือน</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>Axios instance ยังไม่มี interceptor — ไม่มีการจัดการ 401 และ session expiry</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p>เนื่องจากใช้ HTTP-only cookie token ไม่อ่านจาก JS โดยตรง request interceptor จึงเน้นที่การ set headers อื่นๆ ส่วน response interceptor จัดการ 401:</p>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <ul>
+          <li>Request interceptor แนบ <code>Authorization: Bearer {token}</code> ทุก request โดยอ่าน token จาก session</li>
+          <li>Response interceptor จัดการ 401 ด้วย <code>isRedirecting</code> flag กัน race condition จาก concurrent requests</li>
+          <li>เมื่อ 401 ระบบ clear session แล้ว <code>router.push</code> ไป <code>/login?reason=session_expired</code></li>
+          <li>หน้า Login อ่าน <code>?reason=session_expired</code> แล้วแสดง banner แจ้ง user ว่า session หมดอายุ</li>
+        </ul>
         <pre>// src/api/client.ts
-import { useAuthStore } from '@/stores/auth'
 import router from '@/router'
 
-export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,  // ส่ง HTTP-only cookie อัตโนมัติ
-})
+let isRedirecting = false
 
-// Request interceptor — เพิ่ม headers ที่จำเป็น
-apiClient.interceptors.request.use((config) => {
-  config.headers['X-Requested-With'] = 'XMLHttpRequest'
+apiClient.interceptors.request.use(config => {
+  const token = getToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
-// Response interceptor — จัดการ 401
-let isRedirecting = false
 apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    if (error.response?.status === 401 && !isRedirecting) {
+  res => res,
+  async (err) => {
+    if (err.response?.status === 401 && !isRedirecting) {
       isRedirecting = true
-      const auth = useAuthStore()
-      auth.clearSession()
+      clearSession()
       await router.push({ path: '/login', query: { reason: 'session_expired' } })
       isRedirecting = false
     }
-    return Promise.reject(error)
-  }
-)</pre>
-        <p style="margin-top:8px"><strong>หน้า Login</strong> ควรแสดง banner เมื่อ <code>?reason=session_expired</code> เพื่อแจ้ง user ว่า session หมดอายุ</p>
-        <p style="margin-top:4px;color:var(--red);font-size:12px">⚠ P1 Critical — ไม่มี interceptor นี้ทำให้ 401 กลายเป็น uncaught error และ user ไม่รู้ว่า session หมด</p>
+    return Promise.reject(err)
+  },
+)
+
+// src/views/LoginView.vue — banner
+const sessionExpired = computed(() => route.query.reason === 'session_expired')
+// &lt;div v-if="sessionExpired"&gt;Session หมดอายุ กรุณาเข้าสู่ระบบใหม่&lt;/div&gt;</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ul>
+          <li><strong>Banner:</strong> ไปที่ <code>/login?reason=session_expired</code> — ต้องเห็น banner สีเหลือง "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่"</li>
+          <li><strong>Token attach:</strong> เปิด DevTools → Network → เลือก request ใดก็ได้ → Headers → ต้องมี <code>Authorization: Bearer ...</code></li>
+          <li><strong>401 handling:</strong> ใน DevTools → Network → Throttle OFF → ขวาคลิก API request → Block → reload ให้ backend return 401 — ต้องถูก redirect ไป <code>/login?reason=session_expired</code></li>
+          <li><strong>Race condition guard:</strong> จำลอง 401 พร้อมกัน 3 requests ต้องเห็นการ redirect เพียงครั้งเดียว ไม่ใช่ 3 ครั้ง</li>
+        </ul>
+        <pre># จำลอง 401 ใน browser console (ต้อง login ก่อน)
+# ทดสอบ banner โดยตรง
+window.location.href = '/login?reason=session_expired'</pre>
       </div>
     </div>
   </div>

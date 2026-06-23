@@ -20,6 +20,19 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
       },
+      headers: {
+        'Content-Security-Policy': [
+          "default-src 'self'",
+          "script-src 'self'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          "img-src 'self' data: blob:",
+          "connect-src 'self' ws://localhost:5173 https://login.microsoftonline.com",
+          "frame-ancestors 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ].join('; '),
+      },
     },
     build: {
       rollupOptions: {

@@ -108,6 +108,19 @@ app.add_middleware(
 app.middleware("http")(audit_log_middleware)
 
 
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data: blob:; "
+    "connect-src 'self' https://login.microsoftonline.com; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self';"
+)
+
+
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
@@ -115,6 +128,7 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = _CSP
     if not settings.debug:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response

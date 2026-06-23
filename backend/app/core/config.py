@@ -58,7 +58,9 @@ class Settings(BaseSettings):
     # Microsoft Entra ID
     azure_tenant_id: str = ""
     azure_client_id: str = ""
+    azure_client_secret: str = ""
     azure_authority: str = ""
+    entra_domain: str = ""  # e.g. "company.com" — used to strip domain from preferred_username
 
     # Draft mode
     draft_mode: bool = True
@@ -86,10 +88,15 @@ class Settings(BaseSettings):
             )
         return self
 
-    @field_validator("sentry_dsn", "encryption_key", "azure_tenant_id", "azure_client_id", mode="before")
+    @field_validator("sentry_dsn", "encryption_key", "azure_tenant_id", "azure_client_id", "azure_client_secret", mode="before")
     @classmethod
     def strip_optional_str(cls, v: str) -> str:
         return v.strip() if isinstance(v, str) else v
+
+    @field_validator("entra_domain", mode="before")
+    @classmethod
+    def strip_entra_domain(cls, v: str) -> str:
+        return v.strip().lstrip("@") if isinstance(v, str) else v
 
     # Dev: local users
     auth_users_json: str = "[]"

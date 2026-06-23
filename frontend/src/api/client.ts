@@ -5,7 +5,10 @@ import router from '@/router'
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 30_000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
 })
 
 apiClient.interceptors.request.use(config => {

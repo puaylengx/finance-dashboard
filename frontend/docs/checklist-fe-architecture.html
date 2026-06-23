@@ -71,7 +71,7 @@
     <a href="checklist-fe-performance.html">← Performance</a>
     <a href="checklist-fe-api.html">API Integration →</a>
   </div>
-  <h2>Architecture <small>— 5 requirements &nbsp; Pass 3 / Partial 0 / Defer 0 / Fail 2</small></h2>
+  <h2>Architecture <small>— 5 requirements &nbsp; Pass 4 / Partial 0 / Defer 0 / Fail 1</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">โครงสร้าง codebase, state management, type safety, และ security ระดับ routing</p>
 
   <!-- 1. Component-Based -->
@@ -165,56 +165,51 @@ npx tsc --noEmit
   <div class="item" id="route-guard">
     <div class="item-head">
       <div><div class="item-title">4. Route Guard</div><div class="item-sub">ตรวจสิทธิ์ก่อน render ทุก route ด้วย Vue Router navigation guard redirect ไปหน้า login หากไม่มีสิทธิ์</div></div>
-      <div class="item-badges"><span class="p1">P1</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p1">P1</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Navigation guard คือ hook ที่ Vue Router เรียกก่อน render page ใช้ตรวจสอบว่า user มีสิทธิ์เข้า route นั้นหรือไม่ ถ้าไม่มีสิทธิ์ให้ redirect ไปหน้า login หรือหน้า 403 แทน</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>ถ้าไม่มี route guard user ที่ไม่ได้ login สามารถพิมพ์ URL ตรงๆ แล้วเข้าหน้า financial data ได้ browser render component ก่อน API call fail — ข้อมูลที่โหลดมาแล้วอาจ show ก่อน 401 redirect</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ปัจจุบัน router ไม่มี <code>beforeEach</code> guard — ทุก route เข้าได้โดยไม่ตรวจ auth</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p><strong>1. เพิ่ม meta ใน route definitions</strong></p>
-        <pre>// router/index.ts
-const routes = [
-  {
-    path: '/login',
-    component: () => import('@/pages/LoginPage.vue'),
-    meta: { requiresAuth: false }
-  },
-  {
-    path: '/dashboard',
-    component: () => import('@/pages/DashboardPage.vue'),
-    meta: { requiresAuth: true, roles: ['fa', 'coordinator'] }
-  },
-  {
-    path: '/admin',
-    component: () => import('@/pages/AdminPage.vue'),
-    meta: { requiresAuth: true, roles: ['fa'] }
-  }
-]</pre>
-        <p style="margin-top:8px"><strong>2. เพิ่ม beforeEach guard</strong></p>
-        <pre>// router/guards.ts
-import { useAuthStore } from '@/stores/auth'
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ ✓</h4>
+        <p><code>router/index.ts</code> มี <code>beforeEach</code> guard ครบถ้วน ครอบคลุม 4 กรณี:</p>
+        <pre>router.beforeEach((to, _from, next) => {
+  const session  = getSession()          // อ่านจาก sessionStorage + ตรวจ expiry
+  const auth     = session !== null
+  const role     = session?.role ?? ''
+  const position = session?.position ?? null
 
-router.beforeEach(async (to) => {
-  const auth = useAuthStore()
+  if (to.meta.requiresAuth && !auth)                              return next('/login')   // ไม่ได้ login
+  if (to.meta.requiresAuth && auth && role === 'user')            return next('/login')   // role ต่ำสุด
+  if (to.meta.requiresFAPosition && (!isFA(role) || !hasPosition(position))) return next('/io') // admin guard
+  if (to.path === '/login' && auth)                               return next('/budget')  // กัน login ซ้ำ
 
-  if (!to.meta.requiresAuth) return true
+  const page = to.meta.page as string | undefined
+  if (page && auth && !canAccess(role, page)) return next('/io')  // page-level RBAC
 
-  if (!auth.isAuthenticated) {
-    return { path: '/login', query: { redirect: to.fullPath } }
-  }
-
-  const requiredRoles = to.meta.roles as string[] | undefined
-  if (requiredRoles && !requiredRoles.includes(auth.role)) {
-    return { path: '/403' }
-  }
-
-  return true
+  next()
 })</pre>
-        <p style="margin-top:8px"><strong>3. สร้างหน้า 401 และ 403</strong> สำหรับ redirect ที่ชัดเจน</p>
-        <p style="margin-top:4px;color:var(--red);font-size:12px">⚠ P1 Critical — ต้องทำก่อน production เพราะ financial data เปิด public ถ้าไม่มี guard</p>
+        <p style="margin-top:6px">Route meta ที่ตั้งไว้: <code>requiresAuth: true</code> บน <code>/budget</code>, <code>/io</code>, <code>/admin</code> · <code>requiresFAPosition: true</code> บน <code>/admin</code></p>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <p><strong>1. ทดสอบ manual (browser)</strong></p>
+        <pre># ไม่ได้ login → พิมพ์ URL ตรงๆ
+/io      → ต้อง redirect ไป /login
+/budget  → ต้อง redirect ไป /login
+/admin   → ต้อง redirect ไป /login
+
+# login แล้ว → ไปหน้า /login
+/login   → ต้อง redirect ไป /budget
+
+# role 'user' (ต่ำสุด) → ต้อง redirect ไป /login
+# role ไม่ใช่ FA + ไม่มี position → /admin → ต้อง redirect ไป /io</pre>
+        <p style="margin-top:8px"><strong>2. ตรวจสอบ session expiry</strong></p>
+        <pre># เปิด DevTools → Application → Session Storage
+# แก้ expiresAt เป็น timestamp ในอดีต (เช่น 1) แล้ว navigate
+# ต้อง redirect ไป /login ทันที</pre>
+        <p style="margin-top:8px"><strong>3. ตรวจสอบด้วย Vue DevTools</strong></p>
+        <pre># ติดตั้ง Vue DevTools extension → เปิด Router tab
+# ดู navigation log ว่า guard ถูกเรียกทุก route change
+# ดู meta ของแต่ละ route ว่ามี requiresAuth ถูกต้อง</pre>
       </div>
     </div>
   </div>

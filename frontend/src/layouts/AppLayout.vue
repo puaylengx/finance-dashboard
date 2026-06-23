@@ -134,6 +134,25 @@
         <button @click="timeout.dismiss()" class="mt-3 text-xs text-accent hover:underline">รับทราบ</button>
       </div>
     </Transition>
+
+    <!-- Toast notifications -->
+    <div class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+      <TransitionGroup name="toast">
+        <div
+          v-for="t in toast.toasts"
+          :key="t.id"
+          class="flex items-start gap-3 rounded-xl border px-4 py-3 w-72 shadow-xl pointer-events-auto"
+          :class="{
+            'bg-danger/10 border-danger/40 text-danger': t.type === 'error',
+            'bg-success/10 border-success/40 text-success': t.type === 'success',
+            'bg-surface border-border text-fg': t.type === 'info',
+          }"
+        >
+          <span class="text-sm flex-1">{{ t.message }}</span>
+          <button @click="toast.dismiss(t.id)" class="opacity-60 hover:opacity-100 text-xs shrink-0">✕</button>
+        </div>
+      </TransitionGroup>
+    </div>
   </div>
 </template>
 
@@ -143,6 +162,7 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSessionTimeout } from '@/composables/useSessionTimeout'
 import { useTheme } from '@/composables/useTheme'
+import { useToast } from '@/composables/useToast'
 
 const props = withDefaults(defineProps<{ title?: string; showExport?: boolean }>(), {
   showExport: false,
@@ -157,6 +177,7 @@ const auth      = useAuthStore()
 const route     = useRoute()
 const timeout   = useSessionTimeout()
 const themeCtrl = useTheme()
+const toast     = useToast()
 
 const PAGE_TITLES: Record<string, string> = {
   '/budget': 'Budget', '/io': 'IO Dashboard', '/admin': 'Admin',

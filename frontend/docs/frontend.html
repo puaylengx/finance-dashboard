@@ -122,6 +122,8 @@
   </div>
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
 
+  <a href="../../docs/index.html" id="nav-home">← หน้าหลัก</a>
+
   <div class="group-label">Overview</div>
   <a href="checklist-frontend.html">Checklist Index &amp; Summary</a>
   <a href="frontend.html" class="active">Frontend Guide</a>
@@ -163,7 +165,7 @@
 
   <!-- Header -->
   <div style="margin-bottom:48px">
-    <h1 style="font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">
+    <h1 style="font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">
       Seamless Dashboard — Frontend
     </h1>
     <p style="color:var(--muted);font-size:15px">Vue 3 · TypeScript · Pinia · TanStack Query · ApexCharts · PrimeVue · Playwright</p>
@@ -230,6 +232,8 @@ frontend/
 │   │   ├── client.ts              <span class="note">← Axios instance + JWT interceptor + 401 handler</span>
 │   │   ├── auth.ts                <span class="note">← loginWithPassword, draftLogin, entraLogin, fetchMe</span>
 │   │   └── budget.ts              <span class="note">← fetchBudget/IO + coordinator CRUD</span>
+│   ├── <span class="dir">lib/</span>
+│   │   └── msalConfig.ts          <span class="note">← PublicClientApplication, loginScopes, isMsalConfigured()</span>
 │   ├── <span class="dir">auth/</span>
 │   │   ├── permissions.ts         <span class="note">← FA/Division/Position roles, extractClaims, canAccess</span>
 │   │   └── session.ts             <span class="note">← sessionStorage AuthUser, getToken, msUntilExpiry</span>
@@ -266,16 +270,18 @@ frontend/
 │       │   ├── BudgetView.vue     <span class="note">← All roles: FA เห็น Division+Dept; non-FA เห็น combined</span>
 │       │   └── IoView.vue         <span class="note">← All roles: IO Goods/Project/Activity/Work</span>
 │       └── <span class="dir">admin/</span>
-│           └── CoordinatorView.vue <span class="note">← FA+position: coordinator CRUD</span>
+│           └── AdminView.vue      <span class="note">← FA+position: coordinator CRUD — table with sort, status badge, audit columns</span>
 ├── <span class="dir">tests/</span>
 │   ├── <span class="dir">unit/</span>
 │   │   ├── format.test.ts         <span class="note">← Vitest: fmt, fmtShort, fmtPct, fiscalMonthName</span>
 │   │   └── permissions.test.ts    <span class="note">← Vitest: extractClaims, role helpers, canAccess</span>
 │   └── <span class="dir">e2e/</span>
 │       └── auth.spec.ts           <span class="note">← Playwright: login flow, access control, responsive</span>
+├── <span class="dir">public/</span>
+│   └── auth-redirect.html         <span class="note">← MSAL popup redirect handler (จำเป็นสำหรับ loginPopup)</span>
 ├── index.html
 ├── vite.config.ts                 <span class="note">← Code splitting, proxy /api → :8000</span>
-├── tailwind.config.ts             <span class="note">← Design tokens (colors, fonts, animations)</span>
+├── tailwind.config.ts             <span class="note">← Design tokens (ใช้กับ Tailwind v4 — colors, animations)</span>
 ├── playwright.config.ts           <span class="note">← Chromium + iPhone 13</span>
 ├── vitest.config.ts
 └── package.json
@@ -325,12 +331,12 @@ npm run preview</pre>
   <!-- 4. Design System -->
   <section id="design-system">
     <h2><span class="n">4</span>Design System</h2>
-    <p>Design tokens กำหนดครั้งเดียวใน <code>tailwind.config.ts</code> ใช้ได้ทุก component โดยไม่ต้อง hardcode สี</p>
+    <p>Design tokens กำหนดใน <code>src/style.css</code> ด้วย Tailwind v4 <code>@theme inline</code> ใช้ได้ทุก component โดยไม่ต้อง hardcode สี</p>
 
     <div class="two-col">
       <div class="card">
         <h4>Color Tokens</h4>
-        <pre><span class="cmt">/* tailwind.config.ts */</span>
+        <pre><span class="cmt">/* src/style.css — @theme inline */</span>
 bg:       <span class="str">'#0f1117'</span>  <span class="cmt">// พื้นหลังหลัก</span>
 surface:  <span class="str">'#1a1d27'</span>  <span class="cmt">// card, sidebar</span>
 surface2: <span class="str">'#22263a'</span>  <span class="cmt">// input, hover</span>
@@ -357,7 +363,16 @@ muted:    <span class="str">'#8892b0'</span>  <span class="cmt">// secondary tex
     </div>
 
     <h3>Font</h3>
-    <p>ใช้ <strong>IBM Plex Sans Thai</strong> จาก Google Fonts — รองรับภาษาไทยและอังกฤษ โหลดด้วย <code>preconnect</code> เพื่อลด latency</p>
+    <p>ใช้ <strong>IBM Plex Sans Thai Looped</strong> (Thai) + <strong>IBM Plex Sans</strong> (English) จาก Google Fonts ตั้งค่าผ่าน Tailwind v4 CSS variable:</p>
+    <pre><span class="cmt">/* src/style.css — Tailwind v4 @theme inline */</span>
+@theme inline {
+  --font-sans: 'IBM Plex Sans Thai Looped', 'IBM Plex Sans', sans-serif;
+}
+body {
+  font-family: 'IBM Plex Sans Thai Looped', 'IBM Plex Sans', sans-serif;
+}
+<span class="cmt">/* ต้องตั้งทั้งใน @theme inline (สำหรับ Tailwind preflight ที่ set บน &lt;html&gt;)
+   และ body {} เพื่อให้ครอบคลุมทั้ง 2 path */</span></pre>
 
     <h3>Print CSS</h3>
     <pre><span class="cmt">/* @media print — style.css */</span>
@@ -494,18 +509,35 @@ apiClient.interceptors.response.use(
   expiresAt: number  <span class="cmt">// unix ms จาก JWT exp</span>
 }</pre>
 
-    <h3>Draft Mode (Dev) — New Login UI</h3>
-    <p>Draft login redesigned เป็น 3 categories: <strong>FA</strong> (special card), <strong>Division</strong> (grid 6 roles), <strong>Staff</strong> (grid 21 roles + position), <strong>Faculty</strong> (FT/PT/PC sub-type + role + chairman)</p>
-    <pre><span class="cmt">// VITE_DRAFT_MODE=true → แสดง role picker UI</span>
-<span class="cmt">// สร้าง job_title format ถูกต้องตาม category ที่เลือก:</span>
+    <h3>MSAL Integration (Production)</h3>
+    <p>ตั้งค่า <code>VITE_AZURE_CLIENT_ID</code> + <code>VITE_AZURE_TENANT_ID</code> → ปุ่ม Microsoft Login ปรากฏ (MSAL <code>loginPopup</code> flow)</p>
+    <pre><span class="cmt">// src/lib/msalConfig.ts</span>
+<span class="kw">export function</span> <span class="fn">isMsalConfigured</span>(): boolean { ... }
+<span class="kw">export const</span> msalInstance = <span class="kw">new</span> PublicClientApplication(config)
+<span class="kw">export const</span> loginScopes = [<span class="str">'openid'</span>, <span class="str">'profile'</span>, <span class="str">`api://${clientId}/access_as_user`</span>]
+<span class="cmt">// Cache: localStorage (ยังคงอยู่ข้ามแท็บ ต่างจาก sessionStorage ของ auth store)</span>
+<span class="cmt">// redirectUri: window.location.origin + '/auth-redirect.html'</span></pre>
+    <pre><span class="cmt">// LoginView.vue — Microsoft login handler</span>
+<span class="kw">async function</span> <span class="fn">handleMicrosoftLogin</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> result = <span class="kw">await</span> msalInstance.loginPopup({ scopes: loginScopes, redirectUri })
+    <span class="kw">const</span> res = <span class="kw">await</span> entraLogin(result.accessToken)   <span class="cmt">// POST /auth/entra-login</span>
+    auth.setUser(res.data)                             <span class="cmt">// ตั้ง session + redirect /budget</span>
+  } <span class="kw">catch</span> (e) {
+    <span class="cmt">// interaction_in_progress error: clear msal.* sessionStorage แล้ว retry ครั้งเดียว</span>
+  }
+}
+<span class="cmt">// public/auth-redirect.html — MSAL popup redirect handler (ต้องมีไว้)</span></pre>
+
+    <h3>Draft Mode (Dev)</h3>
+    <p>เมื่อ <code>VITE_DRAFT_MODE=true</code> แสดง role picker UI — 4 categories: <strong>FA</strong>, <strong>Division</strong>, <strong>Staff</strong>, <strong>Faculty</strong> (FT sub-type เท่านั้น)</p>
+    <p>เมื่อมีทั้ง MSAL + draft mode → แสดงปุ่ม Microsoft ก่อน + divider "▼ เข้าสู่ระบบแบบทดสอบ" toggle draft form</p>
+    <pre><span class="cmt">// สร้าง job_title format ถูกต้องตาม category ที่เลือก:</span>
 FA:      <span class="str">"fa"</span>                               <span class="cmt">→ role=fa, position=null</span>
 Division: <span class="str">"staff,{role}"</span>                   <span class="cmt">→ เช่น staff,ba</span>
 Staff:   <span class="str">"staff,{role}"</span>                     <span class="cmt">→ เช่น staff,it</span>
 Staff+pos: <span class="str">"staff,{role},{position}"</span>        <span class="cmt">→ เช่น staff,it,chief</span>
-Faculty: <span class="str">"faculty,{subtype}_lecturers,{role},chairman"</span>
-
-<span class="cmt">// VITE_DRAFT_MODE=false → แสดงปุ่ม Microsoft Login (MSAL)</span>
-<span class="tag">&lt;button</span> v-else @click=<span class="str">"loginEntra"</span><span class="tag">&gt;</span>🏢 Microsoft Login<span class="tag">&lt;/button&gt;</span></pre>
+Faculty: <span class="str">"faculty,ft_lecturers,{role},chairman"</span>  <span class="cmt">← FT only (simplified)</span></pre>
 
     <h3>วิธีทดสอบ</h3>
     <div class="test-steps">
@@ -612,7 +644,12 @@ countdownInterval = setInterval(() => {
         <td><code>IoView.vue</code></td>
         <td><code>GET /api/v1/io</code></td>
         <td><span class="badge badge-all">All roles</span></td>
-        <td>IO KPIs (Goods/Project/Activity/Work counts) + <strong>FA:</strong> 2 bar charts (Dept + Division); <strong>Non-FA:</strong> 1 bar chart (combined) + 4 IO drilldown tables</td>
+        <td>
+          Row 1: <code>KpiCards</code> (col-span-1) + <code>CostOwnerBarChart</code>(s) (col-span-2) — layout เหมือน BudgetView<br>
+          <strong>FA:</strong> 2 bar charts side-by-side (Dept + Division); <strong>Non-FA:</strong> 1 bar chart (combined)<br>
+          Row 2: 4 StatCards (IO Goods/Project/Activity/Work counts)<br>
+          Row 3: 4 IoPivotTable (drilldown per IO type)
+        </td>
       </tr>
     </table>
 
@@ -743,7 +780,18 @@ Charts ต้องปรับขนาดตาม viewport โดยไม่
   <section id="table">
     <h2><span class="n">12</span>Drill-down Pivot Table</h2>
 
-    <p>ตาราง GL ที่ expand/collapse รายการย่อย — ไม่ใช้ AG Grid (ใช้ native table + Vue reactivity)</p>
+    <p>ตาราง GL ที่ expand/collapse รายการย่อย — ไม่ใช้ AG Grid (ใช้ native table + Vue reactivity) มี 2 components:</p>
+    <ul>
+      <li><code>PivotTable.vue</code> — Budget GL table, default sort: GL Code asc</li>
+      <li><code>IoPivotTable.vue</code> — IO drilldown table (Goods/Project/Activity/Work), default sort: Code asc; visual design เหมือน PivotTable (card + header + expand column + color scheme)</li>
+    </ul>
+
+    <h3>Sorting (ทั้ง 2 components)</h3>
+    <pre><span class="cmt">// คลิก column header → sort; คลิกซ้ำ → toggle asc/desc</span>
+<span class="cmt">// Sort icons: ⇅ (unsorted), ▼ (desc), ▲ (asc)</span>
+<span class="cmt">// PivotTable — SortCol: 'gl_id' | 'gl_description' | 'total_amount'</span>
+<span class="cmt">// IoPivotTable — SortCol: 'id' | 'description' | 'total_amount'</span>
+<span class="kw">const</span> sorted = computed(() => [...items].sort((a, b) => { ... }))</pre>
 
     <pre><span class="cmt">// PivotTable.vue — expand/collapse ด้วย Set</span>
 <span class="kw">const</span> expanded = ref(<span class="kw">new</span> Set&lt;string&gt;())
@@ -917,15 +965,32 @@ Charts ต้องปรับขนาดตาม viewport โดยไม่
   <section id="coordinator">
     <h2><span class="n">15</span>Coordinator Admin</h2>
 
-    <p>หน้า <code>/admin/coordinators</code> เข้าได้เฉพาะ <strong>FA + position (chief/chairman/head)</strong></p>
+    <p>หน้า <code>/admin/coordinators</code> เข้าได้เฉพาะ <strong>FA + position (chief/chairman/head)</strong> — component: <code>AdminView.vue</code></p>
 
     <h3>Features</h3>
     <ul>
-      <li>ดูรายชื่อ coordinator ทั้งหมด (active + inactive)</li>
+      <li>ดูรายชื่อ coordinator ทั้งหมด (active + inactive) ในรูปแบบตาราง</li>
+      <li><strong>Status badge</strong> — Active (เขียว) / Inactive (เทา) พร้อม dot indicator</li>
+      <li><strong>Audit columns</strong> — "สร้างโดย" (created_by + fmtDate) + "อัปเดตล่าสุด" (updated_by + fmtDate)</li>
+      <li><strong>Sortable columns</strong> — คลิก header เพื่อเรียงตาม username, สถานะ, created_at, updated_at; default: created_at DESC</li>
+      <li><strong>วันที่รูปแบบไทย</strong> — <code>fmtDate()</code> แสดง "11 มิถุนายน 2569 เวลา 08:30 น."</li>
       <li>เพิ่ม coordinator ใหม่ (หรือ reactivate ถ้า inactive)</li>
-      <li>Toggle active ↔ inactive (soft delete)</li>
+      <li>Toggle active ↔ inactive (soft delete) ด้วยปุ่ม "ปิดสิทธิ์" / "เปิดสิทธิ์"</li>
       <li>ใช้ TanStack Query <code>useMutation</code> + <code>invalidateQueries</code> → list refresh อัตโนมัติ</li>
     </ul>
+
+    <pre><span class="cmt">// AdminView.vue — sort logic</span>
+<span class="kw">type</span> SortKey = <span class="str">'username'</span> | <span class="str">'active'</span> | <span class="str">'created_at'</span> | <span class="str">'updated_at'</span>
+<span class="kw">const</span> sortKey = ref&lt;SortKey&gt;(<span class="str">'created_at'</span>)
+<span class="kw">const</span> sortDir = ref&lt;SortDir&gt;(<span class="str">'desc'</span>)
+
+<span class="cmt">// fmtDate: long Thai format</span>
+<span class="fn">function</span> <span class="fn">fmtDate</span>(iso: string) {
+  <span class="kw">const</span> d = <span class="kw">new</span> Date(iso)
+  <span class="kw">const</span> date = d.toLocaleDateString(<span class="str">'th-TH'</span>, { day: <span class="str">'numeric'</span>, month: <span class="str">'long'</span>, year: <span class="str">'numeric'</span> })
+  <span class="kw">const</span> time = d.toLocaleTimeString(<span class="str">'th-TH'</span>, { hour: <span class="str">'2-digit'</span>, minute: <span class="str">'2-digit'</span>, hour12: <span class="kw">false</span> })
+  <span class="kw">return</span> <span class="str">`${date} เวลา ${time} น.`</span>
+}</pre>
 
     <h3>วิธีทดสอบ</h3>
     <div class="test-steps">
@@ -1174,7 +1239,7 @@ npx playwright test --debug</pre>
       <p style="color:var(--muted);font-size:13px;margin:0">
         <strong style="color:var(--text)">Seamless Dashboard Frontend v1.0</strong><br>
         Vue 3 · TypeScript · Pinia · TanStack Query · ApexCharts · PrimeVue · Playwright<br>
-        Docs generated: 2026-06-03
+        Docs generated: 2026-06-23
       </p>
     </div>
   </section>

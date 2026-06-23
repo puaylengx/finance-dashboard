@@ -19,6 +19,10 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        authRedirect: resolve(__dirname, 'auth-redirect.html'),
+      },
       output: {
         manualChunks(id) {
           if (id.includes('vue-router') || id.includes('pinia') || id.includes('node_modules/vue/')) return 'vue-core'

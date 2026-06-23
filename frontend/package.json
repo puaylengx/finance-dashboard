@@ -13,7 +13,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "size": "node scripts/check-bundle-size.js",
-    "build:check": "npm run build && npm run size"
+    "build:check": "npm run build && npm run size",
+    "lhci": "lhci autorun"
   },
   "dependencies": {
     "@azure/msal-browser": "^5.14.0",
@@ -32,6 +33,7 @@
     "vue3-apexcharts": "^1.11.1"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^24.12.3",

@@ -73,7 +73,7 @@
     <a href="checklist-fe-api.html">← API Integration</a>
     <a href="checklist-fe-testing.html">Testing →</a>
   </div>
-  <h2>Security <small>— 6 requirements &nbsp; Pass 4 / Partial 1 / Defer 0 / Fail 1</small></h2>
+  <h2>Security <small>— 6 requirements &nbsp; Pass 5 / Partial 0 / Defer 0 / Fail 1</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">ความปลอดภัยฝั่ง browser: XSS, token storage, role-based rendering, session management, CSRF, และ Content Security Policy</p>
 
   <!-- 1. XSS Prevention -->
@@ -190,34 +190,53 @@ export const vPermission = {
   <div class="item" id="csrf">
     <div class="item-head">
       <div><div class="item-title">5. CSRF Protection</div><div class="item-sub">ใช้ CSRF token หรือ SameSite=Strict cookie กันการโจมตี cross-site</div></div>
-      <div class="item-badges"><span class="p2">P2</span><span class="partial">Partial</span></div>
+      <div class="item-badges"><span class="p2">P2</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
-      <div class="block"><h4>คืออะไร</h4><p>CSRF (Cross-Site Request Forgery) คือ attack ที่หลอกให้ browser ของ victim ส่ง request ที่ไม่ต้องการไปยัง site ที่ victim login อยู่ เช่น หน้าเว็บ evil.com ซ่อน <code>&lt;img src="bank.com/transfer?to=hacker&amp;amount=10000"&gt;</code></p></div>
-      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard ที่รับ write actions (update budget, toggle coordinator) ถ้าไม่มี CSRF protection — attacker อาจ trigger action เหล่านั้นจาก site อื่นได้ถ้า user เปิด tab นั้นค้างไว้</p></div>
-      <div class="block block-partial"><h4>สถานะในโปรเจกต์ — บางส่วน</h4>
-        <p><strong>ป้องกันได้บางส่วน</strong> ผ่าน <code>SameSite=Strict</code> บน auth cookie — browser จะไม่ส่ง cookie เมื่อ request มาจาก cross-site origin ทำให้ CSRF attack ที่พึ่งพา cookie ล้มเหลว</p>
-        <p style="margin-top:6px"><strong>ยังไม่มี</strong> explicit CSRF token header (<code>X-CSRF-Token</code>) ซึ่งเป็น defense layer เพิ่มเติม</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ (defense-in-depth)</h4>
-        <p><strong>Option 1 (แนะนำ): Double Submit Cookie Pattern</strong></p>
-        <pre>// Backend ส่ง CSRF token ใน non-HttpOnly cookie
-Set-Cookie: csrf_token=random_token; SameSite=Strict; Path=/
+      <div class="block"><h4>คืออะไร</h4><p>CSRF (Cross-Site Request Forgery) คือ attack ที่หลอกให้ browser ของ victim ส่ง request ที่ไม่ต้องการไปยัง site ที่ victim login อยู่ เช่น หน้าเว็บ evil.com ซ่อน <code>&lt;img src="bank.com/transfer?to=hacker&amp;amount=10000"&gt;</code> — browser ส่ง cookie ไปโดยอัตโนมัติ ทำให้ request ผ่าน auth</p></div>
+      <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Finance dashboard ที่รับ write actions (toggle coordinator, future budget mutations) ถ้าไม่มี CSRF protection — attacker อาจ trigger action เหล่านั้นจาก site อื่นได้ถ้า user เปิด tab นั้นค้างไว้</p></div>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Pass</h4>
+        <p><strong>CSRF-immune by design</strong> เพราะ auth ใช้ Bearer token ใน <code>sessionStorage</code> แทน cookie:</p>
+        <ul style="margin-top:8px">
+          <li><strong>sessionStorage isolation</strong> — JS ของ origin อื่นอ่าน <code>sessionStorage</code> ไม่ได้ (Same-Origin Policy) ทำให้ attacker ขโมย token ไปใช้ใน cross-site request ไม่ได้</li>
+          <li><strong>Authorization: Bearer header</strong> — browser ไม่ auto-send custom header ให้ cross-site requests (ต่างจาก cookie ที่ browser ส่งเสมอ) Axios attach header ด้วย JS ที่ทำงานบน same origin เท่านั้น</li>
+          <li><strong>Content-Type: application/json</strong> — บังคับให้ cross-origin request ต้องผ่าน CORS preflight ก่อน (non-simple request) backend <code>allow_origins</code> จะ reject origin ที่ไม่ได้รับอนุญาต</li>
+          <li><strong>X-Requested-With: XMLHttpRequest</strong> — เพิ่มเป็น default header ใน <code>src/api/client.ts</code> เป็น defense-in-depth layer มาตรฐาน บาง WAF และ backend ตรวจ header นี้เพื่อยืนยันว่า request มาจาก AJAX ไม่ใช่ form POST</li>
+        </ul>
+        <pre>// src/api/client.ts — headers ที่ block CSRF ได้ทุก layer
+export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  timeout: 30_000,
+  headers: {
+    'Content-Type': 'application/json',   // forces CORS preflight cross-origin
+    'X-Requested-With': 'XMLHttpRequest', // AJAX identifier, WAF-friendly
+  },
+})
 
-// Frontend อ่าน csrf_token จาก cookie แล้วใส่ใน header
-// src/api/client.ts — request interceptor
-apiClient.interceptors.request.use((config) => {
-  const csrfToken = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('csrf_token='))
-    ?.split('=')[1]
-  if (csrfToken) {
-    config.headers['X-CSRF-Token'] = csrfToken
-  }
+// request interceptor แนบ Bearer token (ไม่ใช่ cookie → ไม่ถูก auto-send)
+apiClient.interceptors.request.use(config => {
+  const token = getToken() // อ่านจาก sessionStorage เท่านั้น
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })</pre>
-        <p style="margin-top:8px"><strong>Option 2: Origin/Referer Check ฝั่ง backend</strong> — validate ว่า <code>Origin</code> header ตรงกับ allowed origin (ง่ายกว่า แต่ browser บางตัวไม่ส่ง header นี้)</p>
-        <p style="margin-top:6px;color:var(--yellow);font-size:12px">⚠ SameSite=Strict ป้องกัน CSRF ส่วนใหญ่ได้ แต่ defense-in-depth ด้วย CSRF token ทำให้ปลอดภัยกว่าและผ่าน security audit ได้ง่ายขึ้น</p>
+        <pre># backend/app/main.py — CORS config อนุญาต X-Requested-With
+allow_headers=["Content-Type", "Authorization", "X-Requested-With"]</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ol>
+          <li><strong>ตรวจ header ใน DevTools</strong> — เปิด DevTools → Network → เลือก API request ใดก็ได้ → Headers → Request Headers ต้องมี:<br><code>X-Requested-With: XMLHttpRequest</code><br><code>Content-Type: application/json</code><br><code>Authorization: Bearer &lt;token&gt;</code></li>
+          <li><strong>จำลอง cross-site form POST</strong> — เปิด DevTools → Console แล้วรัน:<br>
+            <pre>// จำลอง attacker พยายาม POST จาก origin อื่น (ไม่มี token)
+fetch('/api/v1/admin/coordinators/1', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' }
+  // ไม่มี Authorization header → 401 Unauthorized
+}).then(r => console.log('Status:', r.status))</pre>
+            ต้องได้ <code>401 Unauthorized</code> — ยืนยันว่าไม่มี token = ไม่มีสิทธิ์
+          </li>
+          <li><strong>ตรวจ CORS preflight</strong> — DevTools → Network → กรอง <code>OPTIONS</code> → ดู response header <code>Access-Control-Allow-Headers</code> ต้องมี <code>X-Requested-With</code> ใน allowed headers</li>
+          <li><strong>ยืนยัน sessionStorage ไม่ถูก cross-origin อ่าน</strong> — เปิด tab ใหม่ไปที่ domain อื่น (เช่น <code>about:blank</code>) → Console → <code>sessionStorage.getItem('auth_user')</code> ต้องได้ <code>null</code> (SOP block)</li>
+        </ol>
       </div>
     </div>
   </div>

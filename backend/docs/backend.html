@@ -241,11 +241,14 @@
   </div>
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
   
+  <a href="../../docs/index.html" id="nav-home">← หน้าหลัก</a>
+
   <div class="group">Overview</div>
   <a href="checklist.html" id="nav-checklist">Checklist Index &amp; Summary</a>
   <a href="backend.html" id="nav-backend" class="active">Backend Guide</a>
   <a href="data-dictionary.html" id="nav-data-dict">Data Dictionary</a>
   <a href="runbook.html" id="nav-runbook">Operations Runbook</a>
+  <a href="entra-id-setup.html" id="nav-entra">Entra ID Setup</a>
   
   <div class="group">Sections</div>
   <a href="#overview">Architecture</a>
@@ -368,7 +371,11 @@ backend/
 │   ├── 001_create_finance_tables.sql
 │   ├── 002_create_master_tables.sql
 │   ├── 003_create_coordinator.sql
-│   ├── 004_create_indexes.sql     <span class="note">← 15 performance indexes</span>
+│   ├── 004_create_indexes.sql     <span class="note">← 14 performance indexes</span>
+│   ├── 005_rename_erp_table.sql   <span class="note">← erp_2025 → erp_transactions</span>
+│   ├── 006_create_audit_log.sql   <span class="note">← audit trail table</span>
+│   ├── 007_enable_pg_stat_statements.sql <span class="note">← slow-query extension</span>
+│   ├── 008_add_upn_to_coordinator.sql    <span class="note">← UPN column + unique index</span>
 │   └── migrate.py                 <span class="note">← CLI migration runner</span>
 ├── <span class="dir">tests/</span>
 │   ├── conftest.py                <span class="note">← Shared fixtures, mock DB/Redis</span>
@@ -427,6 +434,9 @@ uvicorn app.main:app --reload --port 8000</pre>
       <tr><td><code>JWT_SECRET_KEY</code></td><td>change-me</td><td><strong style="color:var(--red)">ต้องเปลี่ยนใน production!</strong></td></tr>
       <tr><td><code>DRAFT_MODE</code></td><td><code>true</code></td><td>เปิด /auth/draft-login (ปิดใน production)</td></tr>
       <tr><td><code>AZURE_TENANT_ID</code></td><td>—</td><td>จำเป็นสำหรับ /auth/entra-login จริง</td></tr>
+      <tr><td><code>AZURE_CLIENT_ID</code></td><td>—</td><td>Entra App (Client) ID — ใช้ validate audience ใน JWT</td></tr>
+      <tr><td><code>AZURE_CLIENT_SECRET</code></td><td>—</td><td>Optional — ถ้าตั้งจะ fallback ดึง jobTitle จาก Microsoft Graph API</td></tr>
+      <tr><td><code>ENTRA_DOMAIN</code></td><td>—</td><td>เช่น "company.com" — ใช้สร้าง UPN (<code>username@domain</code>) สำหรับ coordinator lookup</td></tr>
       <tr><td><code>ALLOWED_ORIGINS</code></td><td>http://localhost:5173</td><td>CORS origins (comma-separated)</td></tr>
       <tr><td><code>LOG_LEVEL</code></td><td><code>INFO</code></td><td>DEBUG / INFO / WARNING / ERROR</td></tr>
       <tr><td><code>SENTRY_DSN</code></td><td>—</td><td>Error tracking (optional)</td></tr>
@@ -451,7 +461,7 @@ uvicorn app.main:app --reload --port 8000</pre>
 
     <div class="callout callout-warn">
       <strong>⚠ Production Checklist</strong>
-      <code>DRAFT_MODE=false</code> · <code>JWT_SECRET_KEY</code> ที่ random · <code>DEBUG=false</code> · <code>AZURE_*</code> ครบ
+      <code>DRAFT_MODE=false</code> · <code>JWT_SECRET_KEY</code> ที่ random · <code>DEBUG=false</code> · <code>AZURE_TENANT_ID</code> + <code>AZURE_CLIENT_ID</code> ครบ · <code>ENTRA_DOMAIN</code> ถ้าใช้ UPN coordinator
     </div>
   </section>
 
@@ -514,12 +524,14 @@ _pool = AsyncConnectionPool(
       <tr><th>Key Pattern</th><th>TTL</th><th>เก็บอะไร</th></tr>
       <tr><td><code>seamless:v1:budget:{role}:{hash}</code></td><td>300s (5 min)</td><td>Budget dashboard payload</td></tr>
       <tr><td><code>seamless:v1:io:{role}:{hash}</code></td><td>300s (5 min)</td><td>IO dashboard payload</td></tr>
-      <tr><td><code>seamless:coordinator:{username}</code></td><td>600s (10 min)</td><td>Coordinator lookup result (1/0)</td></tr>
+      <tr><td><code>seamless:coordinator:{lower(username)}</code></td><td>600s (10 min)</td><td>Coordinator lookup result (1/0) — key เป็น lowercase ของ username หรือ UPN</td></tr>
     </table>
 
-    <pre><span class="cmt"># Cache invalidation หลัง toggle coordinator</span>
-<span class="kw">await</span> invalidate_coordinator_cache(username)
-<span class="cmt"># → ลบ seamless:coordinator:{username}</span></pre>
+    <pre><span class="cmt"># Cache invalidation หลัง add/toggle coordinator</span>
+<span class="cmt"># ลบทั้ง UPN key และ username key เพื่อ dual-lookup ถูกต้อง</span>
+<span class="kw">if</span> upn:
+    <span class="kw">await</span> invalidate_coordinator_cache(upn)     <span class="cmt"># key: lower(upn)</span>
+<span class="kw">await</span> invalidate_coordinator_cache(username) <span class="cmt"># key: lower(username)</span></pre>
   </section>
 
   <!-- ── 7. Security ───────────────────────────────────────────────────── -->
@@ -595,18 +607,36 @@ Strict-Transport-Security: max-age=31536000  <span class="cmt"># production only
     <h3>Auth Flow</h3>
     <div class="card">
       <div class="flow" style="flex-wrap:wrap;gap:8px">
-        <div class="flow-step"><span class="step-num">1 · Frontend</span><span class="step-lbl">MSAL Login</span></div>
+        <div class="flow-step"><span class="step-num">1 · Frontend</span><span class="step-lbl">MSAL loginPopup</span></div>
         <span class="flow-arrow">→</span>
         <div class="flow-step"><span class="step-num">2 · POST</span><span class="step-lbl">/entra-login</span></div>
         <span class="flow-arrow">→</span>
-        <div class="flow-step"><span class="step-num">3 · Backend</span><span class="step-lbl">Validate JWKS</span></div>
+        <div class="flow-step"><span class="step-num">3 · Backend</span><span class="step-lbl">Validate JWKS + Audience</span></div>
         <span class="flow-arrow">→</span>
-        <div class="flow-step"><span class="step-num">4 · Extract</span><span class="step-lbl">jobTitle → role</span></div>
+        <div class="flow-step"><span class="step-num">4 · Extract</span><span class="step-lbl">jobTitle → role<br>(Graph fallback)</span></div>
         <span class="flow-arrow">→</span>
-        <div class="flow-step"><span class="step-num">5 · Check</span><span class="step-lbl">Position / Coordinator</span></div>
+        <div class="flow-step"><span class="step-num">5 · Check</span><span class="step-lbl">Position / Coordinator<br>(UPN or username)</span></div>
         <span class="flow-arrow">→</span>
         <div class="flow-step"><span class="step-num">6 · Issue</span><span class="step-lbl">JWT</span></div>
       </div>
+    </div>
+
+    <h3>Audience Validation</h3>
+    <p>ตรวจสอบ <code>aud</code> claim แบบ manual เพื่อรองรับทั้ง 2 format:</p>
+    <pre><span class="cmt"># app/services/auth_service.py</span>
+valid_audiences = {settings.azure_client_id, <span class="fn">f</span><span class="str">"api://{settings.azure_client_id}"</span>}
+<span class="kw">if</span> claims.get(<span class="str">"aud"</span>) <span class="kw">not in</span> valid_audiences:
+    <span class="kw">return</span> <span class="kw">None</span>   <span class="cmt"># reject invalid audience</span></pre>
+
+    <h3>Graph API Fallback (jobTitle)</h3>
+    <p>บาง Entra token อาจไม่มี <code>jobTitle</code> claim — ถ้าตั้ง <code>AZURE_CLIENT_SECRET</code> ระบบจะ fallback ดึงจาก Microsoft Graph API:</p>
+    <pre><span class="cmt"># ดึง app token ด้วย client_credentials flow (cached)</span>
+<span class="kw">await</span> _fetch_graph_app_token()
+<span class="cmt"># เรียก GET https://graph.microsoft.com/v1.0/users/{oid}?$select=jobTitle</span>
+<span class="kw">await</span> _get_job_title_from_graph(oid)</pre>
+    <div class="callout callout-info">
+      <strong>ℹ Graph Token Cache</strong>
+      App token จาก client_credentials ถูก cache ใน memory (<code>_graph_token_cache</code>) จนหมดอายุ (ปกติ 3600s) — ไม่ดึงใหม่ทุก request
     </div>
 
     <h3>job_title Parsing</h3>
@@ -996,7 +1026,8 @@ curl "http://localhost:8000/api/v1/io?year=2025" \
   <span class="key">"data"</span>: [
     {
       <span class="key">"id"</span>:         <span class="num">1</span>,
-      <span class="key">"username"</span>:   <span class="str">"john.doe@example.com"</span>,
+      <span class="key">"username"</span>:   <span class="str">"john.doe"</span>,
+      <span class="key">"upn"</span>:        <span class="str">"john.doe@company.com"</span>,   <span class="cmt">// null ถ้าไม่ได้ตั้ง ENTRA_DOMAIN</span>
       <span class="key">"active"</span>:     <span class="kw">true</span>,
       <span class="key">"created_at"</span>: <span class="str">"2025-01-15T08:30:00+07:00"</span>,
       <span class="key">"updated_at"</span>: <span class="kw">null</span>,
@@ -1015,7 +1046,8 @@ curl "http://localhost:8000/api/v1/io?year=2025" \
   <span class="key">"success"</span>: <span class="kw">true</span>,
   <span class="key">"data"</span>: {
     <span class="key">"id"</span>:         <span class="num">1</span>,
-    <span class="key">"username"</span>:   <span class="str">"john.doe@example.com"</span>,
+    <span class="key">"username"</span>:   <span class="str">"john.doe"</span>,
+    <span class="key">"upn"</span>:        <span class="str">"john.doe@company.com"</span>,
     <span class="key">"active"</span>:     <span class="kw">true</span>,
     <span class="key">"created_at"</span>: <span class="str">"2025-01-15T08:30:00+07:00"</span>,
     <span class="key">"updated_at"</span>: <span class="kw">null</span>,
@@ -1023,6 +1055,12 @@ curl "http://localhost:8000/api/v1/io?year=2025" \
     <span class="key">"updated_by"</span>: <span class="kw">null</span>
   }
 }</pre>
+
+    <div class="callout callout-info">
+      <strong>ℹ UPN Auto-build</strong>
+      เมื่อ <code>ENTRA_DOMAIN=company.com</code> ตั้งอยู่ backend จะ auto-build <code>upn = username@company.com</code> ตอน add coordinator
+      — ใช้สำหรับ match กับ <code>preferred_username</code> จาก Entra token โดยอัตโนมัติ
+    </div>
 
     <h3>วิธีทดสอบ</h3>
     <div class="test-steps">
@@ -1110,9 +1148,13 @@ mu_strategy, ic_strategy</pre>
 
     <h3>finance_coordinator — ตาราง Access Control</h3>
     <pre>id         SERIAL PRIMARY KEY
-username   TEXT NOT NULL UNIQUE    <span class="cmt">-- ตรวจสอบกับ Entra username</span>
+username   TEXT NOT NULL UNIQUE    <span class="cmt">-- local username (short form)</span>
+upn        TEXT                    <span class="cmt">-- User Principal Name: username@domain (migration 008)</span>
 active     BOOLEAN DEFAULT TRUE    <span class="cmt">-- soft delete</span>
-created_at, updated_at, created_by, updated_by</pre>
+created_at, updated_at, created_by, updated_by
+
+<span class="cmt">-- INDEX: UNIQUE on LOWER(upn) WHERE upn IS NOT NULL</span>
+<span class="cmt">-- Lookup: LOWER(upn) = LOWER(?) OR LOWER(username) = LOWER(?)</span></pre>
   </section>
 
   <!-- ── 14. Migrations ───────────────────────────────────────────────── -->
@@ -1121,10 +1163,14 @@ created_at, updated_at, created_by, updated_by</pre>
 
     <table>
       <tr><th>File</th><th>สร้างอะไร</th></tr>
-      <tr><td><code>001_create_finance_tables.sql</code></td><td>ตาราง <code>erp_transactions</code></td></tr>
+      <tr><td><code>001_create_finance_tables.sql</code></td><td>ตาราง <code>erp_transactions</code> (เดิมชื่อ <code>erp_2025</code>)</td></tr>
       <tr><td><code>002_create_master_tables.sql</code></td><td>ตาราง master ทั้งหมด (9 ตาราง)</td></tr>
       <tr><td><code>003_create_coordinator.sql</code></td><td>ตาราง <code>finance_coordinator</code> + indexes</td></tr>
       <tr><td><code>004_create_indexes.sql</code></td><td>14 performance indexes บน erp_transactions + master tables</td></tr>
+      <tr><td><code>005_rename_erp_table.sql</code></td><td>Rename <code>erp_2025</code> → <code>erp_transactions</code> รองรับหลายปีผ่าน <code>fiscal_year</code></td></tr>
+      <tr><td><code>006_create_audit_log.sql</code></td><td>ตาราง <code>audit_log</code> — immutable audit trail ทุก request ข้อมูลการเงิน</td></tr>
+      <tr><td><code>007_enable_pg_stat_statements.sql</code></td><td>Enable <code>pg_stat_statements</code> extension — slow-query tracking (ต้อง superuser)</td></tr>
+      <tr><td><code>008_add_upn_to_coordinator.sql</code></td><td>เพิ่ม column <code>upn TEXT</code> + unique index <code>LOWER(upn)</code> บน <code>finance_coordinator</code></td></tr>
     </table>
 
     <pre><span class="cmt"># รัน migrations ทั้งหมด</span>
@@ -1136,8 +1182,12 @@ python migrations/migrate.py
   RUN   002_create_master_tables.sql ... OK
   RUN   003_create_coordinator.sql ... OK
   RUN   004_create_indexes.sql ... OK
+  RUN   005_rename_erp_table.sql ... OK
+  RUN   006_create_audit_log.sql ... OK
+  RUN   007_enable_pg_stat_statements.sql ... OK
+  RUN   008_add_upn_to_coordinator.sql ... OK
 
-Done — 4 migration(s) applied.</pre>
+Done — 8 migration(s) applied.</pre>
 
     <div class="callout callout-info">
       <strong>ℹ Idempotent</strong>
@@ -1387,7 +1437,7 @@ open htmlcov/index.html</pre>
       <p style="color:var(--muted);font-size:13px;margin:0">
         <strong style="color:var(--text)">Seamless Dashboard Backend v1.0</strong><br>
         FastAPI · psycopg3 · Redis · MS Entra ID · JWT<br>
-        Docs generated: 2026-06-17
+        Docs generated: 2026-06-23
       </p>
     </div>
   </section>

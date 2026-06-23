@@ -48,3 +48,35 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           ALLOWED_ORIGINS: http://localhost:5173
           AUTH_USERS_JSON: "[]"
+
+  frontend-lhci:
+    name: Lighthouse CI (Frontend)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ""
+
+      - name: Check bundle size
+        run: npm run size
+
+      - name: Lighthouse CI
+        run: npm run lhci
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

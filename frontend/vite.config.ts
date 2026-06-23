@@ -28,7 +28,11 @@ export default defineConfig(({ mode }) => {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
           "img-src 'self' data: blob:",
+<<<<<<< HEAD
           "connect-src 'self' ws://localhost:5173 https://login.microsoftonline.com",
+=======
+          `connect-src 'self' ws://localhost:5173 ${backendUrl} https://login.microsoftonline.com`,
+>>>>>>> 6cdef4d (fix(frontend): add backendUrl to CSP connect-src to allow direct API origin)
           "frame-ancestors 'none'",
           "base-uri 'self'",
           "form-action 'self'",

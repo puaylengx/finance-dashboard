@@ -32,6 +32,12 @@
         </p>
       </div>
 
+      <!-- Session expired banner -->
+      <div v-if="sessionExpired" class="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 mb-2">
+        <svg class="shrink-0 mt-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p class="text-xs text-yellow-400 leading-relaxed">Session หมดอายุ กรุณาเข้าสู่ระบบใหม่</p>
+      </div>
+
       <div class="rounded-2xl border border-border bg-surface p-6 flex flex-col gap-6">
 
         <!-- Microsoft Login -->
@@ -214,7 +220,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { draftLogin, entraLogin } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
@@ -267,7 +273,9 @@ const FACULTY_ROLES = [
 ]
 
 const router           = useRouter()
+const route            = useRoute()
 const auth             = useAuthStore()
+const sessionExpired   = computed(() => route.query.reason === 'session_expired')
 const themeCtrl        = useTheme()
 const isFASelected     = ref(false)
 const category         = ref<Category | null>(null)

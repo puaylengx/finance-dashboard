@@ -74,7 +74,7 @@
     <a href="checklist-fe-security.html">← Security</a>
     <a href="checklist-fe-cicd.html">CI/CD →</a>
   </div>
-  <h2>Testing <small>— 4 requirements &nbsp; Pass 2 / Partial 0 / Defer 1 / Fail 1</small></h2>
+  <h2>Testing <small>— 4 requirements &nbsp; Pass 3 / Partial 0 / Defer 1 / Fail 0</small></h2>
   <p style="color:var(--muted);font-size:13px;margin:8px 0 28px">การทดสอบ frontend ครอบคลุม unit, component, E2E, และ visual regression</p>
 
   <!-- 1. Unit Tests -->
@@ -151,46 +151,50 @@ npx playwright test --ui</pre>
   <div class="item" id="component-tests">
     <div class="item-head">
       <div><div class="item-title">3. Component Tests</div><div class="item-sub">ทดสอบ component render และ interaction ด้วย Vue Test Utils</div></div>
-      <div class="item-badges"><span class="p3">P3</span><span class="fail">Fail</span></div>
+      <div class="item-badges"><span class="p3">P3</span><span class="pass">Pass</span></div>
     </div>
     <div class="item-body">
       <div class="block"><h4>คืออะไร</h4><p>Component test คือการทดสอบ Vue component แบบ isolated — mount component ใน JSDOM environment แล้วทดสอบ render output และ user interaction โดยใช้ Vue Test Utils + Vitest ร่วมกัน เป็น layer กลางระหว่าง unit test และ E2E</p></div>
       <div class="block"><h4>ทำไมถึงสำคัญ</h4><p>Unit test ไม่ทดสอบ template; E2E ช้าและต้องการ browser จริง component test ตรวจสอบว่า component render ถูกต้องตาม props, emit event ถูกต้อง, และ slot ทำงานตามที่ออกแบบ — รันเร็วกว่า E2E มาก</p></div>
-      <div class="block block-warn"><h4>สถานะในโปรเจกต์ — ยังไม่มี</h4>
-        <p>ยังไม่มี component test file ในโปรเจกต์ — ทดสอบได้แค่ unit (composable) และ E2E เท่านั้น</p>
-      </div>
-      <div class="block block-todo"><h4>สิ่งที่ต้องทำ</h4>
-        <p><strong>Setup: เพิ่ม @vue/test-utils</strong></p>
-        <pre>npm install -D @vue/test-utils @testing-library/vue</pre>
-        <p style="margin-top:8px"><strong>ตัวอย่าง component test:</strong></p>
-        <pre>// src/components/atoms/Button.test.ts
-import { mount } from '@vue/test-utils'
-import Button from './Button.vue'
-
-describe('Button', () => {
-  it('renders slot content', () => {
-    const wrapper = mount(Button, { slots: { default: 'คลิก' } })
-    expect(wrapper.text()).toBe('คลิก')
-  })
-
-  it('emits click event', async () => {
-    const wrapper = mount(Button)
-    await wrapper.trigger('click')
-    expect(wrapper.emitted('click')).toHaveLength(1)
-  })
-
-  it('is disabled when prop passed', () => {
-    const wrapper = mount(Button, { props: { disabled: true } })
-    expect(wrapper.attributes('disabled')).toBeDefined()
-  })
-})</pre>
-        <p style="margin-top:8px"><strong>Components ที่ควรมี test ก่อน:</strong></p>
-        <ul>
-          <li><code>StatCard.vue</code> — ตรวจ format ตัวเลข, positive/negative color</li>
-          <li><code>DataTable.vue</code> — ตรวจ empty state, sort, pagination</li>
-          <li><code>FilterBar.vue</code> — ตรวจ emit filter event พร้อม correct payload</li>
-          <li><code>ErrorState.vue</code> — ตรวจ retry button emit</li>
+      <div class="block block-pass"><h4>สถานะในโปรเจกต์ — Pass</h4>
+        <p>Implemented 4 component test files รวม 23 tests ผ่านทั้งหมด (<code>npm run test:run</code>):</p>
+        <ul style="margin-top:8px">
+          <li><strong><code>EmptyState.test.ts</code></strong> (7 tests) — ทดสอบทุก variant (no-data/no-results/no-permission), custom title/description override, action slot render/hide</li>
+          <li><strong><code>KpiCard.test.ts</code></strong> (7 tests) — label render, prefix/suffix, default &amp; custom color class, sub text render/hide</li>
+          <li><strong><code>SkeletonCard.test.ts</code></strong> (3 tests) — default height 80px, custom height prop, animate-skeleton class</li>
+          <li><strong><code>StatCard.test.ts</code></strong> (6 tests) — label/value/unit text, subValue render/hide, indigo default colorMap, emerald colorMap, icon slot</li>
         </ul>
+        <p style="margin-top:8px"><strong>Vitest config</strong> เพิ่มใน <code>vite.config.ts</code>:</p>
+        <pre>/// &lt;reference types="vitest/config" /&gt;
+// ใน return object ของ defineConfig:
+test: {
+  environment: 'jsdom',
+  include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+}</pre>
+        <p style="margin-top:8px"><strong>Scripts ใน <code>package.json</code></strong>:</p>
+        <pre>"test": "vitest",       // watch mode (dev)
+"test:run": "vitest run" // CI mode (single run)</pre>
+      </div>
+      <div class="block"><h4>วิธีทดสอบ</h4>
+        <ol>
+          <li><strong>รัน tests ทั้งหมด (CI mode)</strong>:
+            <pre>cd frontend
+npm run test:run
+# ผลที่คาดหวัง: Test Files 4 passed (4) | Tests 23 passed (23)</pre>
+          </li>
+          <li><strong>รัน watch mode (dev)</strong>:
+            <pre>npm run test
+# vitest จะ re-run tests ทุกครั้งที่ไฟล์เปลี่ยน</pre>
+          </li>
+          <li><strong>รัน test ไฟล์เดียว</strong>:
+            <pre>npm run test:run -- EmptyState
+npm run test:run -- src/components/ui/KpiCard.test.ts</pre>
+          </li>
+          <li><strong>ตรวจสอบ coverage (optional)</strong>:
+            <pre>npm run test:run -- --coverage
+# ต้องติดตั้ง @vitest/coverage-v8 ก่อน: npm install -D @vitest/coverage-v8</pre>
+          </li>
+        </ol>
       </div>
     </div>
   </div>
@@ -223,7 +227,7 @@ npx playwright test --update-snapshots</pre>
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);margin-top:8px">
-    อัปเดต 2026-06-23 &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-cicd.html" style="color:var(--accent)">CI/CD →</a>
+    อัปเดต 2026-06-23 (Component Tests → Pass, 23 tests) &nbsp;·&nbsp; <a href="checklist-frontend.html" style="color:var(--accent)">← กลับ Index</a> &nbsp;·&nbsp; <a href="checklist-fe-cicd.html" style="color:var(--accent)">CI/CD →</a>
   </div>
 </main>
 <script>

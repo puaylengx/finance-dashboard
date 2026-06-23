@@ -77,11 +77,14 @@
   </div>
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀️ Light</button>
   
+  <a href="../../docs/index.html" id="nav-home">← หน้าหลัก</a>
+
   <div class="group">Overview</div>
   <a href="checklist.html" id="nav-checklist">Checklist Index &amp; Summary</a>
   <a href="backend.html" id="nav-backend">Backend Guide</a>
   <a href="data-dictionary.html" id="nav-data-dict" class="active">Data Dictionary</a>
   <a href="runbook.html" id="nav-runbook">Operations Runbook</a>
+  <a href="entra-id-setup.html" id="nav-entra">Entra ID Setup</a>
   
   <div class="group">หมวดหมู่ Checklist</div>
   <a href="checklist-api-design.html" id="nav-api">API Design <span class="cnt">8</span></a>
@@ -309,19 +312,20 @@
   <div class="table-block" id="finance-coordinator">
     <div class="table-head"><span class="table-tag tag-system">system</span><h3>finance_coordinator</h3></div>
     <div class="table-body">
-      <p class="table-desc">รายชื่อ Finance Coordinator ที่ได้รับสิทธิ์พิเศษในการดู dashboard ทุก cost center ผู้ใช้ที่ถูก toggle active=TRUE จะได้รับ coordinator role ใน JWT token ผ่าน cache<br>Migration: <code>003_create_coordinator.sql</code></p>
+      <p class="table-desc">รายชื่อ Finance Coordinator ที่ได้รับสิทธิ์พิเศษในการดู dashboard ทุก cost center ผู้ใช้ที่ถูก toggle active=TRUE จะได้รับ coordinator role ใน JWT token ผ่าน cache<br>Migration: <code>003_create_coordinator.sql</code> + <code>008_add_upn_to_coordinator.sql</code></p>
       <table>
         <thead><tr><th>Column</th><th>Type</th><th>Required</th><th>ความหมาย</th></tr></thead>
         <tbody>
           <tr><td>id <span class="pk">PK</span></td><td class="type">SERIAL</td><td class="req">NOT NULL</td><td>Auto-increment primary key</td></tr>
-          <tr><td>username <span class="idx">idx unique</span></td><td class="type">TEXT</td><td class="req">NOT NULL UNIQUE</td><td>Username ของ coordinator — ตรงกับ <code>sub</code> field ใน JWT token (Entra ID UPN)</td></tr>
+          <tr><td>username <span class="idx">idx unique</span></td><td class="type">TEXT</td><td class="req">NOT NULL UNIQUE</td><td>Short username ของ coordinator (ไม่มี domain) — ใช้สำหรับ draft login lookup</td></tr>
+          <tr><td>upn <span class="idx">partial idx unique</span></td><td class="type">TEXT</td><td class="opt">NULL</td><td>User Principal Name — <code>username@domain</code> เช่น <code>john.doe@company.com</code> auto-build จาก <code>ENTRA_DOMAIN</code> เมื่อ add coordinator ใช้ match กับ <code>preferred_username</code> จาก Entra token โดยตรง (migration 008)</td></tr>
           <tr><td>active <span class="idx-partial">partial idx</span></td><td class="type">BOOLEAN</td><td class="req">NOT NULL DEFAULT TRUE</td><td>สถานะ — TRUE = มีสิทธิ์ coordinator, FALSE = ถูก revoke ชั่วคราว; Partial index ที่ active=TRUE เพิ่ม performance การ lookup</td></tr>
           <tr><td>created_at</td><td class="type">TIMESTAMPTZ</td><td class="req">NOT NULL</td><td>วันเวลาที่เพิ่ม coordinator</td></tr>
           <tr><td>updated_at</td><td class="type">TIMESTAMPTZ</td><td class="opt">NULL</td><td>วันเวลาที่ toggle ล่าสุด — ใช้สำหรับ optimistic locking (<code>X-Expected-Updated-At</code> header)</td></tr>
           <tr><td>created_by / updated_by</td><td class="type">TEXT</td><td class="opt">NULL</td><td>username ของ FA ที่ทำการ add/toggle coordinator</td></tr>
         </tbody>
       </table>
-      <div class="indexes-note"><strong>Locking:</strong> toggle_coordinator ใช้ pessimistic lock (<code>SELECT FOR UPDATE</code>) + optimistic lock (<code>expected_updated_at</code> header) → 409 conflict ถ้า concurrent modification &nbsp;·&nbsp; Cache: Redis key <code>seamless:v1:auth:coordinator:{username}</code> ถูก invalidate ทุกครั้งที่ toggle</div>
+      <div class="indexes-note"><strong>Lookup:</strong> <code>is_coordinator()</code> ตรวจ <code>LOWER(upn)=LOWER(?)</code> OR <code>LOWER(username)=LOWER(?)</code> และ <code>active=TRUE</code> — รองรับทั้ง Entra preferred_username (UPN) และ short username &nbsp;·&nbsp; <strong>Locking:</strong> toggle_coordinator ใช้ pessimistic lock (<code>SELECT FOR UPDATE</code>) + optimistic lock (<code>expected_updated_at</code> header) → 409 conflict ถ้า concurrent modification &nbsp;·&nbsp; Cache invalidation: ลบ Redis keys ทั้ง lowercase(upn) และ lowercase(username) หลัง add/toggle</div>
     </div>
   </div>
 
@@ -347,7 +351,7 @@
   </div>
 
   <div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);">
-    อัปเดต 2026-06-19 &nbsp;·&nbsp; Schema จาก migrations/ &nbsp;·&nbsp; <a href="checklist-documentation.html" style="color:var(--accent)">← Documentation Checklist</a> &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">กลับ Index</a>
+    อัปเดต 2026-06-23 &nbsp;·&nbsp; Schema จาก migrations/ &nbsp;·&nbsp; <a href="checklist-documentation.html" style="color:var(--accent)">← Documentation Checklist</a> &nbsp;·&nbsp; <a href="checklist.html" style="color:var(--accent)">กลับ Index</a>
   </div>
 </main>
 <script>

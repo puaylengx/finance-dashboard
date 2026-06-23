@@ -9,7 +9,9 @@
     "build:staging": "vue-tsc -b && vite build --mode staging",
     "build:production": "vue-tsc -b && vite build --mode production",
     "preview": "vite preview",
-    "preview:staging": "vite preview --mode staging"
+    "preview:staging": "vite preview --mode staging",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@azure/msal-browser": "^5.14.0",

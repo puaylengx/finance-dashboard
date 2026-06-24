@@ -15,6 +15,10 @@ const msalConfig: Configuration = {
   cache: {
     cacheLocation: 'localStorage',
   },
+  system: {
+    popupBridgeTimeout: 360_000,   // popup wait timeout (ms), v5 replaces windowHashTimeout
+    iframeBridgeTimeout: 10_000,
+  },
 }
 
 if (clientId && tenantId) {

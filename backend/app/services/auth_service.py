@@ -17,14 +17,26 @@ from app.core.security import (
 )
 from app.schemas.auth import TokenResponse
 
+__all__ = [
+    "EntraNotConfiguredError",
+    "is_coordinator",
+    "login_with_password",
+    "login_with_entra_token",
+    "draft_login",
+]
+
 logger = get_logger(__name__)
 
 _entra_jwks_cache: dict | None = None
 _graph_token_cache: dict | None = None
+_jwks_failure_count: int = 0
+_jwks_circuit_open_until: float = 0.0
+_JWKS_FAILURE_THRESHOLD: int = 3
+_JWKS_COOLDOWN_SECONDS: int = 60
 
 
 class EntraNotConfiguredError(Exception):
-    """Raised when MS Entra ID credentials are missing from settings."""
+    """Raised when MS Entra ID credentials are missing or circuit is open."""
 
 
 def _load_users() -> list[dict]:
@@ -105,19 +117,48 @@ async def login_with_password(username: str, password: str) -> TokenResponse | N
 
 
 async def _fetch_entra_jwks() -> dict:
-    global _entra_jwks_cache
+    global _entra_jwks_cache, _jwks_failure_count, _jwks_circuit_open_until
+
     if _entra_jwks_cache:
         return _entra_jwks_cache
+
+    # Circuit breaker: fail fast while cooldown is active
+    now = time.monotonic()
+    if now < _jwks_circuit_open_until:
+        remaining = int(_jwks_circuit_open_until - now)
+        logger.warning("Azure JWKS circuit open — fast fail, retry in %ds", remaining)
+        raise EntraNotConfiguredError(
+            f"Azure JWKS temporarily unavailable — retry in {remaining}s"
+        )
 
     jwks_url = (
         f"https://login.microsoftonline.com/{settings.azure_tenant_id}"
         f"/discovery/v2.0/keys"
     )
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(jwks_url)
-        resp.raise_for_status()
-        _entra_jwks_cache = resp.json()
-    return _entra_jwks_cache
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(jwks_url)
+            resp.raise_for_status()
+            _entra_jwks_cache = resp.json()
+            _jwks_failure_count = 0
+            return _entra_jwks_cache
+    except httpx.HTTPError as exc:
+        _jwks_failure_count += 1
+        if _jwks_failure_count >= _JWKS_FAILURE_THRESHOLD:
+            _jwks_circuit_open_until = time.monotonic() + _JWKS_COOLDOWN_SECONDS
+            _jwks_failure_count = 0
+            logger.error(
+                "Azure JWKS circuit OPEN after %d failures — cooldown %ds",
+                _JWKS_FAILURE_THRESHOLD, _JWKS_COOLDOWN_SECONDS,
+            )
+            raise EntraNotConfiguredError(
+                f"Azure JWKS circuit opened after repeated failures: {exc}"
+            ) from exc
+        logger.warning(
+            "Azure JWKS fetch failed (%d/%d): %s",
+            _jwks_failure_count, _JWKS_FAILURE_THRESHOLD, exc,
+        )
+        raise
 
 
 async def _fetch_graph_app_token() -> str:

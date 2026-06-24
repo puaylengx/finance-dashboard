@@ -121,6 +121,9 @@ _CSP = (
 )
 
 
+_DOCS_PATHS = ("/api/docs", "/api/redoc", "/api/openapi.json")
+
+
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
@@ -128,7 +131,8 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Content-Security-Policy"] = _CSP
+    if not any(request.url.path.startswith(p) for p in _DOCS_PATHS):
+        response.headers["Content-Security-Policy"] = _CSP
     if not settings.debug:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response

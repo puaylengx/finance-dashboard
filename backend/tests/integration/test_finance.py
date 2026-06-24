@@ -27,12 +27,12 @@ MOCK_DASHBOARD = _mock_dashboard()
 @pytest.mark.asyncio
 class TestFinanceEndpoint:
     async def test_finance_requires_auth(self, client):
-        resp = await client.get("/api/v1/finance")
+        resp = await client.get("/api/v1/budget")
         assert resp.status_code == 401
 
     async def test_finance_requires_fa_role(self, client, division_token):
         resp = await client.get(
-            "/api/v1/finance",
+            "/api/v1/budget",
             headers={"Authorization": f"Bearer {division_token}"},
         )
         assert resp.status_code == 403
@@ -42,7 +42,7 @@ class TestFinanceEndpoint:
             "app.services.finance_service.get_dashboard",
             AsyncMock(return_value=MOCK_DASHBOARD),
         ):
-            resp = await client.get("/api/v1/finance?year=2025", headers=auth_headers_fa)
+            resp = await client.get("/api/v1/budget?year=2025", headers=auth_headers_fa)
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
@@ -50,11 +50,11 @@ class TestFinanceEndpoint:
         assert data["data"]["kpis"]["doc_count"] == 42
 
     async def test_finance_invalid_year(self, client, auth_headers_fa):
-        resp = await client.get("/api/v1/finance?year=1999", headers=auth_headers_fa)
+        resp = await client.get("/api/v1/budget?year=1999", headers=auth_headers_fa)
         assert resp.status_code == 422
 
     async def test_finance_invalid_month(self, client, auth_headers_fa):
-        resp = await client.get("/api/v1/finance?year=2025&month_from=13", headers=auth_headers_fa)
+        resp = await client.get("/api/v1/budget?year=2025&month_from=13", headers=auth_headers_fa)
         assert resp.status_code == 422
 
 
@@ -80,7 +80,7 @@ class TestFinanceErrors:
             "app.services.finance_service.get_dashboard",
             AsyncMock(side_effect=RuntimeError("db down")),
         ):
-            resp = await client.get("/api/v1/finance?year=2025", headers=auth_headers_fa)
+            resp = await client.get("/api/v1/budget?year=2025", headers=auth_headers_fa)
         assert resp.status_code == 500
 
     async def test_budget_service_error_returns_500(self, client, auth_headers_division):
@@ -103,11 +103,11 @@ class TestFinanceErrors:
 @pytest.mark.asyncio
 class TestFinanceTopN:
     async def test_top_n_invalid_zero(self, client, auth_headers_fa):
-        resp = await client.get("/api/v1/finance?year=2025&top_n=0", headers=auth_headers_fa)
+        resp = await client.get("/api/v1/budget?year=2025&top_n=0", headers=auth_headers_fa)
         assert resp.status_code == 422
 
     async def test_top_n_too_large(self, client, auth_headers_fa):
-        resp = await client.get("/api/v1/finance?year=2025&top_n=501", headers=auth_headers_fa)
+        resp = await client.get("/api/v1/budget?year=2025&top_n=501", headers=auth_headers_fa)
         assert resp.status_code == 422
 
     async def test_top_n_limits_table_rows(self, client, auth_headers_fa):
@@ -116,7 +116,7 @@ class TestFinanceTopN:
             AsyncMock(return_value=_mock_dashboard(rows=30)),
         ):
             resp = await client.get(
-                "/api/v1/finance?year=2025&top_n=5", headers=auth_headers_fa
+                "/api/v1/budget?year=2025&top_n=5", headers=auth_headers_fa
             )
         assert resp.status_code == 200
         data = resp.json()

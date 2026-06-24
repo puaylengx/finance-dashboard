@@ -137,11 +137,13 @@ class TestApplyTopN:
         rows = [{"cost_center_description": f"CC{i}", "total": i} for i in range(30)]
         result = {
             "kpis": {},
+            "spending_by_all": list(rows),
             "spending_by_dept": list(rows),
             "spending_by_division": list(rows),
             "pivot_table_by_io_goods": list(rows),
             "pivot_table_by_io_project": list(rows),
             "pivot_table_by_io_work": list(rows),
+            "pivot_table_by_io_activity": list(rows),
         }
         out = _apply_top_n(result, _IO_TABLE_KEYS, top_n=8)
         for key in _IO_TABLE_KEYS:

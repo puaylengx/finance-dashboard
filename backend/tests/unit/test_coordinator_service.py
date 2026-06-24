@@ -91,7 +91,9 @@ class TestAddCoordinator:
         invalidate = AsyncMock()
 
         with patch("app.services.coordinator_service.get_admin_db") as mock_gdb, \
-             patch("app.services.coordinator_service.invalidate_coordinator_cache", invalidate):
+             patch("app.services.coordinator_service.invalidate_coordinator_cache", invalidate), \
+             patch("app.services.coordinator_service.settings") as mock_settings:
+            mock_settings.entra_domain = None
             mock_gdb.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
             mock_gdb.return_value.__aexit__ = AsyncMock(return_value=False)
             await add_coordinator(username="alice", created_by="admin")

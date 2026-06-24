@@ -30,12 +30,17 @@ class TestFinanceEndpoint:
         resp = await client.get("/api/v1/budget")
         assert resp.status_code == 401
 
-    async def test_finance_requires_fa_role(self, client, division_token):
-        resp = await client.get(
-            "/api/v1/budget",
-            headers={"Authorization": f"Bearer {division_token}"},
-        )
-        assert resp.status_code == 403
+    async def test_finance_division_can_access(self, client, division_token):
+        with patch(
+            "app.services.finance_service.get_dashboard",
+            AsyncMock(return_value=MOCK_DASHBOARD),
+        ):
+            resp = await client.get(
+                "/api/v1/budget?year=2025",
+                headers={"Authorization": f"Bearer {division_token}"},
+            )
+        assert resp.status_code == 200
+        assert resp.json()["success"] is True
 
     async def test_finance_fa_access(self, client, auth_headers_fa):
         with patch(

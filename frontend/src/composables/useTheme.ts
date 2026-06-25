@@ -2,7 +2,7 @@ import { ref, watchEffect } from 'vue'
 
 type Theme = 'dark' | 'light'
 
-const theme = ref<Theme>((localStorage.getItem('theme') as Theme) || 'dark')
+const theme = ref<Theme>((localStorage.getItem('theme') as Theme) || 'light')
 
 watchEffect(() => {
   document.documentElement.setAttribute('data-theme', theme.value)

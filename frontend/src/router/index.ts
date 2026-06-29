@@ -15,13 +15,14 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  const session  = getSession()
-  const auth     = session !== null
-  const role     = session?.role ?? ''
-  const position = session?.position ?? null
+  const session     = getSession()
+  const auth        = session !== null
+  const role        = session?.role ?? ''
+  const position    = session?.position ?? null
+  const coordinator = session?.coordinator ?? false
 
-  if (to.meta.requiresAuth && !auth)                                   return next('/login')
-  if (to.meta.requiresAuth && auth && role === 'user') return next('/login')
+  if (to.meta.requiresAuth && !auth)                                              return next('/login')
+  if (to.meta.requiresAuth && auth && role === 'user' && !coordinator) return next('/login')
   if (to.meta.requiresFAPosition && (!isFA(role) || !hasPosition(position)))           return next('/io')
   if (to.path === '/login' && auth)                                    return next('/budget')
 

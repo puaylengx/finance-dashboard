@@ -8,6 +8,7 @@ class LoginRequest(BaseModel):
 
 class EntraLoginRequest(BaseModel):
     access_token: str = Field(..., description="MS Entra ID access token")
+    job_title: str = Field(default="", description="jobTitle จาก Graph API (frontend ส่งมาเป็น fallback)")
 
 
 class DraftLoginRequest(BaseModel):

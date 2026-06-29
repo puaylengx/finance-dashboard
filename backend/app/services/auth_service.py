@@ -185,6 +185,7 @@ async def _fetch_graph_app_token() -> str:
 
 
 async def _get_job_title_from_graph(oid: str) -> str:
+    """App-only: ต้องการ User.Read.All (application permission + admin consent)"""
     try:
         graph_token = await _fetch_graph_app_token()
         async with httpx.AsyncClient(timeout=10) as client:
@@ -195,11 +196,46 @@ async def _get_job_title_from_graph(oid: str) -> str:
             resp.raise_for_status()
             return resp.json().get("jobTitle") or ""
     except Exception as exc:
-        logger.warning("Graph jobTitle fetch failed: %s", exc)
+        logger.warning("Graph app-only jobTitle fetch failed: %s", exc)
         return ""
 
 
-async def login_with_entra_token(access_token: str) -> TokenResponse | None:
+async def _get_job_title_obo(user_access_token: str) -> str:
+    """On-Behalf-Of: แลก user token เป็น Graph token — ต้องการแค่ User.Read (delegated)"""
+    if not settings.azure_client_secret:
+        logger.debug("OBO skipped: AZURE_CLIENT_SECRET not set")
+        return ""
+    try:
+        url = f"https://login.microsoftonline.com/{settings.azure_tenant_id}/oauth2/v2.0/token"
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(url, data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                "client_id": settings.azure_client_id,
+                "client_secret": settings.azure_client_secret,
+                "assertion": user_access_token,
+                "scope": "https://graph.microsoft.com/User.Read",
+                "requested_token_use": "on_behalf_of",
+            })
+            if not resp.is_success:
+                logger.warning("OBO token exchange failed: %s %s", resp.status_code, resp.text)
+                return ""
+            graph_token = resp.json()["access_token"]
+
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                "https://graph.microsoft.com/v1.0/me?$select=jobTitle",
+                headers={"Authorization": f"Bearer {graph_token}"},
+            )
+            if not resp.is_success:
+                logger.warning("OBO Graph /me failed: %s %s", resp.status_code, resp.text)
+                return ""
+            return resp.json().get("jobTitle") or ""
+    except Exception as exc:
+        logger.warning("OBO unexpected error: %s", exc)
+        return ""
+
+
+async def login_with_entra_token(access_token: str, job_title: str = "") -> TokenResponse | None:
     """Validate MS Entra ID token and issue our JWT.
 
     Raises:
@@ -238,22 +274,42 @@ async def login_with_entra_token(access_token: str) -> TokenResponse | None:
         logger.warning("Entra token validation failed: %s", exc)
         return None
 
-    job_title: str = claims.get("jobTitle") or claims.get("job_title") or ""
+    job_title_from_token: str = claims.get("jobTitle") or claims.get("job_title") or ""
     display_name: str = claims.get("name") or claims.get("displayName") or ""
     username: str = claims.get("preferred_username") or claims.get("upn") or display_name
 
-    if not job_title and settings.azure_client_secret:
+    # ลำดับความสำคัญ: token claim → OBO Graph → app-only Graph → frontend fallback
+    effective_job_title = job_title_from_token
+    job_title_source = "token"
+    if not effective_job_title:
+        effective_job_title = await _get_job_title_obo(access_token)
+        if effective_job_title:
+            job_title_source = "graph:obo"
+    if not effective_job_title and settings.azure_client_secret:
         oid: str = claims.get("oid") or ""
         if oid:
-            job_title = await _get_job_title_from_graph(oid)
+            effective_job_title = await _get_job_title_from_graph(oid)
+            if effective_job_title:
+                job_title_source = "graph:app"
+    if not effective_job_title and job_title:
+        effective_job_title = job_title
+        job_title_source = "frontend"
 
-    extracted = extract_claims(job_title)
+    logger.info("Entra job_title: user=%s source=%s job_title='%s'",
+                username, job_title_source if effective_job_title else "none", effective_job_title)
+
+    if not effective_job_title:
+        logger.warning("Entra login denied: %s (job_title not found)", username)
+        return None
+
+    extracted = extract_claims(effective_job_title)
     role = extracted["role"]
     position = extracted["position"]
 
     if has_access_by_position(position):
         token = create_access_token(username, role, position=position)
-        logger.info("Entra login (position): %s → role=%s pos=%s", username, role, position)
+        logger.info("Entra login OK (position): %s → role=%s pos=%s job_title='%s'",
+                    username, role, position, effective_job_title)
         return TokenResponse(
             token=token,
             expires_in=settings.jwt_expires_seconds,
@@ -265,7 +321,8 @@ async def login_with_entra_token(access_token: str) -> TokenResponse | None:
 
     if await is_coordinator(username):
         token = create_access_token(username, role, coordinator=True)
-        logger.info("Entra login (coordinator): %s → role=%s", username, role)
+        logger.info("Entra login OK (coordinator): %s → role=%s job_title='%s'",
+                    username, role, effective_job_title)
         return TokenResponse(
             token=token,
             expires_in=settings.jwt_expires_seconds,
@@ -274,7 +331,8 @@ async def login_with_entra_token(access_token: str) -> TokenResponse | None:
             name=display_name,
         )
 
-    logger.warning("Entra login denied: %s (job_title='%s')", username, job_title)
+    logger.warning("Entra login denied: %s (job_title='%s', role=%s — no position, not coordinator)",
+                   username, effective_job_title, role)
     return None
 
 

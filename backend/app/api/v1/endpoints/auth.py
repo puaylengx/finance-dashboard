@@ -68,7 +68,7 @@ async def login(request: Request, form: OAuth2PasswordRequestForm = Depends()):
 @limiter.limit(settings.rate_limit_auth)
 async def entra_login(request: Request, body: EntraLoginRequest):
     try:
-        result = await login_with_entra_token(body.access_token)
+        result = await login_with_entra_token(body.access_token, body.job_title)
     except EntraNotConfiguredError as exc:
         hint = " (ตั้งค่า DRAFT_MODE=true แล้วใช้ /api/v1/auth/draft-login)" if settings.draft_mode else ""
         raise HTTPException(

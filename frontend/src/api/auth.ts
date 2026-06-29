@@ -8,8 +8,11 @@ export async function draftLogin(payload: DraftLoginRequest): Promise<TokenRespo
   return data.data
 }
 
-export async function entraLogin(accessToken: string): Promise<TokenResponse> {
-  const { data } = await apiClient.post<ApiResponse<TokenResponse>>(`${BASE}/entra-login`, { access_token: accessToken })
+export async function entraLogin(accessToken: string, jobTitle = ''): Promise<TokenResponse> {
+  const { data } = await apiClient.post<ApiResponse<TokenResponse>>(`${BASE}/entra-login`, {
+    access_token: accessToken,
+    job_title: jobTitle,
+  })
   return data.data
 }
 

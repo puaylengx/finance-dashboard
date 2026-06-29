@@ -328,6 +328,24 @@ async function handleDraftLogin() {
   } finally { loading.value = false }
 }
 
+async function fetchJobTitleFromGraph(account: import('@azure/msal-browser').AccountInfo): Promise<string> {
+  try {
+    const graphResult = await msalInstance.acquireTokenSilent({
+      scopes: ['https://graph.microsoft.com/User.Read'],
+      account,
+    })
+    const resp = await fetch(
+      'https://graph.microsoft.com/v1.0/me?$select=jobTitle',
+      { headers: { Authorization: `Bearer ${graphResult.accessToken}` } },
+    )
+    if (!resp.ok) return ''
+    const profile = await resp.json()
+    return profile.jobTitle ?? ''
+  } catch {
+    return ''
+  }
+}
+
 async function handleMicrosoftLogin(isRetry = false) {
   error.value = ''; loading.value = true
   try {
@@ -337,7 +355,9 @@ async function handleMicrosoftLogin(isRetry = false) {
       prompt: 'select_account',
     })
     console.log('[MSAL] popup ok, account:', result.account?.username, 'token len:', result.accessToken.length)
-    const session = await entraLogin(result.accessToken)
+    const jobTitle = result.account ? await fetchJobTitleFromGraph(result.account) : ''
+    console.log('[MSAL] jobTitle from Graph:', jobTitle || '(empty)')
+    const session = await entraLogin(result.accessToken, jobTitle)
     console.log('[MSAL] backend ok, role:', session.role)
     auth.setUser(session.token, session, result.account?.username ?? result.account?.name ?? '')
     router.push('/budget')

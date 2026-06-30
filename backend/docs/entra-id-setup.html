@@ -64,10 +64,6 @@
     .box-error{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);}
     .box-error::before{content:"🚫  ";font-size:14px;}
 
-    /* Screenshot placeholder */
-    .screen{background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--muted);margin:6px 0;}
-    .screen strong{color:var(--text);}
-
     /* Flow diagram */
     .flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:12px 0;}
     .flow-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:12px;text-align:center;min-width:110px;}
@@ -91,40 +87,6 @@
     ::-webkit-scrollbar-track{background:var(--bg);}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
     @media(max-width:768px){nav{display:none;}main{margin-left:0;padding:20px 14px;}}
-    @media print{
-      *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-      html,body{background:#fff!important;color:#111!important;}
-      nav{display:none!important;}
-      header{display:none!important;}
-      main{margin-left:0!important;padding:16px!important;max-width:100%!important;}
-      h1{background:none!important;-webkit-text-fill-color:#111!important;color:#111!important;}
-      h2{border-bottom:1px solid #ccc;color:#111!important;}
-      .summary-grid{grid-template-columns:repeat(6,1fr);}
-      .stat{background:#f5f5f5!important;border:1px solid #ddd!important;}
-      .stat .val{font-size:22px!important;}
-      .legend{background:#f5f5f5!important;border:1px solid #ddd!important;}
-      table{page-break-inside:auto;}
-      tr{page-break-inside:avoid;}
-      th{background:#eee!important;color:#444!important;}
-      td{border-bottom:1px solid #e0e0e0!important;}
-      .pass{background:#dcfce7!important;color:#166534!important;border-color:#86efac!important;}
-      .partial{background:#fef9c3!important;color:#854d0e!important;border-color:#fde047!important;}
-      .fail{background:#fee2e2!important;color:#991b1b!important;border-color:#fca5a5!important;}
-      .defer{background:#dbeafe!important;color:#1e40af!important;border-color:#93c5fd!important;}
-      .p1{background:#fee2e2!important;color:#991b1b!important;}
-      .p2{background:#fef9c3!important;color:#854d0e!important;}
-      .p3{background:#dbeafe!important;color:#1e40af!important;}
-      .p4{background:#f3f4f6!important;color:#374151!important;}
-      a{color:#1d4ed8!important;}
-      a.cat-link{color:#1d4ed8!important;}
-      code{background:#f0f9ff!important;color:#0369a1!important;}
-      [style*="--green"],[style*="color:var(--green)"]{color:#166534!important;}
-      [style*="--yellow"],[style*="color:var(--yellow)"]{color:#854d0e!important;}
-      [style*="--red"],[style*="color:var(--red)"]{color:#991b1b!important;}
-      [style*="--blue"],[style*="color:var(--blue)"]{color:#1e40af!important;}
-      [style*="--muted"],[style*="color:var(--muted)"]{color:#4b5563!important;}
-      div[style*="background:var(--surface)"]{background:#f5f5f5!important;border-color:#ddd!important;color:#374151!important;}
-    }
   </style>
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
 </head>
@@ -167,27 +129,30 @@
   <div style="margin-bottom:36px">
     <h1 style="font-size:28px;font-weight:800;background:linear-gradient(135deg,#0078d4,var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">Microsoft Entra ID Setup</h1>
     <p style="color:var(--muted);font-size:14px">Seamless Dashboard API &nbsp;·&nbsp; คู่มือตั้งค่า Authentication ด้วย Microsoft Entra ID (Azure AD) แบบ end-to-end</p>
-    <p style="color:var(--muted);font-size:12px;margin-top:4px">อัปเดต 2026-06-23 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ทำตามลำดับ Step 1 → 6 เพื่อผลลัพธ์ที่ถูกต้อง</strong></p>
+    <p style="color:var(--muted);font-size:12px;margin-top:4px">อัปเดต 2026-06-30 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ทำตามลำดับ Step 1 → 8 เพื่อผลลัพธ์ที่ถูกต้อง</strong></p>
   </div>
 
   <!-- Auth Flow Overview -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:28px;">
     <h4 style="margin-bottom:14px">Auth Flow — ภาพรวม</h4>
     <div class="flow">
-      <div class="flow-box">User<br><span style="font-size:10px;color:var(--muted)">คลิก Login</span></div>
+      <div class="flow-box">User<br><span style="font-size:10px;color:var(--muted)">คลิก "เข้าสู่ระบบด้วย Microsoft"</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-box highlight">MSAL Popup<br><span style="font-size:10px">Azure Login Page</span></div>
+      <div class="flow-box highlight">MSAL loginPopup<br><span style="font-size:10px">Azure Login Page</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-box">Access Token<br><span style="font-size:10px;color:var(--muted)">(มี jobTitle)</span></div>
+      <div class="flow-box">Access Token<br><span style="font-size:10px;color:var(--muted)">aud = api://{client-id}</span></div>
       <div class="flow-arrow">→</div>
       <div class="flow-box">POST /auth/<br>entra-login</div>
       <div class="flow-arrow">→</div>
       <div class="flow-box">Validate JWKS<br><span style="font-size:10px;color:var(--muted)">ที่ Backend</span></div>
       <div class="flow-arrow">→</div>
+      <div class="flow-box">Resolve jobTitle<br><span style="font-size:10px;color:var(--muted)">token → OBO → app-only → frontend</span></div>
+      <div class="flow-arrow">→</div>
       <div class="flow-box highlight">JWT<br><span style="font-size:10px">ของระบบ</span></div>
     </div>
     <p style="margin-top:10px;font-size:12px;color:var(--muted)">
-      Frontend ใช้ MSAL (Authorization Code + PKCE) → ได้ MS Access Token → ส่งมาให้ Backend validate กับ Azure JWKS → Backend ออก JWT ของระบบเองที่ใช้ต่อ
+      Frontend ใช้ MSAL Browser (popup, Authorization Code + PKCE) ขอ access token ของ <strong>API ตัวเอง</strong> (scope <code>api://{client-id}/access_as_user</code>) ไม่ใช่ Graph token ตรง ๆ —
+      Backend validate token นี้กับ Azure JWKS แล้วค่อย resolve <code>jobTitle</code> จากหลายแหล่งตามลำดับความสำคัญ (ดู Step 7)
     </p>
   </div>
 
@@ -196,13 +161,18 @@
     <div class="toc-title">สารบัญ</div>
     <div class="toc">
       <a href="#step1">Step 1 — App Registration (Azure Portal)</a>
-      <a href="#step2">Step 2 — Redirect URI (SPA)</a>
-      <a href="#step3">Step 3 — Token Claims (jobTitle)</a>
-      <a href="#step4">Step 4 — API Permissions</a>
-      <a href="#step5">Step 5 — Backend .env</a>
-      <a href="#step6">Step 6 — Frontend MSAL Setup</a>
-      <a href="#step7">Step 7 — ตั้งค่า jobTitle ของ Users</a>
+      <a href="#step2">Step 2 — Authentication (SPA + Redirect URI)</a>
+      <a href="#step3">Step 3 — Expose an API (access_as_user scope)</a>
+      <a href="#step4">Step 4 — Certificates &amp; Secrets</a>
+      <a href="#step5">Step 5 — API Permissions</a>
+      <a href="#step6">Step 6 — Token Claims (jobTitle, optional)</a>
+      <a href="#step7">Step 7 — Backend .env</a>
+      <a href="#step8">Step 8 — Frontend .env + MSAL Setup</a>
+      <a href="#jobtitle">jobTitle Resolution Chain</a>
+      <a href="#parsing">job_title → role / position Parsing</a>
+      <a href="#coordinator">Coordinator Fallback (ไม่มี position)</a>
       <a href="#troubleshoot">Troubleshooting</a>
+      <a href="#checklist">Checklist ก่อน Go Live</a>
     </div>
   </div>
 
@@ -230,9 +200,9 @@
 
       <p>กด <strong>Register</strong> → หน้า Overview จะแสดงข้อมูล:</p>
       <div class="box box-ok">
-        คัดลอกค่าสำคัญจากหน้า Overview:<br>
-        <code>Application (client) ID</code> → ใช้เป็น <code>AZURE_CLIENT_ID</code><br>
-        <code>Directory (tenant) ID</code> → ใช้เป็น <code>AZURE_TENANT_ID</code>
+        คัดลอกค่าสำคัญจากหน้า Overview — ใช้ตอนตั้งค่า <code>.env</code> ทั้ง backend และ frontend:<br>
+        <code>Application (client) ID</code> → ใช้เป็น <code>AZURE_CLIENT_ID</code> / <code>VITE_AZURE_CLIENT_ID</code><br>
+        <code>Directory (tenant) ID</code> → ใช้เป็น <code>AZURE_TENANT_ID</code> / <code>VITE_AZURE_TENANT_ID</code>
       </div>
     </div>
   </div>
@@ -241,7 +211,7 @@
   <div class="step" id="step2">
     <div class="step-head">
       <div class="step-num azure">2</div>
-      <h3>Redirect URI — เลือก Platform เป็น SPA</h3>
+      <h3>Authentication — Platform = SPA + Redirect URI ของ Popup Handler</h3>
       <span class="tag tag-azure">Azure Portal</span>
     </div>
     <div class="step-body">
@@ -252,14 +222,14 @@
       </ol>
 
       <div class="box box-warn">
-        <strong>ต้องเลือก SPA ไม่ใช่ Web</strong> — frontend ใช้ <code>@azure/msal-browser</code> ซึ่งใช้ Authorization Code + PKCE ทำงานใน browser โดยตรง ถ้าเลือก Web จะเจอ CORS error
+        <strong>ต้องเลือก SPA ไม่ใช่ Web</strong> — frontend ใช้ <code>@azure/msal-browser</code> (Authorization Code + PKCE) ทำงานใน browser โดยตรง ถ้าเลือก Web จะเจอ CORS error ตอน <code>loginPopup()</code>
       </div>
 
       <table>
         <tr><th>Platform</th><th>Flow</th><th>ใช้ได้กับ MSAL Browser</th></tr>
         <tr>
           <td><span class="pill pill-spa">SPA</span> Single-page application</td>
-          <td>Auth Code + PKCE (ไม่ต้อง client secret)</td>
+          <td>Auth Code + PKCE (ไม่ต้อง client secret ฝั่ง browser)</td>
           <td style="color:var(--green)">✓ ถูกต้อง</td>
         </tr>
         <tr>
@@ -269,16 +239,16 @@
         </tr>
       </table>
 
-      <p>ใส่ Redirect URI ตามสภาพแวดล้อม:</p>
+      <p>ระบบนี้ใช้ <strong>popup flow</strong> (ไม่ใช่ redirect flow) — popup window จะโหลดหน้า <code>auth-redirect.html</code> ของ frontend เอง แล้วส่งผลลัพธ์กลับไปยังหน้าหลักผ่าน <code>BroadcastChannel</code> (ดู Step 8.4) ดังนั้น Redirect URI ที่ตั้งใน Azure ต้องชี้ไปที่ไฟล์นี้โดยตรง ไม่ใช่ origin เปล่า ๆ:</p>
       <table>
         <tr><th>สภาพแวดล้อม</th><th>Redirect URI</th></tr>
-        <tr><td>Development</td><td><code>http://localhost:5173</code></td></tr>
-        <tr><td>Staging</td><td><code>https://staging.your-domain.com</code></td></tr>
-        <tr><td>Production</td><td><code>https://your-domain.com</code></td></tr>
+        <tr><td>Development</td><td><code>http://localhost:5173/auth-redirect.html</code></td></tr>
+        <tr><td>Staging</td><td><code>https://staging.your-domain.com/auth-redirect.html</code></td></tr>
+        <tr><td>Production</td><td><code>https://your-domain.com/auth-redirect.html</code></td></tr>
       </table>
 
       <div class="box box-info">
-        สามารถเพิ่ม URI ได้หลายตัวพร้อมกัน แนะนำใส่ทั้ง dev และ production ในครั้งเดียว
+        เพิ่ม URI ได้หลายตัวพร้อมกัน — แนะนำใส่ทั้ง dev และ production <code>/auth-redirect.html</code> ในครั้งเดียว
       </div>
 
       <p>เลื่อนลงหา <strong>Implicit grant and hybrid flows</strong> → <strong>ไม่ต้องติ๊ก</strong> ทั้ง Access tokens และ ID tokens (SPA ใช้ PKCE แทน)</p>
@@ -290,11 +260,107 @@
   <div class="step" id="step3">
     <div class="step-head">
       <div class="step-num azure">3</div>
-      <h3>Token Configuration — เพิ่ม jobTitle Claim</h3>
+      <h3>Expose an API — เปิด scope ที่ frontend ใช้ขอ access token</h3>
       <span class="tag tag-azure">Azure Portal</span>
     </div>
     <div class="step-body">
-      <p>Backend ใช้ <code>jobTitle</code> จาก Access Token เพื่อ extract role และ position ของ user</p>
+      <p>Frontend ไม่ได้ขอ access token ของ Microsoft Graph ตรง ๆ — มันขอ token ของ <strong>App ตัวเอง</strong> เพื่อส่งให้ backend validate
+      (scope ที่ frontend ใช้: <code>api://{client-id}/access_as_user</code> — ดู <code>frontend/src/lib/msalConfig.ts</code>) จึงต้องเปิด API นี้ใน Azure Portal ก่อน ไม่งั้น <code>loginPopup()</code> จะ error ว่า scope ไม่ถูกต้อง</p>
+
+      <ol>
+        <li>เลือก <strong>Expose an API</strong> จาก sidebar</li>
+        <li>คลิก <strong>Set</strong> ข้าง <strong>Application ID URI</strong> → ปล่อยค่า default <code>api://{client-id}</code> → <strong>Save</strong></li>
+        <li>คลิก <strong>+ Add a scope</strong></li>
+      </ol>
+
+      <table>
+        <tr><th>Field</th><th>ค่าที่ตั้ง</th></tr>
+        <tr><td>Scope name</td><td><code>access_as_user</code></td></tr>
+        <tr><td>Who can consent</td><td>Admins and users</td></tr>
+        <tr><td>Admin consent display name / description</td><td>เช่น "Access Seamless Dashboard API as the signed-in user"</td></tr>
+        <tr><td>State</td><td>Enabled</td></tr>
+      </table>
+
+      <div class="box box-warn">
+        ชื่อ scope ต้องตรงกับที่ frontend ขอเป๊ะ ๆ คือ <code>access_as_user</code> — ถ้าตั้งชื่ออื่นต้องไปแก้ <code>loginScopes</code> ใน <code>msalConfig.ts</code> ด้วย
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" id="step4">
+    <div class="step-head">
+      <div class="step-num azure">4</div>
+      <h3>Certificates &amp; Secrets — สร้าง Client Secret</h3>
+      <span class="tag tag-azure">Azure Portal</span>
+    </div>
+    <div class="step-body">
+      <p>Backend ต้องใช้ client secret เพื่อแลก token แทนผู้ใช้ (On-Behalf-Of) และเพื่อเรียก Microsoft Graph แบบ app-only — เป็น fallback สำหรับตอนที่ <code>jobTitle</code> ไม่ติดมาใน access token (ดู Step 7 และหัวข้อ jobTitle Resolution Chain)</p>
+
+      <ol>
+        <li>เลือก <strong>Certificates &amp; secrets</strong> จาก sidebar</li>
+        <li>คลิก <strong>+ New client secret</strong></li>
+        <li>ตั้งชื่อ + อายุ (แนะนำ 6–12 เดือน แล้วตั้ง reminder ต่ออายุ)</li>
+        <li>คลิก <strong>Add</strong></li>
+      </ol>
+
+      <div class="box box-warn">
+        <strong>คัดลอกค่าใน column "Value" ทันที</strong> — ไม่ใช่ "Secret ID" — ค่านี้จะแสดงครั้งเดียว ปิดหน้าไปแล้วดูซ้ำไม่ได้ ต้องสร้างใหม่ถ้าพลาด
+      </div>
+
+      <p>ค่านี้คือ <code>AZURE_CLIENT_SECRET</code> ใน backend <code>.env</code> (ดู Step 7)</p>
+
+      <div class="box box-info">
+        <strong>ไม่สร้าง secret นี้ได้ไหม?</strong> ได้ — ระบบยังทำงานได้ถ้า Entra token มี <code>jobTitle</code> claim ติดมาเอง (Step 6) หรือถ้า frontend ดึง jobTitle จาก Graph สำเร็จและส่งมาเป็น fallback แต่ทาง On-Behalf-Of (แนะนำที่สุด เพราะ permission scope แคบสุด) จะไม่ทำงาน
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step" id="step5">
+    <div class="step-head">
+      <div class="step-num azure">5</div>
+      <h3>API Permissions — ให้สิทธิ์ที่จำเป็น</h3>
+      <span class="tag tag-azure">Azure Portal</span>
+    </div>
+    <div class="step-body">
+      <p>เลือก <strong>API permissions</strong> จาก sidebar แล้วเพิ่มทั้งหมดนี้:</p>
+
+      <table>
+        <tr><th>API</th><th>Permission</th><th>Type</th><th>เหตุผล</th><th>จำเป็น?</th></tr>
+        <tr><td>Seamless Dashboard (ตัวเอง)</td><td><code>access_as_user</code></td><td>Delegated</td><td>token ที่ frontend ใช้คุยกับ backend</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+        <tr><td>Microsoft Graph</td><td><code>openid</code></td><td>Delegated</td><td>OIDC login flow พื้นฐาน</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+        <tr><td>Microsoft Graph</td><td><code>profile</code></td><td>Delegated</td><td>ดึง name/claims พื้นฐานจาก Entra</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+        <tr><td>Microsoft Graph</td><td><code>User.Read</code></td><td>Delegated</td><td>ใช้โดย frontend (ดึง jobTitle ตรงจาก browser) <em>และ</em> โดย backend OBO flow</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
+        <tr><td>Microsoft Graph</td><td><code>User.Read.All</code></td><td>Application</td><td>app-only Graph fallback (backend ค้นหา jobTitle จาก <code>oid</code> โดยตรง) — ใช้เฉพาะตอน token claim และ OBO ใช้ไม่ได้</td><td style="color:var(--yellow)">ทางเลือก</td></tr>
+      </table>
+
+      <p>วิธีเพิ่ม:</p>
+      <ol>
+        <li><code>access_as_user</code>: คลิก <strong>+ Add a permission</strong> → tab <strong>APIs my organization uses</strong> → ค้นหาชื่อ App ของตัวเอง (<code>seamless-dashboard</code>) → Delegated → ติ๊ก <code>access_as_user</code></li>
+        <li><code>openid / profile / User.Read</code>: <strong>+ Add a permission</strong> → <strong>Microsoft Graph</strong> → <strong>Delegated permissions</strong> → ค้นหาแล้วติ๊กทั้ง 3</li>
+        <li><code>User.Read.All</code> (ถ้าต้องการ app-only fallback): <strong>+ Add a permission</strong> → <strong>Microsoft Graph</strong> → <strong>Application permissions</strong> → ค้นหา <code>User.Read.All</code></li>
+      </ol>
+
+      <div class="box box-info">
+        <strong>Grant admin consent</strong> — คลิก <strong>Grant admin consent for [organization]</strong> แล้วกด <strong>Yes</strong> (ต้องมีสิทธิ์ Global Admin หรือ Application Admin)<br><br>
+        <code>User.Read</code> (delegated) ต้อง consent ก่อนถึงจะใช้ On-Behalf-Of (Step 7) ได้สำเร็จ — ถ้าไม่ consent backend จะ log <code>OBO token exchange failed</code> แล้วตกไปลำดับถัดไปในการหา jobTitle<br><br>
+        <code>User.Read.All</code> (application) <strong>ต้อง</strong> admin consent เสมอ ไม่ว่า user คนไหนจะ login ก็ตาม
+      </div>
+
+      <p>หลัง grant — status column จะเปลี่ยนเป็น <span style="color:var(--green)">Granted for [org]</span></p>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="step6">
+    <div class="step-head">
+      <div class="step-num azure">6</div>
+      <h3>Token Configuration — เพิ่ม jobTitle Claim (แนะนำ แต่ไม่บังคับ)</h3>
+      <span class="tag tag-azure">Azure Portal</span>
+    </div>
+    <div class="step-body">
+      <p>ถ้า access token มี <code>jobTitle</code> claim ติดมาด้วย backend จะใช้ค่านี้ทันทีโดยไม่ต้องเรียก Graph เพิ่ม (เร็วที่สุด ไม่มี network round-trip เพิ่ม) — แต่ถ้าข้ามขั้นนี้ ระบบยังทำงานได้ผ่าน On-Behalf-Of / app-only Graph fallback ใน Step 4–5</p>
 
       <div class="box box-warn">
         <strong><code>job_title</code> ไม่ปรากฏในรายการ optional claim ของ UI</strong> — ต้องเพิ่มผ่าน Manifest (JSON) โดยตรง
@@ -324,12 +390,12 @@
       </ol>
 
       <div class="box box-info">
-        <strong>ชื่อ claim ใน token คือ <code>job_title</code> (snake_case)</strong> — Backend รองรับทั้ง <code>job_title</code> และ <code>jobTitle</code> แล้วใน <code>auth_service.py</code><br><br>
+        <strong>ชื่อ claim ใน token คือ <code>job_title</code> (snake_case)</strong> — Backend รองรับทั้ง <code>job_title</code> และ <code>jobTitle</code> (ดู <code>auth_service.py</code> → <code>claims.get("jobTitle") or claims.get("job_title")</code>)<br><br>
         <strong>ทำไมต้องเป็น Access token ไม่ใช่ ID token?</strong><br>
-        Backend รับ Access Token จาก MSAL แล้ว validate กับ Azure JWKS → claim ต้องอยู่ใน Access Token
+        Backend รับ access token จาก MSAL (scope <code>access_as_user</code>) แล้ว validate กับ Azure JWKS — claim ต้องอยู่ใน access token เดียวกันนี้
       </div>
 
-      <p>ตรวจสอบ claim ใน token — หลัง login ใหม่ ให้วาง access token ที่ได้จาก MSAL ที่ <strong>jwt.ms</strong> แล้วดูว่ามี field <code>job_title</code> ปรากฏหรือไม่</p>
+      <p>ตรวจสอบ claim ใน token — วาง access token ที่ได้จาก MSAL ที่ <strong>jwt.ms</strong> แล้วดูว่ามี field <code>job_title</code> ปรากฏหรือไม่</p>
 
       <div class="box box-warn">
         ถ้า login อยู่แล้ว → ต้อง <strong>logout แล้ว login ใหม่</strong> เพื่อให้ Azure ออก token ใหม่ที่มี claim ครบ
@@ -337,198 +403,281 @@
     </div>
   </div>
 
-  <!-- STEP 4 -->
-  <div class="step" id="step4">
+  <!-- STEP 7 -->
+  <div class="step" id="step7">
     <div class="step-head">
-      <div class="step-num azure">4</div>
-      <h3>API Permissions — ให้สิทธิ์ที่จำเป็น</h3>
-      <span class="tag tag-azure">Azure Portal</span>
-    </div>
-    <div class="step-body">
-      <ol>
-        <li>เลือก <strong>API permissions</strong> จาก sidebar</li>
-        <li>คลิก <strong>+ Add a permission</strong> → เลือก <strong>Microsoft Graph</strong></li>
-        <li>เลือก <strong>Delegated permissions</strong></li>
-        <li>ค้นหาและติ๊ก permission ต่อไปนี้:</li>
-      </ol>
-
-      <table>
-        <tr><th>Permission</th><th>เหตุผล</th><th>จำเป็น?</th></tr>
-        <tr><td><code>openid</code></td><td>OIDC login flow พื้นฐาน</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
-        <tr><td><code>profile</code></td><td>ดึง name, jobTitle จาก Entra</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
-        <tr><td><code>email</code></td><td>ดึง email / UPN สำหรับ username</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
-        <tr><td><code>User.Read</code></td><td>อ่านข้อมูล user ที่ login</td><td style="color:var(--green)">✓ จำเป็น</td></tr>
-      </table>
-
-      <p>กด <strong>Add permissions</strong></p>
-
-      <div class="box box-info">
-        <strong>Grant admin consent</strong> — ถ้า org ต้องการ admin consent ให้คลิก <strong>Grant admin consent for [organization]</strong> แล้วกด <strong>Yes</strong> (ต้องมีสิทธิ์ Global Admin หรือ Application Admin)
-      </div>
-
-      <p>หลัง grant — status column จะเปลี่ยนเป็น <span style="color:var(--green)">Granted for [org]</span></p>
-    </div>
-  </div>
-
-  <!-- STEP 5 -->
-  <div class="step" id="step5">
-    <div class="step-head">
-      <div class="step-num backend">5</div>
+      <div class="step-num backend">7</div>
       <h3>Backend — ตั้งค่า .env</h3>
       <span class="tag tag-backend">Backend</span>
     </div>
     <div class="step-body">
-      <p>เปิดไฟล์ <code>backend/.env</code> แล้วใส่ค่าจาก Step 1:</p>
+      <p>เปิดไฟล์ <code>backend/.env</code> แล้วใส่ค่าจาก Step 1–4:</p>
       <pre><span style="color:var(--muted)"># Microsoft Entra ID</span>
-AZURE_TENANT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>   <span style="color:var(--muted)"># Directory (tenant) ID</span>
-AZURE_CLIENT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>   <span style="color:var(--muted)"># Application (client) ID</span>
+AZURE_TENANT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+AZURE_CLIENT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+AZURE_CLIENT_SECRET=<span style="color:var(--yellow)">your-client-secret</span>
 AZURE_AUTHORITY=https://login.microsoftonline.com/<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
-
-<span style="color:var(--muted)"># Optional — ถ้า jobTitle ไม่ได้อยู่ใน token ให้ fallback ดึงจาก Graph API</span>
-AZURE_CLIENT_SECRET=<span style="color:var(--yellow)">your-client-secret</span>   <span style="color:var(--muted)"># ต้องสร้าง client secret ใน Entra App ก่อน</span>
-
-<span style="color:var(--muted)"># Optional — domain สำหรับ UPN coordinator lookup</span>
-ENTRA_DOMAIN=company.com   <span style="color:var(--muted)"># เช่น "mahidol.ac.th" — auto-build UPN เมื่อ add coordinator</span>
+ENTRA_DOMAIN=company.com
 
 <span style="color:var(--muted)"># ปิด Draft Mode เมื่อพร้อม production</span>
 DRAFT_MODE=false
 APP_ENV=production</pre>
 
+      <table>
+        <tr><th>ตัวแปร</th><th>ใช้ทำอะไร / ใช้ที่ไหนในโค้ด</th><th>บังคับ?</th></tr>
+        <tr>
+          <td><code>AZURE_TENANT_ID</code></td>
+          <td>Directory (tenant) ID จาก Step 1 — ใช้สร้าง URL ดึง JWKS (<code>.../discovery/v2.0/keys</code>) สำหรับ verify signature ของ access token, และ URL ขอ token ตอน On-Behalf-Of / app-only Graph (<code>auth_service.py</code>)</td>
+          <td style="color:var(--green)">จำเป็น</td>
+        </tr>
+        <tr>
+          <td><code>AZURE_CLIENT_ID</code></td>
+          <td>Application (client) ID จาก Step 1 — ใช้ตรวจ <code>aud</code> claim ของ token ที่ frontend ส่งมา (ต้องตรงกับ <code>{client-id}</code> หรือ <code>api://{client-id}</code>) ไม่ใช่ token นี้จะถูก reject</td>
+          <td style="color:var(--green)">จำเป็น</td>
+        </tr>
+        <tr>
+          <td><code>AZURE_CLIENT_SECRET</code></td>
+          <td>จาก Step 4 — เปิดใช้ 2 fallback path ในการหา <code>jobTitle</code>: (1) On-Behalf-Of แลก access token ของผู้ใช้เป็น Graph token (ต้องการแค่ <code>User.Read</code> delegated), (2) app-only Graph ด้วย client_credentials (ต้องการ <code>User.Read.All</code> application + admin consent) ถ้าไม่ตั้งค่านี้ ระบบจะข้ามทั้ง 2 path และพึ่ง token claim หรือ frontend fallback เท่านั้น</td>
+          <td style="color:var(--yellow)">ทางเลือก แต่แนะนำให้ตั้ง</td>
+        </tr>
+        <tr>
+          <td><code>AZURE_AUTHORITY</code></td>
+          <td>เก็บไว้สำหรับ config/documentation — ปัจจุบันโค้ด backend ยังไม่ได้อ่านค่านี้ไปใช้ตรง ๆ (สร้าง URL จาก <code>AZURE_TENANT_ID</code> เองทุกที่) ตั้งไว้ตามรูปแบบเผื่อใช้ในอนาคตได้ ไม่กระทบ flow ปัจจุบัน</td>
+          <td style="color:var(--muted)">ไม่บังคับ</td>
+        </tr>
+        <tr>
+          <td><code>ENTRA_DOMAIN</code></td>
+          <td>เช่น <code>company.com</code> — ใช้ตอน <strong>เพิ่ม coordinator</strong> ผ่าน <code>/admin/coordinators</code>: backend auto-build <code>upn = username@ENTRA_DOMAIN</code> เก็บคู่กับ username ใน <code>finance_coordinator</code> table เพื่อให้ตรงกับ <code>preferred_username</code> ที่ Entra ส่งมาตอน login จริง (ไม่ต้องให้แอดมินพิมพ์ UPN เต็มเอง)</td>
+          <td style="color:var(--yellow)">ทางเลือก — จำเป็นถ้าจะใช้ coordinator fallback แบบ UPN</td>
+        </tr>
+        <tr>
+          <td><code>DRAFT_MODE</code></td>
+          <td>เปิด/ปิด endpoint <code>/auth/draft-login</code> ที่จำลองผลลัพธ์เดียวกับ Entra login โดยไม่ต้องต่อ Azure จริง (ใช้ dev/QA) <code>true</code>=เปิด, <code>false</code>=ปิด (404)</td>
+          <td style="color:var(--green)">ต้องเป็น <code>false</code> ใน production</td>
+        </tr>
+      </table>
+
       <div class="box box-warn">
         <strong>APP_ENV=production + DRAFT_MODE=true → App จะ refuse to start</strong><br>
-        backend มี guard ใน <code>config.py</code> ที่ block combination นี้ไว้ ถ้ายังทดสอบอยู่ให้ใช้ <code>APP_ENV=staging</code>
+        มี guard ใน <code>config.py</code> (<code>validate_production_secrets</code>) ที่ block combination นี้ไว้ ถ้ายังทดสอบอยู่ให้ใช้ <code>APP_ENV=staging</code>
       </div>
 
       <p>Restart backend หลังแก้ไข <code>.env</code>:</p>
       <pre>cd backend
 uvicorn app.main:app --reload</pre>
 
-      <p>ทดสอบว่า Backend อ่าน config ถูกต้อง:</p>
-      <pre>curl http://localhost:8000/health | python3 -m json.tool</pre>
-
       <div class="box box-info">
         Backend validate token โดย fetch JWKS จาก:<br>
-        <code>https://login.microsoftonline.com/{AZURE_TENANT_ID}/discovery/v2.0/keys</code><br>
-        ตรวจ audience ทั้ง <code>{CLIENT_ID}</code> และ <code>api://{CLIENT_ID}</code> รูปแบบ<br>
-        ถ้าตั้ง <code>AZURE_CLIENT_SECRET</code>: fallback ดึง jobTitle จาก Graph API ด้วย client_credentials flow (app token cached)
+        <code>https://login.microsoftonline.com/{AZURE_TENANT_ID}/discovery/v2.0/keys</code> (cache ใน memory จนกว่า process restart, มี circuit breaker หยุดยิง 60s หลัง fail 3 ครั้งติด)<br>
+        ตรวจ audience ทั้ง <code>{CLIENT_ID}</code> และ <code>api://{CLIENT_ID}</code> รูปแบบ
       </div>
     </div>
   </div>
 
-  <!-- STEP 6 -->
-  <div class="step" id="step6">
+  <!-- STEP 8 -->
+  <div class="step" id="step8">
     <div class="step-head">
-      <div class="step-num frontend">6</div>
-      <h3>Frontend — ติดตั้ง MSAL และเชื่อม Login</h3>
+      <div class="step-num frontend">8</div>
+      <h3>Frontend — ตั้งค่า .env และเชื่อม MSAL</h3>
       <span class="tag tag-frontend">Frontend</span>
     </div>
     <div class="step-body">
 
-      <h3>6.1 ติดตั้ง Package</h3>
+      <h3>8.1 ติดตั้ง Package</h3>
       <pre>cd frontend
-npm install @azure/msal-browser @azure/msal-react</pre>
+npm install @azure/msal-browser</pre>
+      <p>โปรเจกต์นี้ใช้ <code>@azure/msal-browser</code> ตรง ๆ (ไม่ผ่าน <code>@azure/msal-react</code> หรือ <code>@azure/msal-vue</code>) เพราะเป็น Vue app — เรียก <code>PublicClientApplication</code> เองใน <code>src/lib/msalConfig.ts</code></p>
 
-      <h3>6.2 ตั้งค่า Environment Variables</h3>
-      <p>เพิ่มในไฟล์ <code>frontend/.env</code>:</p>
+      <h3>8.2 Environment Variables</h3>
+      <p>เปิดไฟล์ <code>frontend/.env</code> (คัดลอกจาก <code>.env.example</code>):</p>
       <pre>VITE_API_BASE_URL=http://localhost:8000
+VITE_DRAFT_MODE=true
 VITE_AZURE_CLIENT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
-VITE_AZURE_TENANT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span></pre>
+VITE_AZURE_TENANT_ID=<span style="color:var(--yellow)">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+VITE_APP_TITLE=Finance Dashboard</pre>
 
-      <h3>6.3 สร้าง MSAL Config</h3>
-      <p>สร้างไฟล์ <code>frontend/src/lib/msalConfig.ts</code>:</p>
-      <pre><span style="color:var(--purple)">import</span> { Configuration, PublicClientApplication } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-browser'</span>
+      <table>
+        <tr><th>ตัวแปร</th><th>ใช้ทำอะไร</th><th>บังคับ?</th></tr>
+        <tr><td><code>VITE_API_BASE_URL</code></td><td>Base URL ของ FastAPI backend ที่ frontend เรียก (axios <code>apiClient</code>) และใช้สร้าง dev proxy <code>/api</code> ใน <code>vite.config.ts</code></td><td style="color:var(--green)">จำเป็น</td></tr>
+        <tr><td><code>VITE_DRAFT_MODE</code></td><td>คุม UI: <code>true</code> = แสดงปุ่ม "เข้าสู่ระบบแบบทดสอบ" (role picker → <code>/auth/draft-login</code>), <code>false</code> = แสดงเฉพาะปุ่ม Microsoft login — <strong>ไม่เกี่ยวกับ</strong> backend <code>DRAFT_MODE</code> โดยตรง (ต้องตั้งให้ตรงกันเอง ไม่งั้น UI โผล่ปุ่มที่ backend ปฏิเสธ)</td><td style="color:var(--green)">จำเป็น</td></tr>
+        <tr><td><code>VITE_AZURE_CLIENT_ID</code></td><td>Client ID เดียวกับ Step 1 — ใส่ใน <code>msalConfig.ts</code> เป็น <code>clientId</code> และใช้ประกอบ scope <code>api://{clientId}/access_as_user</code> ถ้าว่าง <code>isMsalConfigured()</code> จะ return false → UI ซ่อนปุ่ม Microsoft ไปเลย แสดงแค่ draft form</td><td style="color:var(--yellow)">จำเป็นสำหรับ production login</td></tr>
+        <tr><td><code>VITE_AZURE_TENANT_ID</code></td><td>Tenant ID เดียวกับ Step 1 — ใส่ใน <code>authority: https://login.microsoftonline.com/{tenantId}</code></td><td style="color:var(--yellow)">จำเป็นสำหรับ production login</td></tr>
+        <tr><td><code>VITE_APP_TITLE</code></td><td>ชื่อแอปที่แสดงใน browser title bar — ไม่เกี่ยวกับ auth มี default ในแอปถ้าไม่ตั้ง</td><td style="color:var(--muted)">ไม่บังคับ</td></tr>
+      </table>
 
-<span style="color:var(--purple)">export const</span> <span style="color:var(--cyan)">msalConfig</span>: Configuration = {
+      <h3>8.3 MSAL Config ปัจจุบัน</h3>
+      <p><code>frontend/src/lib/msalConfig.ts</code>:</p>
+      <pre><span style="color:var(--purple)">const</span> clientId = import.meta.env.VITE_AZURE_CLIENT_ID ?? <span style="color:var(--green)">''</span>
+<span style="color:var(--purple)">const</span> tenantId = import.meta.env.VITE_AZURE_TENANT_ID ?? <span style="color:var(--green)">''</span>
+
+<span style="color:var(--purple)">export const</span> isMsalConfigured = (): boolean => Boolean(clientId && tenantId)
+
+<span style="color:var(--purple)">const</span> msalConfig: Configuration = {
   auth: {
-    clientId: <span style="color:var(--cyan)">import</span>.meta.env.VITE_AZURE_CLIENT_ID,
-    authority: <span style="color:var(--green)">`https://login.microsoftonline.com/${<span style="color:var(--cyan)">import</span>.meta.env.VITE_AZURE_TENANT_ID}`</span>,
-    redirectUri: <span style="color:var(--cyan)">window</span>.location.origin,
+    clientId,
+    authority: <span style="color:var(--green)">`https://login.microsoftonline.com/${tenantId}`</span>,
+    redirectUri: window.location.origin,   <span style="color:var(--muted)">// override เป็น /auth-redirect.html ตอนเรียก loginPopup()</span>
   },
   cache: {
-    cacheLocation: <span style="color:var(--green)">'sessionStorage'</span>,  <span style="color:var(--muted)">// ปลอดภัยกว่า localStorage</span>
-    storeAuthStateInCookie: <span style="color:var(--yellow)">false</span>,
+    cacheLocation: <span style="color:var(--green)">'localStorage'</span>,  <span style="color:var(--muted)">// MSAL token cache — แยกจาก auth session (sessionStorage)</span>
+  },
+  system: {
+    popupBridgeTimeout: <span style="color:var(--yellow)">360_000</span>,   <span style="color:var(--muted)">// 6 นาที — เวลารอ user กรอกรหัสในหน้า popup</span>
+    iframeBridgeTimeout: <span style="color:var(--yellow)">10_000</span>,
   },
 }
 
-<span style="color:var(--purple)">export const</span> <span style="color:var(--cyan)">msalInstance</span> = <span style="color:var(--purple)">new</span> <span style="color:var(--blue)">PublicClientApplication</span>(msalConfig)
+<span style="color:var(--purple)">export const</span> msalInstance = <span style="color:var(--purple)">new</span> PublicClientApplication(msalConfig)
 
-<span style="color:var(--purple)">export const</span> <span style="color:var(--cyan)">loginScopes</span> = {
-  scopes: [<span style="color:var(--green)">'openid'</span>, <span style="color:var(--green)">'profile'</span>, <span style="color:var(--green)">'email'</span>, <span style="color:var(--green)">'User.Read'</span>],
-}</pre>
-
-      <h3>6.4 Wrap App ด้วย MsalProvider</h3>
-      <p>แก้ไฟล์ <code>frontend/src/main.tsx</code>:</p>
-      <pre><span style="color:var(--purple)">import</span> { MsalProvider } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-react'</span>
-<span style="color:var(--purple)">import</span> { msalInstance } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/lib/msalConfig'</span>
-
-<span style="color:var(--purple)">await</span> msalInstance.<span style="color:var(--cyan)">initialize</span>()  <span style="color:var(--muted)">// ต้อง initialize ก่อน render</span>
-
-createRoot(document.getElementById(<span style="color:var(--green)">'root'</span>)!).render(
-  &lt;<span style="color:var(--blue)">MsalProvider</span> instance={msalInstance}&gt;
-    &lt;<span style="color:var(--blue)">App</span> /&gt;
-  &lt;/<span style="color:var(--blue)">MsalProvider</span>&gt;
-)</pre>
-
-      <h3>6.5 Login Function</h3>
-      <p>ในหน้า Login — เพิ่ม handler สำหรับ Microsoft login:</p>
-      <pre><span style="color:var(--purple)">import</span> { useMsal } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-react'</span>
-<span style="color:var(--purple)">import</span> { loginScopes } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/lib/msalConfig'</span>
-<span style="color:var(--purple)">import</span> { entraLogin } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/api/auth'</span>
-
-<span style="color:var(--purple)">const</span> { instance } = <span style="color:var(--blue)">useMsal</span>()
-
-<span style="color:var(--purple)">async function</span> <span style="color:var(--cyan)">handleMicrosoftLogin</span>() {
-  <span style="color:var(--purple)">const</span> result = <span style="color:var(--purple)">await</span> instance.<span style="color:var(--cyan)">loginPopup</span>(loginScopes)
-  <span style="color:var(--purple)">const</span> session = <span style="color:var(--purple)">await</span> <span style="color:var(--cyan)">entraLogin</span>(result.accessToken)
-  <span style="color:var(--muted)">// บันทึก session.token ใน store / localStorage</span>
+<span style="color:var(--purple)">export const</span> loginScopes = {
+  scopes: [<span style="color:var(--green)">'openid'</span>, <span style="color:var(--green)">'profile'</span>, <span style="color:var(--green)">`api://${clientId}/access_as_user`</span>],
 }</pre>
 
       <div class="box box-info">
-        <code>entraLogin()</code> อยู่ที่ <code>frontend/src/api/auth.ts</code> — ส่ง POST ไปยัง <code>/api/v1/auth/entra-login</code> พร้อม <code>access_token</code> จาก MSAL แล้วรับ JWT ของระบบกลับมา
+        <strong>cacheLocation: localStorage</strong> — token cache ของ MSAL เองอยู่ข้าม tab/restart browser (ปกติสำหรับ MSAL) ส่วน session ของแอป (JWT ที่ backend ออก) เก็บแยกใน <code>sessionStorage</code> ผ่าน <code>auth/session.ts</code> — ปิด tab แล้ว session ของแอปหายแม้ MSAL cache ยังอยู่
+      </div>
+
+      <h3>8.4 main.ts — Initialize MSAL ก่อน mount App</h3>
+      <pre><span style="color:var(--purple)">import</span> { msalInstance, isMsalConfigured } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/lib/msalConfig'</span>
+
+<span style="color:var(--kw)">if</span> (isMsalConfigured()) {
+  <span style="color:var(--purple)">await</span> msalInstance.initialize()   <span style="color:var(--muted)">// ต้อง initialize ก่อน render ถ้า config ครบ</span>
+}
+
+createApp(App).use(router)<span style="color:var(--muted)">/* ...mount */</span></pre>
+
+      <h3>8.5 auth-redirect.html — Popup Bridge (จำเป็นต่อ loginPopup)</h3>
+      <p>เป็นไฟล์ root-level แยกจาก <code>index.html</code> — ต้อง build เป็น entry point แยกใน <code>vite.config.ts</code>:</p>
+      <pre><span style="color:var(--cmt)">// vite.config.ts</span>
+build: {
+  rollupOptions: {
+    input: {
+      main: resolve(__dirname, <span style="color:var(--green)">'index.html'</span>),
+      authRedirect: resolve(__dirname, <span style="color:var(--green)">'auth-redirect.html'</span>),  <span style="color:var(--muted)">// ← ต้องมี ไม่งั้น dist/ ไม่มีไฟล์นี้</span>
+    },
+  },
+}</pre>
+      <p><code>frontend/auth-redirect.html</code> → โหลด <code>src/auth-redirect.ts</code> ซึ่งทำงานเฉพาะ "ใน popup window":</p>
+      <pre><span style="color:var(--cmt)">// src/auth-redirect.ts</span>
+<span style="color:var(--purple)">import</span> { BrowserUtils } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-browser'</span>
+
+<span style="color:var(--purple)">const</span> { payload, libraryState } = BrowserUtils.parseAuthResponseFromUrl()
+<span style="color:var(--purple)">const</span> channel = <span style="color:var(--purple)">new</span> BroadcastChannel(libraryState.id)
+channel.postMessage({ payload, v: <span style="color:var(--yellow)">1</span> })   <span style="color:var(--muted)">// ส่งผลลัพธ์กลับไปยัง loginPopup() ในหน้าหลัก</span>
+channel.close()
+window.close()   <span style="color:var(--muted)">// ปิด popup เองหลังส่งเสร็จ</span></pre>
+      <div class="box box-warn">
+        ถ้า deploy แล้วเจอ "popup ค้าง / ไม่ปิดเอง" หรือ login ไม่จบ ให้เช็คก่อนว่า <code>https://your-domain/auth-redirect.html</code> เข้าได้จริงและ Redirect URI ใน Azure (Step 2) ตรงกับ path นี้เป๊ะ
+      </div>
+
+      <h3>8.6 LoginView.vue — Login Handler ปัจจุบัน</h3>
+      <p>เมื่อกดปุ่ม Microsoft login ระบบทำ 3 จังหวะ: ขอ token ของ API ตัวเอง → ขอ token ของ Graph แยก (silent) เพื่อดึง jobTitle ฝั่ง browser → ส่งทั้งสองให้ backend:</p>
+      <pre><span style="color:var(--cmt)">// LoginView.vue</span>
+<span style="color:var(--purple)">async function</span> handleMicrosoftLogin() {
+  <span style="color:var(--purple)">const</span> result = <span style="color:var(--purple)">await</span> msalInstance.loginPopup({
+    ...loginScopes,
+    redirectUri: <span style="color:var(--green)">`${window.location.origin}/auth-redirect.html`</span>,
+    prompt: <span style="color:var(--green)">'select_account'</span>,
+  })
+
+  <span style="color:var(--cmt)">// ดึง jobTitle ตรงจาก Graph ฝั่ง browser — ส่งไปเป็น fallback สุดท้าย (ดูหัวข้อ jobTitle chain)</span>
+  <span style="color:var(--purple)">const</span> graphToken = <span style="color:var(--purple)">await</span> msalInstance.acquireTokenSilent({
+    scopes: [<span style="color:var(--green)">'https://graph.microsoft.com/User.Read'</span>],
+    account: result.account,
+  })
+  <span style="color:var(--purple)">const</span> profile = <span style="color:var(--purple)">await</span> fetch(<span style="color:var(--green)">'https://graph.microsoft.com/v1.0/me?$select=jobTitle'</span>, {
+    headers: { Authorization: <span style="color:var(--green)">`Bearer ${graphToken.accessToken}`</span> },
+  }).then(r => r.json())
+
+  <span style="color:var(--purple)">const</span> session = <span style="color:var(--purple)">await</span> entraLogin(result.accessToken, profile.jobTitle ?? <span style="color:var(--green)">''</span>)
+  auth.setUser(session.token, session, result.account?.username ?? <span style="color:var(--green)">''</span>)
+  router.push(<span style="color:var(--green)">'/budget'</span>)
+}</pre>
+      <div class="box box-info">
+        <code>entraLogin()</code> อยู่ที่ <code>frontend/src/api/auth.ts</code> — ส่ง POST ไปยัง <code>/api/v1/auth/entra-login</code> ด้วย <code>{ access_token, job_title }</code> ทั้งคู่ — <code>job_title</code> ที่ส่งมาจะถูกใช้ "ก็ต่อเมื่อ" backend resolve จาก token claim / OBO / app-only ไม่ได้เลย (ลำดับสุดท้าย)
+      </div>
+      <div class="box box-warn">
+        <code>interaction_in_progress</code> error — เกิดเมื่อมี popup ค้างจาก attempt ก่อนหน้า โค้ดจะ clear <code>sessionStorage</code> key ที่ขึ้นต้นด้วย <code>msal.</code> แล้ว retry ให้อัตโนมัติ 1 ครั้ง
       </div>
     </div>
   </div>
 
-  <!-- STEP 7 -->
-  <div class="step" id="step7">
-    <div class="step-head">
-      <div class="step-num user">7</div>
-      <h3>ตั้งค่า jobTitle ของ Users ใน Entra ID</h3>
-      <span class="tag tag-user">Azure Portal — Users</span>
+  <!-- jobTitle Resolution Chain -->
+  <div id="jobtitle" style="margin-top:36px">
+    <h2>jobTitle Resolution Chain</h2>
+    <p>Backend (<code>auth_service.py</code> → <code>login_with_entra_token()</code>) พยายามหา <code>jobTitle</code> ตามลำดับนี้ หยุดทันทีที่ได้ค่าไม่ว่าง:</p>
+
+    <table>
+      <tr><th>#</th><th>แหล่งข้อมูล</th><th>ต้องตั้งค่าอะไร</th><th>ค่า <code>job_title_source</code> ใน log</th></tr>
+      <tr><td>1</td><td>Claim ในตัว access token เอง (<code>jobTitle</code> หรือ <code>job_title</code>)</td><td>Step 6 (Manifest optional claim)</td><td><code>token</code></td></tr>
+      <tr><td>2</td><td>On-Behalf-Of — แลก access token ของผู้ใช้เป็น Graph token แล้วเรียก <code>/me?$select=jobTitle</code></td><td><code>AZURE_CLIENT_SECRET</code> + Graph <code>User.Read</code> (delegated, consented)</td><td><code>graph:obo</code></td></tr>
+      <tr><td>3</td><td>App-only Graph — ใช้ client_credentials token เรียก <code>/users/{oid}?$select=jobTitle</code></td><td><code>AZURE_CLIENT_SECRET</code> + Graph <code>User.Read.All</code> (application, admin consent)</td><td><code>graph:app</code></td></tr>
+      <tr><td>4</td><td><code>job_title</code> ที่ frontend ส่งมาใน request body (ดึงจาก Graph ฝั่ง browser เอง)</td><td>ไม่ต้องตั้งอะไรเพิ่ม — ทำงานถ้า frontend consent <code>User.Read</code> สำเร็จ</td><td><code>frontend</code></td></tr>
+    </table>
+
+    <div class="box box-warn">
+      ถ้าหาไม่ได้เลยทั้ง 4 ทาง → log <code>Entra login denied: ... (job_title not found)</code> และตอบ <code>403</code> ทันที (ไม่ไปเช็ค coordinator table ต่อ)
     </div>
-    <div class="step-body">
-      <p>Backend อ่าน <code>jobTitle</code> จาก token แล้ว parse เป็น role และ position ของระบบ</p>
+  </div>
 
-      <h3>รูปแบบ jobTitle ที่ระบบรองรับ</h3>
-      <table>
-        <tr><th>รูปแบบ jobTitle</th><th>Role</th><th>Position</th><th>สิทธิ์ที่ได้</th></tr>
-        <tr><td><code>FIN,FA</code></td><td>fa</td><td>-</td><td style="color:var(--red)">ต้องเป็น coordinator จึงเข้าได้</td></tr>
-        <tr><td><code>FIN,BBA</code></td><td>bba</td><td>-</td><td style="color:var(--red)">ต้องเป็น coordinator จึงเข้าได้</td></tr>
-        <tr><td><code>FIN,FA,chief</code></td><td>fa</td><td>chief</td><td style="color:var(--green)">เข้าได้ (scoped ตาม dept)</td></tr>
-        <tr><td><code>FIN,BBA,head</code></td><td>bba</td><td>head</td><td style="color:var(--green)">เข้าได้ (scoped ตาม dept)</td></tr>
-        <tr><td><code>FIN,SCI,chairman</code></td><td>sci</td><td>chairman</td><td style="color:var(--green)">เข้าได้ (scoped ตาม dept)</td></tr>
-        <tr><td><code>FIN,TYPE,BBA,chief</code></td><td>bba</td><td>chief</td><td style="color:var(--green)">เข้าได้ (รองรับ 4 segments)</td></tr>
-      </table>
+  <!-- Parsing -->
+  <div id="parsing" style="margin-top:36px">
+    <h2>job_title → role / position Parsing</h2>
+    <p>เมื่อได้ <code>jobTitle</code> มาแล้ว (ไม่ว่าจากแหล่งไหนใน 4 ข้อด้านบน) backend ส่งเข้า <code>extract_claims()</code> ใน <code>app/core/security.py</code>:</p>
 
-      <div class="box box-info">
-        <strong>Logic การ parse:</strong> segment สุดท้ายที่เป็น <code>chief</code> / <code>chairman</code> / <code>head</code> → position, segment ก่อนหน้าคือ role<br>
-        ดู code ได้ที่ <code>backend/app/core/security.py</code> → <code>extract_claims()</code>
-      </div>
+    <ul>
+      <li>แยก string ด้วย <code>,</code> แล้วทำเป็นตัวพิมพ์เล็กทุก segment</li>
+      <li>ถ้า segment สุดท้ายอยู่ใน <code>{chief, chairman, head}</code> → นั่นคือ <code>position</code>, segment ก่อนหน้าคือ <code>role</code></li>
+      <li>ถ้าไม่ใช่ → ไม่มี <code>position</code>, segment สุดท้ายคือ <code>role</code> เลย</li>
+    </ul>
 
-      <h3>วิธีตั้งค่า jobTitle ใน Azure Portal</h3>
-      <ol>
-        <li>ไปที่ <strong>Entra ID → Users</strong></li>
-        <li>คลิกชื่อ user ที่ต้องการ</li>
-        <li>คลิก <strong>Edit properties</strong> (ปุ่มดินสอบนสุด)</li>
-        <li>เลื่อนหา field <strong>Job title</strong></li>
-        <li>ใส่ค่าตามรูปแบบ เช่น <code>FIN,FA,chief</code></li>
-        <li>กด <strong>Save</strong></li>
-      </ol>
+    <table>
+      <tr><th>jobTitle ตัวอย่าง</th><th>role</th><th>position</th><th>ผลลัพธ์</th></tr>
+      <tr><td><code>fa</code></td><td>fa</td><td>—</td><td style="color:var(--red)">ไม่มี position → ต้องเป็น coordinator จึงเข้าได้</td></tr>
+      <tr><td><code>fa,chief</code></td><td>fa</td><td>chief</td><td style="color:var(--green)">เข้าได้ทันที (มี position)</td></tr>
+      <tr><td><code>staff,bba</code></td><td>bba</td><td>—</td><td style="color:var(--red)">ไม่มี position → ต้องเป็น coordinator จึงเข้าได้</td></tr>
+      <tr><td><code>staff,bba,head</code></td><td>bba</td><td>head</td><td style="color:var(--green)">เข้าได้ทันที (มี position)</td></tr>
+      <tr><td><code>faculty,ft_lecturers,sc,chairman</code></td><td>sc</td><td>chairman</td><td style="color:var(--green)">เข้าได้ทันที (รองรับ 4 segments — position ดูจากตัวสุดท้ายเสมอ)</td></tr>
+    </table>
 
-      <div class="box box-warn">
-        <strong>ระวังตัวพิมพ์ใหญ่-เล็ก</strong> — ระบบ <code>.lower()</code> ทุก segment ก่อน compare ดังนั้น <code>FIN,FA,CHIEF</code> และ <code>fin,fa,chief</code> ให้ผลเหมือนกัน
-      </div>
+    <div class="box box-info">
+      <strong>Logic ไม่ได้ผูกกับชื่อ department ตายตัว</strong> — รับ string รูปแบบใดก็ได้ตราบใดที่ position (ถ้ามี) อยู่ segment สุดท้าย จำนวน segment ก่อนหน้าไม่ถูกจำกัด ฝั่ง frontend draft-login form สร้าง string เหล่านี้ให้ตรง format อยู่แล้ว (ดู <code>jobTitlePreview</code> ใน <code>LoginView.vue</code>) — ใน Entra ID จริง ค่า jobTitle ของ user ใน Azure Portal ต้องตั้งให้ตรง format นี้เอง
     </div>
+
+    <h3>วิธีตั้งค่า jobTitle ของ User ใน Azure Portal</h3>
+    <ol>
+      <li>ไปที่ <strong>Entra ID → Users</strong></li>
+      <li>คลิกชื่อ user ที่ต้องการ</li>
+      <li>คลิก <strong>Edit properties</strong> (ปุ่มดินสอบนสุด)</li>
+      <li>เลื่อนหา field <strong>Job title</strong></li>
+      <li>ใส่ค่าตามรูปแบบ เช่น <code>fa,chief</code></li>
+      <li>กด <strong>Save</strong></li>
+    </ol>
+  </div>
+
+  <!-- Coordinator -->
+  <div id="coordinator" style="margin-top:36px">
+    <h2>Coordinator Fallback (ไม่มี position)</h2>
+    <p>ถ้า jobTitle parse แล้วไม่มี <code>position</code> (เช่น <code>fa</code> หรือ <code>staff,bba</code> เพียว ๆ) backend จะเช็คอีกทางก่อนปฏิเสธ — ค้นหา username ใน table <code>finance_coordinator</code> (ดู <code>auth_service.is_coordinator()</code>):</p>
+
+    <pre>SELECT 1 FROM finance_coordinator
+WHERE (LOWER(upn) = LOWER(:username) OR LOWER(username) = LOWER(:username))
+  AND active = TRUE</pre>
+
+    <ul>
+      <li>เทียบกับทั้ง <code>upn</code> และ <code>username</code> column — รองรับทั้งกรณี admin ใส่แค่ local part กับกรณีที่มี <code>ENTRA_DOMAIN</code> ตั้งไว้แล้ว auto-build เป็น UPN เต็ม (<code>username@domain</code>)</li>
+      <li>ผลลัพธ์ cache ใน Redis (<code>REDIS_TTL_COORDINATOR</code>, default 600s) ลด query ซ้ำ</li>
+      <li>ถ้า match และ <code>active = TRUE</code> → ออก JWT พร้อม <code>coordinator: true</code> (role ยังเป็นค่าที่ extract ได้จาก jobTitle เดิม ไม่ถูก override)</li>
+    </ul>
+
+    <div class="box box-info">
+      Frontend router guard (<code>router/index.ts</code>) บล็อกเส้นทางที่ <code>requiresAuth</code> ถ้า <code>role === 'user' && !coordinator</code> — หมายความว่า user ที่ jobTitle parse ไม่ได้รูปแบบที่รู้จักเลย (role กลายเป็น <code>'user'</code> default) จะเข้าไม่ได้นอกจากเป็น coordinator ที่ active อยู่ในตาราง
+    </div>
+
+    <p>เพิ่ม coordinator ผ่าน Admin UI หรือเรียก API ตรง:</p>
+    <pre>POST /api/v1/admin/coordinators
+{ "username": "john.doe" }
+<span style="color:var(--muted)">→ ถ้าตั้ง ENTRA_DOMAIN=company.com backend จะเซ็ต upn = "john.doe@company.com" ให้อัตโนมัติ</span></pre>
   </div>
 
   <!-- Troubleshooting -->
@@ -551,6 +700,32 @@ createRoot(document.getElementById(<span style="color:var(--green)">'root'</span
     <div class="step">
       <div class="step-head">
         <div class="step-num" style="background:var(--red)">!</div>
+        <h3>"AADSTS65001" / scope ถูกปฏิเสธตอน loginPopup()</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-error">
+          <strong>สาเหตุ:</strong> ยังไม่ทำ Step 3 (Expose an API) หรือยังไม่ grant consent ให้ <code>access_as_user</code>
+        </div>
+        <p><strong>วิธีแก้:</strong> ตรวจ Expose an API ว่ามี scope <code>access_as_user</code> ตั้งอยู่ แล้วไปหน้า API permissions ว่ามี permission ของ app ตัวเองอยู่และ Granted แล้ว</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--red)">!</div>
+        <h3>Popup ค้าง ไม่ปิดเอง / login ไม่จบ</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-error">
+          <strong>สาเหตุ:</strong> <code>auth-redirect.html</code> ไม่ถูก build หรือ deploy, หรือ Redirect URI ใน Azure ไม่ตรงกับ path จริง
+        </div>
+        <p><strong>วิธีแก้:</strong> เปิด <code>https://your-domain/auth-redirect.html</code> ตรง ๆ ดูว่าโหลดได้ และเช็ค <code>vite.config.ts</code> ว่ามี <code>authRedirect</code> entry ใน <code>rollupOptions.input</code> แล้ว rebuild</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--red)">!</div>
         <h3>Backend ตอบ 503 — "MS Entra ID ยังไม่ได้ตั้งค่า"</h3>
       </div>
       <div class="step-body">
@@ -565,34 +740,33 @@ createRoot(document.getElementById(<span style="color:var(--green)">'root'</span
     <div class="step">
       <div class="step-head">
         <div class="step-num" style="background:var(--red)">!</div>
-        <h3>Backend ตอบ 403 — "ไม่มีสิทธิ์เข้าถึง"</h3>
+        <h3>Backend log "OBO token exchange failed" / "OBO Graph /me failed"</h3>
       </div>
       <div class="step-body">
         <div class="box box-error">
-          <strong>สาเหตุ:</strong> <code>jobTitle</code> ของ user ไม่ถูกต้อง หรือไม่ได้ set position และ user ไม่อยู่ใน <code>finance_coordinator</code> table
+          <strong>สาเหตุ:</strong> <code>AZURE_CLIENT_SECRET</code> หมดอายุ/ผิด, หรือ Graph <code>User.Read</code> (delegated) ยังไม่ได้ grant admin consent
         </div>
-        <p><strong>วิธีแก้:</strong></p>
-        <ol>
-          <li>ตรวจสอบ <code>jobTitle</code> ของ user ใน Entra ID ตามรูปแบบ Step 7</li>
-          <li>หรือ เพิ่ม username เข้า <code>finance_coordinator</code> table ด้วย <code>active = TRUE</code></li>
-        </ol>
-        <pre><span style="color:var(--muted)">-- เพิ่ม coordinator</span>
-INSERT INTO finance_coordinator (username, display_name, active)
-VALUES ('user@example.com', 'Display Name', TRUE);</pre>
+        <p><strong>วิธีแก้:</strong> สร้าง client secret ใหม่ (Step 4), ตรวจ API permissions ว่า <code>User.Read</code> delegated สถานะ Granted (Step 5) — ระบบจะตกไป fallback ถัดไปอัตโนมัติ ไม่ทำให้ login fail ทันที เว้นแต่ทุก fallback ใช้ไม่ได้</p>
       </div>
     </div>
 
     <div class="step">
       <div class="step-head">
         <div class="step-num" style="background:var(--red)">!</div>
-        <h3>Token ไม่มี jobTitle claim</h3>
+        <h3>Backend ตอบ 403 — "ไม่มีสิทธิ์เข้าถึง"</h3>
       </div>
       <div class="step-body">
         <div class="box box-error">
-          <strong>สาเหตุ:</strong> ยังไม่ได้เพิ่ม <code>jobTitle</code> ใน Token configuration (Step 3)
+          <strong>สาเหตุ:</strong> หา <code>jobTitle</code> ไม่พบเลยจากทั้ง 4 ทาง (ดู jobTitle Resolution Chain) หรือพบแล้วแต่ parse ออกมาไม่มี position และ user ไม่อยู่ใน <code>finance_coordinator</code>
         </div>
-        <p><strong>วิธีตรวจสอบ:</strong> Decode access token ที่ได้จาก MSAL ใน <a href="https://jwt.ms" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">jwt.ms</a> แล้วดูว่ามี field <code>jobTitle</code> หรือไม่</p>
-        <p><strong>วิธีแก้:</strong> กลับไปทำ Step 3 แล้ว logout/login ใหม่เพื่อรับ token ใหม่</p>
+        <p><strong>วิธีแก้:</strong></p>
+        <ol>
+          <li>ตรวจสอบ <code>jobTitle</code> ของ user ใน Entra ID ตามรูปแบบในหัวข้อ Parsing</li>
+          <li>หรือเพิ่ม username เข้า <code>finance_coordinator</code> table ด้วย <code>active = TRUE</code></li>
+        </ol>
+        <pre><span style="color:var(--muted)">-- เพิ่ม coordinator ตรง DB (หรือใช้ POST /api/v1/admin/coordinators)</span>
+INSERT INTO finance_coordinator (username, upn, active)
+VALUES ('john.doe', 'john.doe@company.com', TRUE);</pre>
       </div>
     </div>
 
@@ -611,20 +785,24 @@ VALUES ('user@example.com', 'Display Name', TRUE);</pre>
   </div>
 
   <!-- Summary Checklist -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-top:40px;">
+  <div id="checklist" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-top:40px;">
     <h4 style="margin-bottom:14px">Checklist ก่อน Go Live</h4>
     <table>
       <tr><th>รายการ</th><th>ตรวจสอบอย่างไร</th></tr>
       <tr><td>App Registration สร้างแล้ว</td><td>Azure Portal → Entra ID → App registrations</td></tr>
       <tr><td>Platform เป็น SPA ไม่ใช่ Web</td><td>Authentication → Platform configurations</td></tr>
-      <tr><td>Redirect URI ถูกต้อง</td><td>Authentication → Redirect URIs</td></tr>
-      <tr><td>jobTitle claim เปิดอยู่ (Access token)</td><td>Token configuration → Optional claims</td></tr>
-      <tr><td>API Permissions: openid, profile, email, User.Read</td><td>API permissions → status = Granted</td></tr>
-      <tr><td><code>AZURE_TENANT_ID</code> และ <code>AZURE_CLIENT_ID</code> ใน backend .env</td><td><code>grep AZURE backend/.env</code></td></tr>
-      <tr><td><code>DRAFT_MODE=false</code> ใน production</td><td><code>grep DRAFT backend/.env</code></td></tr>
-      <tr><td>Frontend ใส่ค่า MSAL config ถูกต้อง</td><td><code>grep VITE_AZURE frontend/.env</code></td></tr>
-      <tr><td>Users มี <code>jobTitle</code> ถูกรูปแบบ</td><td>Entra ID → Users → [user] → Job title</td></tr>
-      <tr><td>ทดสอบ login ครบ flow</td><td>loginPopup() → token → POST /auth/entra-login → JWT</td></tr>
+      <tr><td>Redirect URI ชี้ไปที่ <code>/auth-redirect.html</code> ของแต่ละ environment</td><td>Authentication → Redirect URIs</td></tr>
+      <tr><td>Expose an API → scope <code>access_as_user</code> เปิดอยู่</td><td>Expose an API → Scopes defined by this API</td></tr>
+      <tr><td>Client secret สร้างแล้วและยังไม่หมดอายุ</td><td>Certificates &amp; secrets → Expires column</td></tr>
+      <tr><td>API Permissions: access_as_user, openid, profile, User.Read (+ User.Read.All ถ้าต้องการ)</td><td>API permissions → status = Granted</td></tr>
+      <tr><td>jobTitle claim เปิดอยู่ (ทางเลือก แต่ลด network round-trip)</td><td>Manifest → optionalClaims.accessToken</td></tr>
+      <tr><td><code>AZURE_TENANT_ID</code>, <code>AZURE_CLIENT_ID</code>, <code>AZURE_CLIENT_SECRET</code> ใน backend .env</td><td><code>grep AZURE backend/.env</code></td></tr>
+      <tr><td><code>ENTRA_DOMAIN</code> ตั้งแล้วถ้าใช้ coordinator แบบ UPN</td><td><code>grep ENTRA_DOMAIN backend/.env</code></td></tr>
+      <tr><td><code>DRAFT_MODE=false</code> ใน production</td><td><code>grep DRAFT_MODE backend/.env</code></td></tr>
+      <tr><td>Frontend ใส่ค่า <code>VITE_AZURE_CLIENT_ID</code> / <code>VITE_AZURE_TENANT_ID</code> ถูกต้อง</td><td><code>grep VITE_AZURE frontend/.env</code></td></tr>
+      <tr><td><code>vite.config.ts</code> build <code>auth-redirect.html</code> เป็น entry แยก</td><td>เช็ค <code>dist/auth-redirect.html</code> หลัง build</td></tr>
+      <tr><td>Users มี <code>jobTitle</code> ถูกรูปแบบ (ถ้าจะพึ่ง token claim)</td><td>Entra ID → Users → [user] → Job title</td></tr>
+      <tr><td>ทดสอบ login ครบ flow</td><td>loginPopup() → token → POST /auth/entra-login → JWT → redirect /budget</td></tr>
     </table>
   </div>
 

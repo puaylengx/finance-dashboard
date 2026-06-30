@@ -251,6 +251,7 @@
 frontend/
 ├── <span class="dir">src/</span>
 │   ├── main.ts                    <span class="note">← Bootstrap: Vue + Pinia + TanStack Query + PrimeVue</span>
+│   ├── auth-redirect.ts           <span class="note">← รันใน popup window เท่านั้น: parse MSAL response → BroadcastChannel → window.close()</span>
 │   ├── App.vue                    <span class="note">← Root — แค่ RouterView</span>
 │   ├── style.css                  <span class="note">← Tailwind base + component classes + @media print</span>
 │   ├── vite-env.d.ts              <span class="note">← ImportMeta env types</span>
@@ -309,9 +310,11 @@ frontend/
 │   └── <span class="dir">e2e/</span>
 │       └── auth.spec.ts           <span class="note">← Playwright: login flow, access control, responsive</span>
 ├── <span class="dir">public/</span>
-│   └── auth-redirect.html         <span class="note">← MSAL popup redirect handler (จำเป็นสำหรับ loginPopup)</span>
+│   ├── favicon.svg, icons.svg, theme-init.js
+│   └── msal-test.html
 ├── index.html
-├── vite.config.ts                 <span class="note">← Code splitting, proxy /api → :8000</span>
+├── auth-redirect.html             <span class="note">← MSAL popup bridge (loads src/auth-redirect.ts) — Vite entry แยกจาก index.html</span>
+├── vite.config.ts                 <span class="note">← Code splitting, proxy /api → :8000, build entries (index + auth-redirect)</span>
 ├── tailwind.config.ts             <span class="note">← Design tokens (ใช้กับ Tailwind v4 — colors, animations)</span>
 ├── playwright.config.ts           <span class="note">← Chromium + iPhone 13</span>
 ├── vitest.config.ts
@@ -354,9 +357,11 @@ npm run preview</pre>
       <tr><th>Variable</th><th>Default</th><th>คำอธิบาย</th></tr>
       <tr><td><code>VITE_API_BASE_URL</code></td><td>http://localhost:8000</td><td>Backend URL</td></tr>
       <tr><td><code>VITE_DRAFT_MODE</code></td><td>true</td><td>เปิด draft-login form (dev) / ปิด = Entra button</td></tr>
-      <tr><td><code>VITE_AZURE_CLIENT_ID</code></td><td>—</td><td>MS Entra App ID (production)</td></tr>
-      <tr><td><code>VITE_AZURE_TENANT_ID</code></td><td>—</td><td>MS Entra Tenant ID (production)</td></tr>
+      <tr><td><code>VITE_AZURE_CLIENT_ID</code></td><td>—</td><td>MS Entra App (client) ID — ใช้สร้าง scope <code>api://{clientId}/access_as_user</code> ที่ขอตอน login ถ้าว่าง <code>isMsalConfigured()</code> = false → ซ่อนปุ่ม Microsoft</td></tr>
+      <tr><td><code>VITE_AZURE_TENANT_ID</code></td><td>—</td><td>MS Entra Tenant ID — ใช้สร้าง <code>authority</code> URL ของ MSAL</td></tr>
+      <tr><td><code>VITE_APP_TITLE</code></td><td>Finance Dashboard</td><td>ชื่อแอปที่แสดงใน browser title bar (optional)</td></tr>
     </table>
+    <p style="color:var(--muted);font-size:12px">รายละเอียดการตั้งค่า Entra ID ฝั่ง Azure Portal (App registration, scope, permissions, secret) ดูที่ <code>backend/docs/entra-id-setup.html</code></p>
   </section>
 
   <!-- 4. Design System -->
@@ -541,24 +546,37 @@ apiClient.interceptors.response.use(
 }</pre>
 
     <h3>MSAL Integration (Production)</h3>
-    <p>ตั้งค่า <code>VITE_AZURE_CLIENT_ID</code> + <code>VITE_AZURE_TENANT_ID</code> → ปุ่ม Microsoft Login ปรากฏ (MSAL <code>loginPopup</code> flow)</p>
+    <p>ตั้งค่า <code>VITE_AZURE_CLIENT_ID</code> + <code>VITE_AZURE_TENANT_ID</code> → ปุ่ม Microsoft Login ปรากฏ (MSAL <code>loginPopup</code> flow) token ที่ขอคือ token ของ API ตัวเอง (<code>access_as_user</code>) ไม่ใช่ Graph token ตรง ๆ — backend validate token นี้ ส่วน jobTitle ดึงจาก Graph แยกอีกที (ดูด้านล่าง)</p>
     <pre><span class="cmt">// src/lib/msalConfig.ts</span>
 <span class="kw">export function</span> <span class="fn">isMsalConfigured</span>(): boolean { ... }
 <span class="kw">export const</span> msalInstance = <span class="kw">new</span> PublicClientApplication(config)
-<span class="kw">export const</span> loginScopes = [<span class="str">'openid'</span>, <span class="str">'profile'</span>, <span class="str">`api://${clientId}/access_as_user`</span>]
-<span class="cmt">// Cache: localStorage (ยังคงอยู่ข้ามแท็บ ต่างจาก sessionStorage ของ auth store)</span>
-<span class="cmt">// redirectUri: window.location.origin + '/auth-redirect.html'</span></pre>
+<span class="kw">export const</span> loginScopes = { scopes: [<span class="str">'openid'</span>, <span class="str">'profile'</span>, <span class="str">`api://${clientId}/access_as_user`</span>] }
+<span class="cmt">// Cache: localStorage (MSAL token cache — ยังคงอยู่ข้ามแท็บ ต่างจาก sessionStorage ของ auth store)</span>
+<span class="cmt">// redirectUri ตอน login: window.location.origin + '/auth-redirect.html'</span></pre>
     <pre><span class="cmt">// LoginView.vue — Microsoft login handler</span>
 <span class="kw">async function</span> <span class="fn">handleMicrosoftLogin</span>() {
-  <span class="kw">try</span> {
-    <span class="kw">const</span> result = <span class="kw">await</span> msalInstance.loginPopup({ scopes: loginScopes, redirectUri })
-    <span class="kw">const</span> res = <span class="kw">await</span> entraLogin(result.accessToken)   <span class="cmt">// POST /auth/entra-login</span>
-    auth.setUser(res.data)                             <span class="cmt">// ตั้ง session + redirect /budget</span>
-  } <span class="kw">catch</span> (e) {
-    <span class="cmt">// interaction_in_progress error: clear msal.* sessionStorage แล้ว retry ครั้งเดียว</span>
-  }
+  <span class="kw">const</span> result = <span class="kw">await</span> msalInstance.loginPopup({
+    ...loginScopes, redirectUri: <span class="str">`${origin}/auth-redirect.html`</span>, prompt: <span class="str">'select_account'</span>,
+  })
+
+  <span class="cmt">// ดึง jobTitle ตรงจาก Graph ฝั่ง browser — ส่งไปเป็น fallback ลำดับสุดท้าย</span>
+  <span class="kw">const</span> graphToken = <span class="kw">await</span> msalInstance.acquireTokenSilent({
+    scopes: [<span class="str">'https://graph.microsoft.com/User.Read'</span>], account: result.account,
+  })
+  <span class="kw">const</span> { jobTitle } = <span class="kw">await</span> fetch(<span class="str">'https://graph.microsoft.com/v1.0/me?$select=jobTitle'</span>, {
+    headers: { Authorization: <span class="str">`Bearer ${graphToken.accessToken}`</span> },
+  }).then(r => r.json())
+
+  <span class="kw">const</span> session = <span class="kw">await</span> entraLogin(result.accessToken, jobTitle ?? <span class="str">''</span>)   <span class="cmt">// POST /auth/entra-login</span>
+  auth.setUser(session.token, session, result.account?.username ?? <span class="str">''</span>)
+  router.push(<span class="str">'/budget'</span>)
+  <span class="cmt">// interaction_in_progress error: clear msal.* sessionStorage แล้ว retry ครั้งเดียว</span>
 }
-<span class="cmt">// public/auth-redirect.html — MSAL popup redirect handler (ต้องมีไว้)</span></pre>
+<span class="cmt">// auth-redirect.html (frontend root, ไม่ใช่ public/) — popup bridge, build เป็น Vite entry แยกใน vite.config.ts</span></pre>
+    <div class="callout callout-info">
+      <strong>ℹ Coordinator bypass (router guard)</strong>
+      <code>router/index.ts</code> บล็อก route ที่ <code>requiresAuth</code> ถ้า <code>role === 'user' && !coordinator</code> — user ที่ jobTitle ไม่ตรงรูปแบบที่รู้จัก (role ตกเป็น <code>'user'</code>) ยังเข้าได้ถ้า backend ส่ง <code>coordinator: true</code> กลับมา (อยู่ใน <code>finance_coordinator</code> table ที่ active) รายละเอียดทั้งหมดของ jobTitle/coordinator resolution ดูที่ <code>backend/docs/entra-id-setup.html</code>
+    </div>
 
     <h3>Draft Mode (Dev)</h3>
     <p>เมื่อ <code>VITE_DRAFT_MODE=true</code> แสดง role picker UI — 4 categories: <strong>FA</strong>, <strong>Division</strong>, <strong>Staff</strong>, <strong>Faculty</strong> (FT sub-type เท่านั้น)</p>

@@ -469,7 +469,7 @@ uvicorn app.main:app --reload --port 8000</pre>
       <tr><td><code>DRAFT_MODE</code></td><td><code>true</code></td><td>เปิด /auth/draft-login (ปิดใน production)</td></tr>
       <tr><td><code>AZURE_TENANT_ID</code></td><td>—</td><td>จำเป็นสำหรับ /auth/entra-login จริง</td></tr>
       <tr><td><code>AZURE_CLIENT_ID</code></td><td>—</td><td>Entra App (Client) ID — ใช้ validate audience ใน JWT</td></tr>
-      <tr><td><code>AZURE_CLIENT_SECRET</code></td><td>—</td><td>Optional — ถ้าตั้งจะ fallback ดึง jobTitle จาก Microsoft Graph API</td></tr>
+      <tr><td><code>AZURE_CLIENT_SECRET</code></td><td>—</td><td>Optional — เปิด On-Behalf-Of + app-only Graph fallback สำหรับดึง jobTitle (ดู <a href="entra-id-setup.html#jobtitle">jobTitle Resolution Chain</a>)</td></tr>
       <tr><td><code>ENTRA_DOMAIN</code></td><td>—</td><td>เช่น "company.com" — ใช้สร้าง UPN (<code>username@domain</code>) สำหรับ coordinator lookup</td></tr>
       <tr><td><code>ALLOWED_ORIGINS</code></td><td>http://localhost:5173</td><td>CORS origins (comma-separated)</td></tr>
       <tr><td><code>LOG_LEVEL</code></td><td><code>INFO</code></td><td>DEBUG / INFO / WARNING / ERROR</td></tr>
@@ -662,15 +662,21 @@ valid_audiences = {settings.azure_client_id, <span class="fn">f</span><span clas
 <span class="kw">if</span> claims.get(<span class="str">"aud"</span>) <span class="kw">not in</span> valid_audiences:
     <span class="kw">return</span> <span class="kw">None</span>   <span class="cmt"># reject invalid audience</span></pre>
 
-    <h3>Graph API Fallback (jobTitle)</h3>
-    <p>บาง Entra token อาจไม่มี <code>jobTitle</code> claim — ถ้าตั้ง <code>AZURE_CLIENT_SECRET</code> ระบบจะ fallback ดึงจาก Microsoft Graph API:</p>
-    <pre><span class="cmt"># ดึง app token ด้วย client_credentials flow (cached)</span>
-<span class="kw">await</span> _fetch_graph_app_token()
-<span class="cmt"># เรียก GET https://graph.microsoft.com/v1.0/users/{oid}?$select=jobTitle</span>
-<span class="kw">await</span> _get_job_title_from_graph(oid)</pre>
+    <h3>jobTitle Resolution Chain</h3>
+    <p>บาง Entra token อาจไม่มี <code>jobTitle</code> claim ติดมา — <code>login_with_entra_token()</code> จะลองหาตามลำดับนี้ หยุดทันทีที่ได้ค่าไม่ว่าง:</p>
+    <table>
+      <tr><th>#</th><th>แหล่งข้อมูล</th><th>ต้องตั้งค่าอะไร</th></tr>
+      <tr><td>1</td><td><code>jobTitle</code> / <code>job_title</code> claim ในตัว access token เอง</td><td>Manifest optional claim (Azure Portal)</td></tr>
+      <tr><td>2</td><td>On-Behalf-Of — แลก user access token เป็น Graph token แล้วเรียก <code>/me?$select=jobTitle</code></td><td><code>AZURE_CLIENT_SECRET</code> + Graph <code>User.Read</code> delegated</td></tr>
+      <tr><td>3</td><td>App-only Graph — client_credentials token เรียก <code>/users/{oid}?$select=jobTitle</code></td><td><code>AZURE_CLIENT_SECRET</code> + Graph <code>User.Read.All</code> application</td></tr>
+      <tr><td>4</td><td><code>job_title</code> ที่ frontend ส่งมาใน request body (ดึงจาก Graph ฝั่ง browser)</td><td>ไม่ต้องตั้งอะไรเพิ่ม</td></tr>
+    </table>
+    <pre><span class="cmt"># app/services/auth_service.py</span>
+<span class="kw">await</span> _get_job_title_obo(access_token)        <span class="cmt"># ลำดับ 2 — ต้องการแค่ User.Read (delegated)</span>
+<span class="kw">await</span> _get_job_title_from_graph(oid)           <span class="cmt"># ลำดับ 3 — ต้องการ User.Read.All (application)</span></pre>
     <div class="callout callout-info">
-      <strong>ℹ Graph Token Cache</strong>
-      App token จาก client_credentials ถูก cache ใน memory (<code>_graph_token_cache</code>) จนหมดอายุ (ปกติ 3600s) — ไม่ดึงใหม่ทุก request
+      <strong>ℹ Token Cache</strong>
+      Graph app token (client_credentials) cache ใน memory (<code>_graph_token_cache</code>) จนหมดอายุ (ปกติ 3600s) — ไม่ดึงใหม่ทุก request รายละเอียดการตั้งค่าแต่ละ permission ดูที่ <a href="entra-id-setup.html">Entra ID Setup</a>
     </div>
 
     <h3>job_title Parsing</h3>
@@ -696,7 +702,8 @@ valid_audiences = {settings.azure_client_id, <span class="fn">f</span><span clas
       </div>
       <p>แลก MS Entra ID access token → JWT ของระบบ ต้องตั้งค่า <code>AZURE_TENANT_ID</code></p>
       <pre>{
-  <span class="key">"access_token"</span>: <span class="str">"eyJ0eXAiOiJKV1QiLCJhbGci..."</span>   <span class="cmt">// MS Entra token</span>
+  <span class="key">"access_token"</span>: <span class="str">"eyJ0eXAiOiJKV1QiLCJhbGci..."</span>,  <span class="cmt">// MS Entra token (aud = api://{client-id})</span>
+  <span class="key">"job_title"</span>:    <span class="str">""</span>                              <span class="cmt">// optional — fallback ลำดับสุดท้ายถ้า backend resolve เองไม่ได้</span>
 }</pre>
     </div>
 

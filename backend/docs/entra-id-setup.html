@@ -129,7 +129,7 @@
   <div style="margin-bottom:36px">
     <h1 style="font-size:28px;font-weight:800;background:linear-gradient(135deg,#0078d4,var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">Microsoft Entra ID Setup</h1>
     <p style="color:var(--muted);font-size:14px">Seamless Dashboard API &nbsp;·&nbsp; คู่มือตั้งค่า Authentication ด้วย Microsoft Entra ID (Azure AD) แบบ end-to-end</p>
-    <p style="color:var(--muted);font-size:12px;margin-top:4px">อัปเดต 2026-06-30 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ทำตามลำดับ Step 1 → 8 เพื่อผลลัพธ์ที่ถูกต้อง</strong></p>
+    <p style="color:var(--muted);font-size:12px;margin-top:4px">อัปเดต 2026-07-02 &nbsp;·&nbsp; <strong style="color:var(--yellow)">ทำตามลำดับ Step 1 → 8 เพื่อผลลัพธ์ที่ถูกต้อง</strong></p>
   </div>
 
   <!-- Auth Flow Overview -->
@@ -171,6 +171,7 @@
       <a href="#jobtitle">jobTitle Resolution Chain</a>
       <a href="#parsing">job_title → role / position Parsing</a>
       <a href="#coordinator">Coordinator Fallback (ไม่มี position)</a>
+      <a href="#curl-test">ทดสอบ Manual ผ่าน curl</a>
       <a href="#troubleshoot">Troubleshooting</a>
       <a href="#checklist">Checklist ก่อน Go Live</a>
     </div>
@@ -665,6 +666,112 @@ WHERE (LOWER(upn) = LOWER(:username) OR LOWER(username) = LOWER(:username))
     <pre>POST /api/v1/admin/coordinators
 { "username": "john.doe" }
 <span style="color:var(--muted)">→ ถ้าตั้ง ENTRA_DOMAIN=company.com backend จะเซ็ต upn = "john.doe@company.com" ให้อัตโนมัติ</span></pre>
+  </div>
+
+  <!-- Manual curl testing -->
+  <div id="curl-test" style="margin-top:36px">
+    <h2>ทดสอบ Manual ผ่าน curl (Real Access Token)</h2>
+    <p>ใช้เวลาที่ต้องการยิง <code>POST /api/v1/auth/entra-login</code> ตรง ๆ ด้วย token จริง (ไม่ผ่าน UI) เช่น debug 403 หรือเช็ค response shape</p>
+
+    <div class="box box-error">
+      <strong>ทำผ่าน backend terminal ล้วน ๆ ไม่ได้</strong> — endpoint นี้ต้องการ <strong>delegated user token</strong> (มี <code>oid</code>/<code>upn</code>/<code>jobTitle</code> ของ user จริง) ส่วน backend มีแค่ <code>AZURE_CLIENT_SECRET</code> ทำได้แค่ client-credentials flow ซึ่งได้ <strong>app-only token</strong> (ไม่มี user identity) ใช้ทดสอบ flow จริงไม่ได้ — ต้องมี user login ผ่าน browser อย่างน้อย 1 ครั้งเพื่อได้ token
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num user">1</div>
+        <h3>เปิด backend + frontend</h3>
+      </div>
+      <div class="step-body">
+        <pre><span style="color:var(--muted)"># Terminal 1</span>
+cd backend
+uvicorn app.main:app --reload --port 8000
+
+<span style="color:var(--muted)"># Terminal 2</span>
+cd frontend
+npm run dev</pre>
+        <p>เช็ค: <code>http://localhost:8000/docs</code> ขึ้นหน้า Swagger, <code>http://localhost:5173</code> ขึ้นหน้า login</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num user">2</div>
+        <h3>Login ผ่าน Microsoft จริงในเบราว์เซอร์</h3>
+      </div>
+      <div class="step-body">
+        <p>คลิก "เข้าสู่ระบบด้วย Microsoft" แล้ว login ให้จบ (popup ปิดเอง) — token หมดอายุ ~1 ชม. ทำขั้นตอนถัดไปทันทีหลัง login</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num user">3</div>
+        <h3>ดึง access token เต็มจาก browser Console</h3>
+      </div>
+      <div class="step-body">
+        <div class="box box-warn">
+          <strong>อย่าลองดึงจาก <code>localStorage</code> ตรง ๆ</strong> — <code>@azure/msal-browser</code> ตั้งแต่ v5.14+ เข้ารหัส token cache ทุกตัวก่อนเก็บลง localStorage (ดู <code>EncryptedData</code> ใน <code>msal-browser/src/cache/EncryptedData.ts</code>: ค่าที่ parse ออกมาจะมีแค่ field <code>id</code>, <code>nonce</code>, <code>data</code>, <code>lastUpdatedAt</code> — ไม่มี <code>secret</code> ให้ดึงตรง ๆ อีกแล้ว เป็น security feature ป้องกันการขโมย token ผ่าน XSS/DevTools โดยเจตนา)
+        </div>
+        <p>วิธีที่ใช้ได้จริง: ดึงจาก memory ตอน login เสร็จใหม่ ๆ (ก่อนถูกเข้ารหัส) โดยเพิ่ม <code>console.log</code> ชั่วคราวใน <code>LoginView.vue</code> บรรทัดที่ log <code>result.accessToken</code>:</p>
+        <pre>console.log('[MSAL] popup ok, account:', result.account?.username, 'token len:', result.accessToken.length)
+<span style="color:var(--green)">console.log('[DEBUG-TEMP] accessToken:', result.accessToken)</span>  <span style="color:var(--muted)">// เพิ่มบรรทัดนี้ชั่วคราว</span></pre>
+        <div class="box box-info">
+          <strong>ทำไมต้อง log ตรงจุดนี้:</strong> <code>result.accessToken</code> ที่ <code>loginPopup()</code> return กลับมาคือ token รูปแบบ <strong>plaintext</strong> ที่ยังอยู่ใน JS memory ล้วน ๆ ยังไม่ผ่านการเข้ารหัสของ MSAL — เป็นจุดเดียวในโค้ดที่แอปแตะต้อง token ดิบนี้โดยตรง เพราะบรรทัดถัดไปโค้ดจะส่งต่อเข้า <code>entraLogin()</code> ทันที (ไปแลกเป็น JWT ของระบบ) โดยไม่เก็บ token ดิบนี้ไว้ที่ไหนอีกเลย — ส่วน MSAL เองก็เขียนสำเนาเข้ารหัสแยกไปที่ <code>localStorage</code> เบื้องหลังคู่ขนานกัน (ตามที่อธิบายด้านบนว่าดึงย้อนกลับไม่ได้แล้ว) ดังนั้นถ้าไม่ log ตรงนี้ตอน login สด ๆ ก็ไม่มีจุดไหนในแอปให้ดึง token ดิบออกมาดูได้อีก
+        </div>
+        <p>Vite HMR reload อัตโนมัติ → login ใหม่อีกรอบ → เปิด DevTools Console จะเห็น token เต็มพิมพ์ออกมา → copy ค่าไป</p>
+        <div class="box box-error">
+          <strong>ลบบรรทัด debug นี้ทิ้งทันทีหลังใช้เสร็จ</strong> — ห้าม commit หรือปล่อย log token เต็มค้างไว้ในโค้ด แม้แต่ใน dev
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num user">4</div>
+        <h3>Set เป็น env var แล้วตรวจสอบก่อนใช้</h3>
+      </div>
+      <div class="step-body">
+        <p>ต้องอยู่ terminal เดียวกันตลอด (ตัวแปร shell ไม่ข้าม session):</p>
+        <pre>export MS_TOKEN="&lt;paste token&gt;"
+
+<span style="color:var(--muted)"># เช็คว่าไม่ว่างเปล่า</span>
+echo "${#MS_TOKEN}"                        <span style="color:var(--muted)"># ต้องได้เลขหลักร้อยขึ้นไป ไม่ใช่ 0</span>
+
+<span style="color:var(--muted)"># เช็ค format JWT (header.payload.signature)</span>
+echo "$MS_TOKEN" | tr -cd '.' | wc -c       <span style="color:var(--muted)"># ต้องได้ 2 พอดี</span></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num user">5</div>
+        <h3>ยิง curl</h3>
+      </div>
+      <div class="step-body">
+        <pre>curl -X POST http://localhost:8000/api/v1/auth/entra-login \
+  -H "Content-Type: application/json" \
+  -d "{\"access_token\": \"$MS_TOKEN\"}"</pre>
+        <div class="box box-info">
+          ไม่ต้องส่ง <code>job_title</code> ก็ได้ — ถ้า <code>AZURE_CLIENT_SECRET</code> ตั้งไว้แล้ว backend จะ resolve jobTitle เองจาก token claim / OBO / app-only Graph (ดูหัวข้อ jobTitle Resolution Chain) <code>job_title</code> ใน body เป็น fallback ลำดับสุดท้ายเท่านั้น
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num user">6</div>
+        <h3>อ่านผลลัพธ์</h3>
+      </div>
+      <div class="step-body">
+        <table>
+          <tr><th>ผลที่ได้</th><th>ความหมาย</th></tr>
+          <tr><td><code>{"success":true,"data":{...}}</code></td><td>สำเร็จ — ได้ JWT ของระบบกลับมา</td></tr>
+          <tr><td><code>{"detail":"ไม่มีสิทธิ์เข้าถึง..."}</code> (403)</td><td>token valid แต่ jobTitle/coordinator ไม่เข้าเงื่อนไข — ดู backend log บรรทัด <code>Entra login denied:</code> เพื่อรู้สาเหตุจริง (ดูหัวข้อ Troubleshooting ด้านล่าง)</td></tr>
+          <tr><td><code>Entra token validation failed: Error decoding token headers</code> (backend log)</td><td>ตัวแปร <code>$MS_TOKEN</code> ว่างเปล่าหรือ token เสียรูป (copy ไม่ครบ/ติด quote) — เช็คซ้ำ Step 4</td></tr>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- Troubleshooting -->

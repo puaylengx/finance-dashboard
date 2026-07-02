@@ -239,16 +239,16 @@
         </tr>
       </table>
 
-      <p>ระบบนี้ใช้ <strong>popup flow</strong> (ไม่ใช่ redirect flow) — popup window จะโหลดหน้า <code>auth-redirect.html</code> ของ frontend เอง แล้วส่งผลลัพธ์กลับไปยังหน้าหลักผ่าน <code>BroadcastChannel</code> (ดู Step 8.4) ดังนั้น Redirect URI ที่ตั้งใน Azure ต้องชี้ไปที่ไฟล์นี้โดยตรง ไม่ใช่ origin เปล่า ๆ:</p>
+      <p>ระบบนี้ใช้ <strong>popup flow</strong> (ไม่ใช่ redirect flow) — popup window โหลดหน้าเดิม (<code>index.html</code>) ซ้ำ แต่ <code>main.ts</code> ตรวจด้วย <code>BrowserUtils.isInPopup()</code> ว่ากำลังรันอยู่ใน popup แล้ว broadcast ผลลัพธ์กลับไปหน้าหลักผ่าน <code>@azure/msal-browser/redirect-bridge</code> โดยไม่ mount แอปซ้ำ (ดู Step 8.4) ดังนั้น Redirect URI ที่ตั้งใน Azure ต้องเป็น origin เปล่า ๆ ไม่ต้องชี้ไปไฟล์ย่อย:</p>
       <table>
         <tr><th>สภาพแวดล้อม</th><th>Redirect URI</th></tr>
-        <tr><td>Development</td><td><code>http://localhost:5173/auth-redirect.html</code></td></tr>
-        <tr><td>Staging</td><td><code>https://staging.your-domain.com/auth-redirect.html</code></td></tr>
-        <tr><td>Production</td><td><code>https://your-domain.com/auth-redirect.html</code></td></tr>
+        <tr><td>Development</td><td><code>http://localhost:5173</code></td></tr>
+        <tr><td>Staging</td><td><code>https://staging.your-domain.com</code></td></tr>
+        <tr><td>Production</td><td><code>https://your-domain.com</code></td></tr>
       </table>
 
       <div class="box box-info">
-        เพิ่ม URI ได้หลายตัวพร้อมกัน — แนะนำใส่ทั้ง dev และ production <code>/auth-redirect.html</code> ในครั้งเดียว
+        เพิ่ม URI ได้หลายตัวพร้อมกัน — แนะนำใส่ทั้ง dev และ production origin ในครั้งเดียว
       </div>
 
       <p>เลื่อนลงหา <strong>Implicit grant and hybrid flows</strong> → <strong>ไม่ต้องติ๊ก</strong> ทั้ง Access tokens และ ID tokens (SPA ใช้ PKCE แทน)</p>
@@ -516,7 +516,7 @@ VITE_APP_TITLE=Finance Dashboard</pre>
   auth: {
     clientId,
     authority: <span style="color:var(--green)">`https://login.microsoftonline.com/${tenantId}`</span>,
-    redirectUri: window.location.origin,   <span style="color:var(--muted)">// override เป็น /auth-redirect.html ตอนเรียก loginPopup()</span>
+    redirectUri: window.location.origin,   <span style="color:var(--muted)">// popup กลับมาหน้าเดิมเสมอ (isInPopup() ใน main.ts เป็นคนจัดการ)</span>
   },
   cache: {
     cacheLocation: <span style="color:var(--green)">'localStorage'</span>,  <span style="color:var(--muted)">// MSAL token cache — แยกจาก auth session (sessionStorage)</span>
@@ -537,46 +537,33 @@ VITE_APP_TITLE=Finance Dashboard</pre>
         <strong>cacheLocation: localStorage</strong> — token cache ของ MSAL เองอยู่ข้าม tab/restart browser (ปกติสำหรับ MSAL) ส่วน session ของแอป (JWT ที่ backend ออก) เก็บแยกใน <code>sessionStorage</code> ผ่าน <code>auth/session.ts</code> — ปิด tab แล้ว session ของแอปหายแม้ MSAL cache ยังอยู่
       </div>
 
-      <h3>8.4 main.ts — Initialize MSAL ก่อน mount App</h3>
-      <pre><span style="color:var(--purple)">import</span> { msalInstance, isMsalConfigured } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/lib/msalConfig'</span>
+      <h3>8.4 main.ts — Popup Bridge + Initialize MSAL ก่อน mount App</h3>
+      <p>popup ที่ Microsoft ส่ง response กลับมาจะโหลด <code>index.html</code> เดิมซ้ำ (redirectUri = origin) — <code>main.ts</code> เช็คก่อนว่ากำลังรันอยู่ใน popup หรือไม่ ถ้าใช่ให้ broadcast กลับไปหน้าหลักแล้วจบ ไม่ mount แอปซ้ำ:</p>
+      <pre><span style="color:var(--purple)">import</span> { BrowserUtils } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-browser'</span>
+<span style="color:var(--purple)">import</span> { broadcastResponseToMainFrame } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-browser/redirect-bridge'</span>
+<span style="color:var(--purple)">import</span> { msalInstance, isMsalConfigured } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@/lib/msalConfig'</span>
 
-<span style="color:var(--kw)">if</span> (isMsalConfigured()) {
-  <span style="color:var(--purple)">await</span> msalInstance.initialize()   <span style="color:var(--muted)">// ต้อง initialize ก่อน render ถ้า config ครบ</span>
-}
-
-createApp(App).use(router)<span style="color:var(--muted)">/* ...mount */</span></pre>
-
-      <h3>8.5 auth-redirect.html — Popup Bridge (จำเป็นต่อ loginPopup)</h3>
-      <p>เป็นไฟล์ root-level แยกจาก <code>index.html</code> — ต้อง build เป็น entry point แยกใน <code>vite.config.ts</code>:</p>
-      <pre><span style="color:var(--cmt)">// vite.config.ts</span>
-build: {
-  rollupOptions: {
-    input: {
-      main: resolve(__dirname, <span style="color:var(--green)">'index.html'</span>),
-      authRedirect: resolve(__dirname, <span style="color:var(--green)">'auth-redirect.html'</span>),  <span style="color:var(--muted)">// ← ต้องมี ไม่งั้น dist/ ไม่มีไฟล์นี้</span>
-    },
-  },
+<span style="color:var(--kw)">if</span> (BrowserUtils.isInPopup()) {
+  broadcastResponseToMainFrame().catch(err => console.error(err))
+} <span style="color:var(--kw)">else</span> {
+  <span style="color:var(--kw)">if</span> (isMsalConfigured()) {
+    <span style="color:var(--purple)">await</span> msalInstance.initialize()   <span style="color:var(--muted)">// ต้อง initialize ก่อน render ถ้า config ครบ</span>
+  }
+  createApp(App).use(router)<span style="color:var(--muted)">/* ...mount */</span>
 }</pre>
-      <p><code>frontend/auth-redirect.html</code> → โหลด <code>src/auth-redirect.ts</code> ซึ่งทำงานเฉพาะ "ใน popup window":</p>
-      <pre><span style="color:var(--cmt)">// src/auth-redirect.ts</span>
-<span style="color:var(--purple)">import</span> { BrowserUtils } <span style="color:var(--purple)">from</span> <span style="color:var(--green)">'@azure/msal-browser'</span>
-
-<span style="color:var(--purple)">const</span> { payload, libraryState } = BrowserUtils.parseAuthResponseFromUrl()
-<span style="color:var(--purple)">const</span> channel = <span style="color:var(--purple)">new</span> BroadcastChannel(libraryState.id)
-channel.postMessage({ payload, v: <span style="color:var(--yellow)">1</span> })   <span style="color:var(--muted)">// ส่งผลลัพธ์กลับไปยัง loginPopup() ในหน้าหลัก</span>
-channel.close()
-window.close()   <span style="color:var(--muted)">// ปิด popup เองหลังส่งเสร็จ</span></pre>
+      <div class="box box-info">
+        ไม่มี <code>auth-redirect.html</code> หรือ Vite entry แยกอีกต่อไป — <code>index.html</code> เดียวรองรับทั้ง main app และ popup callback ผ่าน <code>isInPopup()</code>
+      </div>
       <div class="box box-warn">
-        ถ้า deploy แล้วเจอ "popup ค้าง / ไม่ปิดเอง" หรือ login ไม่จบ ให้เช็คก่อนว่า <code>https://your-domain/auth-redirect.html</code> เข้าได้จริงและ Redirect URI ใน Azure (Step 2) ตรงกับ path นี้เป๊ะ
+        ถ้าเจอ "popup ค้าง / ไม่ปิดเอง" หรือ login ไม่จบ ให้เช็คว่า Redirect URI ใน Azure (Step 2) เป็น origin ล้วน ๆ ตรงกับ <code>window.location.origin</code> จริง (ไม่มี path ต่อท้าย)
       </div>
 
-      <h3>8.6 LoginView.vue — Login Handler ปัจจุบัน</h3>
+      <h3>8.5 LoginView.vue — Login Handler ปัจจุบัน</h3>
       <p>เมื่อกดปุ่ม Microsoft login ระบบทำ 3 จังหวะ: ขอ token ของ API ตัวเอง → ขอ token ของ Graph แยก (silent) เพื่อดึง jobTitle ฝั่ง browser → ส่งทั้งสองให้ backend:</p>
       <pre><span style="color:var(--cmt)">// LoginView.vue</span>
 <span style="color:var(--purple)">async function</span> handleMicrosoftLogin() {
   <span style="color:var(--purple)">const</span> result = <span style="color:var(--purple)">await</span> msalInstance.loginPopup({
     ...loginScopes,
-    redirectUri: <span style="color:var(--green)">`${window.location.origin}/auth-redirect.html`</span>,
     prompt: <span style="color:var(--green)">'select_account'</span>,
   })
 
@@ -717,9 +704,9 @@ WHERE (LOWER(upn) = LOWER(:username) OR LOWER(username) = LOWER(:username))
       </div>
       <div class="step-body">
         <div class="box box-error">
-          <strong>สาเหตุ:</strong> <code>auth-redirect.html</code> ไม่ถูก build หรือ deploy, หรือ Redirect URI ใน Azure ไม่ตรงกับ path จริง
+          <strong>สาเหตุ:</strong> Redirect URI ใน Azure มี path ต่อท้าย (ไม่ใช่ origin ล้วน ๆ) ทำให้ <code>isInPopup()</code> เช็คไม่ตรง หรือ popup ไม่ได้โหลด <code>index.html</code> เดิมกลับมา
         </div>
-        <p><strong>วิธีแก้:</strong> เปิด <code>https://your-domain/auth-redirect.html</code> ตรง ๆ ดูว่าโหลดได้ และเช็ค <code>vite.config.ts</code> ว่ามี <code>authRedirect</code> entry ใน <code>rollupOptions.input</code> แล้ว rebuild</p>
+        <p><strong>วิธีแก้:</strong> ตรวจ Redirect URI ใน Azure (Step 2) ให้เป็น origin ตรง ๆ เช่น <code>https://your-domain.com</code> ไม่มี path ต่อท้าย และดูใน console ของ popup ว่า <code>broadcastResponseToMainFrame()</code> รันจบโดยไม่ error</p>
       </div>
     </div>
 
@@ -791,7 +778,7 @@ VALUES ('john.doe', 'john.doe@company.com', TRUE);</pre>
       <tr><th>รายการ</th><th>ตรวจสอบอย่างไร</th></tr>
       <tr><td>App Registration สร้างแล้ว</td><td>Azure Portal → Entra ID → App registrations</td></tr>
       <tr><td>Platform เป็น SPA ไม่ใช่ Web</td><td>Authentication → Platform configurations</td></tr>
-      <tr><td>Redirect URI ชี้ไปที่ <code>/auth-redirect.html</code> ของแต่ละ environment</td><td>Authentication → Redirect URIs</td></tr>
+      <tr><td>Redirect URI เป็น origin ล้วน ๆ (ไม่มี path ต่อท้าย) ของแต่ละ environment</td><td>Authentication → Redirect URIs</td></tr>
       <tr><td>Expose an API → scope <code>access_as_user</code> เปิดอยู่</td><td>Expose an API → Scopes defined by this API</td></tr>
       <tr><td>Client secret สร้างแล้วและยังไม่หมดอายุ</td><td>Certificates &amp; secrets → Expires column</td></tr>
       <tr><td>API Permissions: access_as_user, openid, profile, User.Read (+ User.Read.All ถ้าต้องการ)</td><td>API permissions → status = Granted</td></tr>
@@ -800,7 +787,6 @@ VALUES ('john.doe', 'john.doe@company.com', TRUE);</pre>
       <tr><td><code>ENTRA_DOMAIN</code> ตั้งแล้วถ้าใช้ coordinator แบบ UPN</td><td><code>grep ENTRA_DOMAIN backend/.env</code></td></tr>
       <tr><td><code>DRAFT_MODE=false</code> ใน production</td><td><code>grep DRAFT_MODE backend/.env</code></td></tr>
       <tr><td>Frontend ใส่ค่า <code>VITE_AZURE_CLIENT_ID</code> / <code>VITE_AZURE_TENANT_ID</code> ถูกต้อง</td><td><code>grep VITE_AZURE frontend/.env</code></td></tr>
-      <tr><td><code>vite.config.ts</code> build <code>auth-redirect.html</code> เป็น entry แยก</td><td>เช็ค <code>dist/auth-redirect.html</code> หลัง build</td></tr>
       <tr><td>Users มี <code>jobTitle</code> ถูกรูปแบบ (ถ้าจะพึ่ง token claim)</td><td>Entra ID → Users → [user] → Job title</td></tr>
       <tr><td>ทดสอบ login ครบ flow</td><td>loginPopup() → token → POST /auth/entra-login → JWT → redirect /budget</td></tr>
     </table>

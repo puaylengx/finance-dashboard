@@ -4,6 +4,7 @@
     <!-- Theme toggle -->
     <button
       @click="themeCtrl.toggle()"
+      :aria-label="themeCtrl.theme.value === 'dark' ? 'สลับเป็นโหมดสว่าง' : 'สลับเป็นโหมดมืด'"
       class="fixed top-4 right-4 w-9 h-9 rounded-xl border border-border bg-surface flex items-center justify-center text-muted hover:text-fg hover:border-accent transition-colors z-10"
     >
       <svg v-if="themeCtrl.theme.value === 'dark'" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -351,7 +352,6 @@ async function handleMicrosoftLogin(isRetry = false) {
   try {
     const result = await msalInstance.loginPopup({
       ...loginScopes,
-      redirectUri: `${window.location.origin}/auth-redirect.html`,
       prompt: 'select_account',
     })
     console.log('[MSAL] popup ok, account:', result.account?.username, 'token len:', result.accessToken.length)

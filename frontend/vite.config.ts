@@ -39,7 +39,6 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),
-          authRedirect: resolve(__dirname, 'auth-redirect.html'),
         },
         output: {
           manualChunks(id) {
